@@ -1,0 +1,35 @@
+.egor-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #ff69b4;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.egor-button::after {
+  content: " 💓";
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.egor-button:hover {
+  animation: pulse 1s infinite;
+}
+
+.egor-button:hover::after {
+  opacity: 1;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+  50% { transform: scale(1.1); box-shadow: 0 0 20px #ff1493; }
+  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Гулять по Москве</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="landing">
+
+  <!-- Аудио -->
+  <audio id="bg-audio" src="audio/egor_main.mp4" preload="auto"></audio>
+
+  <!-- Кнопка Егор Крид -->
+  <a href="egorkreed.html" class="egor-button">Егор Крид</a>
+
+  <div class="overlay">
+    <div class="buttons">
+      <button class="main-button love-hover" onclick="startMusicAndNavigate()">Летс гоууу</button>
+      <a href="sadd.html" class="main-button sad-hover">Ноууу</a>
+    </div>
+  </div>
+
+  <script>
+    function startMusicAndNavigate() {
+      const audio = document.getElementById('bg-audio');
+      audio.play().catch(() => {});
+      window.location.href = 'map.html';
+    }
+
+    document.addEventListener('click', function enableAudio() {
+      const audio = document.getElementById('bg-audio');
+      audio.play().catch(() => {});
+      document.removeEventListener('click', enableAudio);
+    });
+  </script>
+
+</body>
+</html>
