@@ -8,7 +8,7 @@
 <body class="landing">
 
   <!-- Аудио -->
-  <audio id="bg-audio" src="audio/music.mp3" preload="auto"></audio>
+  <audio id="bg-audio" src="audio/egor_main.mp4" preload="auto"></audio>
 
   <!-- Кнопка Егор Крид -->
   <a href="egorkreed.html" class="egor-button">Егор Крид</a>
@@ -16,23 +16,18 @@
   <div class="overlay">
     <div class="buttons">
       <div class="button-wrapper">
-        <button class="main-button love-hover" onclick="startMusicAndNavigate()">Летс гоууу</button>
-        <div class="tooltip">сюда блин</div>
+        <a href="choise.html" class="main-button love-hover">Летс гоууу</a>
+        <div class="tooltip light-tooltip">Let's gooo Сююююда блин</div>
       </div>
       <div class="button-wrapper">
         <a href="sadd.html" class="main-button sad-hover">Ноууу</a>
-        <div class="tooltip">Не кому не отвечаю... я остался 1</div>
+        <div class="tooltip light-tooltip">Не кому не отвечаю... я остался 1</div>
       </div>
     </div>
   </div>
 
   <script>
-    function startMusicAndNavigate() {
-      const audio = document.getElementById('bg-audio');
-      audio.play().catch(() => {});
-      window.location.href = 'map.html';
-    }
-
+    // Активация аудио при первом взаимодействии
     document.addEventListener('click', function enableAudio() {
       const audio = document.getElementById('bg-audio');
       audio.play().catch(() => {});
