@@ -1,3 +1,92 @@
+/* Центрирование и оформление */
+.overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.buttons {
+  display: flex;
+  gap: 60px;
+  position: relative;
+}
+
+/* Обёртка для каждой кнопки и подсказки */
+.button-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Подсказки */
+.tooltip {
+  position: absolute;
+  bottom: -40px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  opacity: 0;
+  transition: 0.3s;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.button-wrapper:hover .tooltip {
+  opacity: 1;
+  transform: translateY(-5px);
+}
+
+/* Кнопки */
+.main-button {
+  padding: 16px 40px;
+  font-size: 20px;
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.main-button:hover {
+  animation: pulse 1s infinite;
+}
+
+/* Смайлики при наведении */
+.love-hover::after {
+  content: " 💖";
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.love-hover:hover::after {
+  opacity: 1;
+}
+
+.sad-hover::after {
+  content: " 😢";
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.sad-hover:hover::after {
+  opacity: 1;
+}
+
+/* Пульсация */
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px #ff1493; }
+  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+}
+
+/* Егор Крид */
 .egor-button {
   position: absolute;
   top: 20px;
@@ -26,10 +115,4 @@
 
 .egor-button:hover::after {
   opacity: 1;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
-  50% { transform: scale(1.1); box-shadow: 0 0 20px #ff1493; }
-  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
 }
