@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
   };
 
-  const emojis = emojiSets[type] || emojiSets.love; // fallback на hearts
+  const emojis = emojiSets[type] || emojiSets.hearts; // fallback на hearts
 
   // Создание контейнера
   const heartsContainer = document.createElement('div');

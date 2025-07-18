@@ -111,7 +111,7 @@ body.landing {
 .egor-wrapper {
   position: absolute;
   top: 20px;
-  left: 20px;
+  left: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,6 +135,8 @@ body.landing {
 
 .egor-button:hover {
   animation: pulse 1s infinite;
+  transform: scale(1.1) rotate(-1deg);
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
 }
 
 .egor-button::after {
