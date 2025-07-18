@@ -124,3 +124,9 @@
 .egor-button:hover::after {
   opacity: 1;
 }
+.egor-caption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: white;
+  opacity: 0.9;
+}
