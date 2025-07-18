@@ -36,9 +36,9 @@
 }
 
 .light-tooltip {
-  border: 2px solid white;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 2px solid rgb(248, 158, 226);
+  background:  #ff69b4;
+  color: rgb(245, 243, 244);
   backdrop-filter: blur(4px);
 }
 
