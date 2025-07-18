@@ -84,11 +84,12 @@ body.landing {
 }
 
 .tooltip {
+ content: attr(data-description);
   position: absolute;
   bottom: -35px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   color: #000;
   padding: 8px 12px;
   border-radius: 10px;
@@ -98,7 +99,8 @@ body.landing {
   transition: opacity 0.3s ease;
   font-size: 0.9rem;
   z-index: 10;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid #ff69b4;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.4);
 }
 
 .button-wrapper:hover .tooltip {
@@ -147,10 +149,11 @@ body.landing {
 
 /* Всплывающая подпись при наведении */
 .egor-caption-tooltip {
+  content: attr(data-tooltip);
   position: absolute;
-  bottom: -42px;
+  bottom: -38px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(10px);
   background: rgba(255, 255, 255, 0.95);
   color: #000;
   padding: 8px 14px;
@@ -161,7 +164,7 @@ body.landing {
   z-index: 10;
   opacity: 0;
   pointer-events: none;
-  box-shadow: 0 0 8px rgba(255, 105, 180, 0.3);
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
   border: 2px solid #ff69b4;
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -169,7 +172,7 @@ body.landing {
 /* Показывается при наведении */
 .egor-button:hover .egor-caption-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(-5px);
+  transform: translateX(-50%) translateY(-2px);
 }
 
 /* Анимация */

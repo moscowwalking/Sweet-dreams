@@ -9,11 +9,11 @@
 
   
   <div class="egor-wrapper">
-    <a href="egorkreed.html" class="egor-button">
-      Егор Крид
-    <div class="egor-caption-tooltip">Открывай глаза спящая красавица</div>
-    </a>
-  </div>
+  <a href="egorkreed.html" class="egor-button">
+    Егор Крид
+    <span class="egor-caption-tooltip">Открывай глаза спящая красавица</span>
+  </a>
+</div>
 
  
   <div class="overlay">
@@ -29,9 +29,9 @@
     </div>
   </div>
 
-  <audio autoplay loop style="display: none">
-    <source src="audio/egor_main.mp3" type="audio/mpeg">
-    </audio>
+  <audio id="audio-player" autoplay loop style="display: none">
+  <source src="audio/egor_main.mp3" type="audio/mpeg">
+</audio>
     <script>
   window.addEventListener('load', () => {
     const audio = document.getElementById('audio-player');
