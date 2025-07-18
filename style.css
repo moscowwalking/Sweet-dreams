@@ -1,19 +1,35 @@
-/* Центрирование и оформление */
+/* Общие стили */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff0f5;
+}
+
+/* Центрирование основного блока */
 .overlay {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   flex-direction: column;
+  text-align: center;
+  padding: 20px;
 }
 
+/* Кнопки по центру */
 .buttons {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 60px;
+  margin-top: 40px;
   position: relative;
 }
 
-/* Обёртка для каждой кнопки и подсказки */
+/* Обёртка кнопки + подпись */
 .button-wrapper {
   position: relative;
   display: flex;
@@ -21,54 +37,30 @@
   align-items: center;
 }
 
-/* Подсказки */
-.tooltip {
-  position: absolute;
-  bottom: -50px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 14px;
-  opacity: 0;
-  transition: 0.3s;
-  pointer-events: none;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.light-tooltip {
-  border: 2px solid rgb(248, 158, 226);
-  background:  #ff69b4;
-  color: rgb(245, 243, 244);
-  backdrop-filter: blur(4px);
-}
-
-.button-wrapper:hover .tooltip {
-  opacity: 1;
-  transform: translateY(-5px);
-}
-
-/* Кнопки */
+/* Основная кнопка */
 .main-button {
   padding: 16px 40px;
   font-size: 20px;
-  background-color: #ff69b4;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
   color: white;
   border: none;
   border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   position: relative;
-  text-decoration: none;
 }
 
-/* Убираем лишние стили при наведении */
+/* Эффекты при наведении */
 .main-button:hover {
   animation: pulse 1s infinite;
-  outline: none;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 105, 180, 0.6);
 }
 
-/* Смайлики при наведении */
+/* Появляющиеся смайлики */
 .love-hover::after {
   content: " 💖";
   opacity: 0;
@@ -87,6 +79,28 @@
   opacity: 1;
 }
 
+/* Подсказка */
+.tooltip {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  padding: 8px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.button-wrapper:hover .tooltip {
+  opacity: 1;
+}
+
 /* Пульсация */
 @keyframes pulse {
   0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
@@ -94,7 +108,7 @@
   100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
 }
 
-/* Егор Крид */
+/* Кнопка Егор Крид */
 .egor-button {
   position: absolute;
   top: 20px;
@@ -102,7 +116,7 @@
   padding: 10px 25px;
   font-size: 18px;
   font-weight: bold;
-  background: #ff69b4;
+  background: linear-gradient(to right, #ff69b4, #ff1493);
   color: white;
   border: none;
   border-radius: 30px;
@@ -124,9 +138,11 @@
 .egor-button:hover::after {
   opacity: 1;
 }
+
+/* Подпись под Егором */
 .egor-caption {
   margin-top: 6px;
   font-size: 14px;
-  color: white;
+  color: #555;
   opacity: 0.9;
 }

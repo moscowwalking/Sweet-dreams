@@ -11,48 +11,66 @@
       background-size: cover;
       font-family: 'Segoe UI', sans-serif;
       color: white;
+      overflow: hidden;
+    }
+    .egor-wrapper {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
     }
   </style>
 </head>
 <body class="landing">
 
-  
+  <!-- Кнопка Егор Крид -->
   <div class="egor-wrapper">
     <a href="egorkreed.html" class="egor-button">Егор Крид</a>
-    <div class="tooltip light-tooltip">Открывай глаза спящая красавица</div>
+    <div class="egor-caption">Открывай глаза спящая красавица</div>
   </div>
 
+  <!-- Центральные кнопки -->
   <div class="overlay">
     <div class="buttons">
       <div class="button-wrapper">
         <a href="choise.html" class="main-button love-hover">Летс гоууу</a>
-        <div class="tooltip light-tooltip">Let's gooo Сююююда блин</div>
+        <div class="tooltip light-tooltip">Сюда блин 💘</div>
       </div>
       <div class="button-wrapper">
         <a href="sadd.html" class="main-button sad-hover">Ноууу</a>
-        <div class="tooltip light-tooltip">Не кому не отвечаю... я остался 1</div>
+        <div class="tooltip light-tooltip">Не кому не отвечаю... я остался 1 😔</div>
       </div>
     </div>
   </div>
 
- <audio autoplay loop style="display: none">
-    <source src="audio/egor_main.mp4" type="audio/mpeg">
-    </audio>
-    <script>
-  window.addEventListener('load', () => {
-    const audio = document.getElementById('audio-player');
-    audio.muted = false;
-    audio.play().catch(() => {
-      
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить музыку";
-      btn.className = "gift-button";
-      btn.style.marginTop = "20px";
-      btn.onclick = () => audio.play();
-      document.body.appendChild(btn);
+  <!-- Аудио -->
+  <audio id="audio-player" autoplay loop>
+    <source src="audio/egor_main.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    window.addEventListener('load', () => {
+      const audio = document.getElementById('audio-player');
+      const tryPlay = () => {
+        audio.muted = false;
+        audio.play().catch(() => {
+          const btn = document.createElement('button');
+          btn.innerText = "▶ Включить музыку";
+          btn.className = "gift-button";
+          btn.style.marginTop = "20px";
+          btn.onclick = () => {
+            audio.play();
+            btn.remove();
+          };
+          document.body.appendChild(btn);
+        });
+      };
+      setTimeout(tryPlay, 300);
     });
-  });
-</script>   
+  </script>
 
 </body>
 </html>
