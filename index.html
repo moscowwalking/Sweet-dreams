@@ -27,32 +27,23 @@
     </div>
   </div>
 
-  <!-- Музыка -->
-  <audio id="audio-player" autoplay loop>
+  <audio autoplay loop style="display: none">
     <source src="audio/egor_main.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- Скрипты -->
-  <script src="script.js"></script>
-  <script>
-    window.addEventListener('load', () => {
-      const audio = document.getElementById('audio-player');
-      const tryPlay = () => {
-        audio.muted = false;
-        audio.play().catch(() => {
-          const btn = document.createElement('button');
-          btn.innerText = "▶ Включить музыку";
-          btn.className = "gift-button";
-          btn.style.marginTop = "20px";
-          btn.onclick = () => {
-            audio.play();
-            btn.remove();
-          };
-          document.body.appendChild(btn);
-        });
-      };
-      setTimeout(tryPlay, 300);
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      // если не получилось — покажем кнопку вручную
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
     });
-  </script>
+  });
+</script> 
 </body>
 </html>

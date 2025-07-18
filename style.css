@@ -85,7 +85,7 @@ body.landing {
 
 .tooltip {
   position: absolute;
-  bottom: -40px;
+  bottom: -35px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.9);
@@ -96,8 +96,9 @@ body.landing {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  font-size: 14px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
 }
 
 .button-wrapper:hover .tooltip {
@@ -144,19 +145,18 @@ body.landing {
 
 /* Текст "Открывай глаза" */
 .egor-caption {
-  margin-top: 8px;
-  font-size: 16px;
-  color: #fff;
-  background-color: rgba(255, 105, 180, 0.6);
-  padding: 6px 14px;
-  border-radius: 20px;
-  box-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
-  transition: all 0.3s ease;
+ margin-top: 10px;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
   font-weight: 500;
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transform: translateY(-10px);
-  animation: fadeInUp 1.2s ease-out 0.6s forwards;
+  z-index: 10;
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
 /* Анимация */
