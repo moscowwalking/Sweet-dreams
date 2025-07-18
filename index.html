@@ -4,11 +4,23 @@
   <meta charset="UTF-8">
   <title>Московские парки</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      background: url('images/kreed.main.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
+  </style>
 </head>
 <body class="landing">
 
-  <!-- Кнопка Егор Крид -->
-  <a href="egorkreed.html" class="egor-button">Егор Крид</a>
+  
+  <div class="egor-wrapper">
+    <a href="egorkreed.html" class="egor-button">Егор Крид</a>
+    <div class="egor-caption">Открывай глаза спящая красавица</div>
+  </div>
 
   <div class="overlay">
     <div class="buttons">
@@ -31,7 +43,7 @@
     const audio = document.getElementById('audio-player');
     audio.muted = false;
     audio.play().catch(() => {
-      // если не получилось — покажем кнопку вручную
+      
       const btn = document.createElement('button');
       btn.innerText = "▶ Включить музыку";
       btn.className = "gift-button";
