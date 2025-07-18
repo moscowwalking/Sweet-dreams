@@ -2,31 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Московские парки</title>
+  <title>walking ураа</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      margin: 0;
-      background: url('image/kreed_main.jpg') no-repeat center center fixed;
-      background-size: cover;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      overflow: hidden;
-    }
-    .egor-wrapper {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 10;
-    }
-  </style>
 </head>
-<body class="landing">
+<body class="landing" data-emojis="love">
 
-  <!-- Кнопка Егор Крид -->
+  <!-- Кнопка и текст сверху -->
   <div class="egor-wrapper">
     <a href="egorkreed.html" class="egor-button">Егор Крид</a>
     <div class="egor-caption">Открывай глаза спящая красавица</div>
@@ -46,11 +27,13 @@
     </div>
   </div>
 
-  <!-- Аудио -->
+  <!-- Музыка -->
   <audio id="audio-player" autoplay loop>
     <source src="audio/egor_main.mp3" type="audio/mpeg">
   </audio>
 
+  <!-- Скрипты -->
+  <script src="script.js"></script>
   <script>
     window.addEventListener('load', () => {
       const audio = document.getElementById('audio-player');
@@ -71,6 +54,5 @@
       setTimeout(tryPlay, 300);
     });
   </script>
-
 </body>
 </html>

@@ -1,14 +1,22 @@
-/* Общие стили */
+/* Сброс */
 body, html {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow-x: hidden;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   background-color: #fff0f5;
 }
 
-/* Центрирование основного блока */
+/* Фон и цвет */
+body.landing {
+  background: url('image/kreed_main.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: white;
+  overflow: hidden;
+}
+
+/* Центральный блок */
 .overlay {
   display: flex;
   justify-content: center;
@@ -19,7 +27,7 @@ body, html {
   padding: 20px;
 }
 
-/* Кнопки по центру */
+/* Кнопки */
 .buttons {
   display: flex;
   flex-wrap: wrap;
@@ -29,7 +37,6 @@ body, html {
   position: relative;
 }
 
-/* Обёртка кнопки + подпись */
 .button-wrapper {
   position: relative;
   display: flex;
@@ -37,7 +44,6 @@ body, html {
   align-items: center;
 }
 
-/* Основная кнопка */
 .main-button {
   padding: 16px 40px;
   font-size: 20px;
@@ -53,14 +59,12 @@ body, html {
   position: relative;
 }
 
-/* Эффекты при наведении */
 .main-button:hover {
   animation: pulse 1s infinite;
   transform: scale(1.1);
   box-shadow: 0 0 15px rgba(255, 105, 180, 0.6);
 }
 
-/* Появляющиеся смайлики */
 .love-hover::after {
   content: " 💖";
   opacity: 0;
@@ -79,7 +83,6 @@ body, html {
   opacity: 1;
 }
 
-/* Подсказка */
 .tooltip {
   position: absolute;
   bottom: -40px;
@@ -101,18 +104,18 @@ body, html {
   opacity: 1;
 }
 
-/* Пульсация */
-@keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
-  50% { transform: scale(1.05); box-shadow: 0 0 20px #ff1493; }
-  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
-}
-
-/* Кнопка Егор Крид */
-.egor-button {
+/* Егор Крид блок */
+.egor-wrapper {
   position: absolute;
   top: 20px;
   left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.egor-button {
   padding: 10px 25px;
   font-size: 18px;
   font-weight: bold;
@@ -139,10 +142,59 @@ body, html {
   opacity: 1;
 }
 
-/* Подпись под Егором */
+/* Текст "Открывай глаза" */
 .egor-caption {
-  margin-top: 6px;
-  font-size: 14px;
-  color: #555;
-  opacity: 0.9;
+  margin-top: 8px;
+  font-size: 16px;
+  color: #fff;
+  background-color: rgba(255, 105, 180, 0.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInUp 1.2s ease-out 0.6s forwards;
+}
+
+/* Анимация */
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px #ff1493; }
+  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Падающие эмоджи */
+.hearts-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.falling-emoji {
+  position: absolute;
+  top: -50px;
+  animation-name: fall;
+  animation-timing-function: linear;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
 }
