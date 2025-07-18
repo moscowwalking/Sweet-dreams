@@ -7,13 +7,15 @@
 </head>
 <body class="landing" data-emojis="love">
 
-  <!-- Кнопка и текст сверху -->
+  
   <div class="egor-wrapper">
-    <a href="egorkreed.html" class="egor-button">Егор Крид</a>
-    <div class="egor-caption">Открывай глаза спящая красавица</div>
+    <a href="egorkreed.html" class="egor-button">
+      Егор Крид
+    <div class="egor-caption-tooltip">Открывай глаза спящая красавица</div>
+    </a>
   </div>
 
-  <!-- Центральные кнопки -->
+ 
   <div class="overlay">
     <div class="buttons">
       <div class="button-wrapper">
@@ -35,7 +37,7 @@
     const audio = document.getElementById('audio-player');
     audio.muted = false;
     audio.play().catch(() => {
-      // если не получилось — покажем кнопку вручную
+      
       const btn = document.createElement('button');
       btn.innerText = "▶ Включить музыку";
       btn.className = "gift-button";

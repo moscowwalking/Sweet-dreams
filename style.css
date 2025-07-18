@@ -127,6 +127,12 @@ body.landing {
   text-decoration: none;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.egor-button:hover {
+  animation: pulse 1s infinite;
 }
 
 .egor-button::after {
@@ -135,28 +141,35 @@ body.landing {
   transition: opacity 0.3s ease;
 }
 
-.egor-button:hover {
-  animation: pulse 1s infinite;
-}
-
 .egor-button:hover::after {
   opacity: 1;
 }
 
-/* Текст "Открывай глаза" */
-.egor-caption {
-  margin-top: 10px;
-  font-size: 0.95rem;
+/* Всплывающая подпись при наведении */
+.egor-caption-tooltip {
+  position: absolute;
+  bottom: -42px;
+  left: 50%;
+  transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.95);
   color: #000;
   padding: 8px 14px;
   border-radius: 12px;
   white-space: nowrap;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
   font-weight: 500;
+  font-size: 0.9rem;
   z-index: 10;
-  transition: all 0.3s ease;
-  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(255, 105, 180, 0.3);
+  border: 2px solid #ff69b4;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Показывается при наведении */
+.egor-button:hover .egor-caption-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
 }
 
 /* Анимация */
