@@ -11,7 +11,7 @@
   <div class="egor-wrapper">
   <a href="egorkreed.html" class="egor-button">
     Егор Крид
-    <span class="egor-caption-tooltip">Открывай глаза спящая красавица</span>
+     <div class="tooltip" data-description="Открывай глаза спящая красавица"></div>
   </a>
 </div>
 
@@ -22,26 +22,24 @@
     <div class="buttons">
       <div class="button-wrapper">
         <a href="choise.html" class="main-button love-hover">Летс гоууу</a>
-        <div class="egor-caption-tooltip">Сююююда блииин </div>
+        <div class="tooltip" data-description="Сююююда блииин"></div>
       </div>
       <div class="button-wrapper">
         <a href="sadd.html" class="main-button sad-hover">Ноууу</a>
-        <div class="egor-caption-tooltip">Не кому не отвечаю... я остался 1 😔</div>
+        <div class="tooltip" data-description="Не кому не отвечаю... я остался 1 😔"></div>
       </div>
     </div>
   </div>
-
-  <audio id="audio-player" autoplay loop style="display: none">
+<div>
+  <audio  autoplay loop style="display: none">
   <source src="audio/egor_main.mp3" type="audio/mpeg">
-</audio>
-
-  <script src="script.js"></script>
-    <script>
-  window.addEventListener('load', () => {
+  </audio>
+  <script>
+window.addEventListener('load', () => {
     const audio = document.getElementById('audio-player');
     audio.muted = false;
     audio.play().catch(() => {
-      
+
       const btn = document.createElement('button');
       btn.innerText = "▶ Включить музыку";
       btn.className = "gift-button";
@@ -50,6 +48,8 @@
       document.body.appendChild(btn);
     });
   });
-</script> 
+  </script> 
+</div>
+  <script src="script.js"></script>
 </body>
 </html>

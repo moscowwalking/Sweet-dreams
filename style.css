@@ -34,7 +34,6 @@ body.landing {
   justify-content: center;
   gap: 60px;
   margin-top: 40px;
-  position: relative;
 }
 
 .button-wrapper {
@@ -65,93 +64,24 @@ body.landing {
   box-shadow: 0 0 15px rgba(255, 105, 180, 0.6);
 }
 
-.love-hover::after {
-  content: " 💖";
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.love-hover:hover::after {
-  opacity: 1;
-}
-
-.sad-hover::after {
-  content: " 😢";
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.sad-hover:hover::after {
-  opacity: 1;
-}
-
-.tooltip {
- content: attr(data-description);
-  position: absolute;
-  bottom: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  color: #000;
-  padding: 8px 12px;
-  border-radius: 10px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  font-size: 0.9rem;
-  z-index: 10;
-  border: 2px solid #ff69b4;
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.4);
-}
-
-.button-wrapper:hover .tooltip {
-  opacity: 1;
-}
-
-/* Егор Крид блок */
-.egor-wrapper {
-  position: absolute;
-  top: 20px;
-  left: 50px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10;
-}
-
-.egor-button {
-  padding: 10px 25px;
-  font-size: 18px;
-  font-weight: bold;
-  background: linear-gradient(to right, #ff69b4, #ff1493);
-  color: white;
-  border: none;
-  border-radius: 30px;
-  text-decoration: none;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  position: relative;
-  display: inline-block;
-}
-
-.egor-button:hover {
-  animation: pulse 1s infinite;
-  transform: scale(1.1) rotate(-1deg);
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
-}
-
+/* Эмодзи после кнопок */
+.love-hover::after,
+.sad-hover::after,
 .egor-button::after {
-  content: " 💓";
+  content: attr(data-emoji);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
+.love-hover:hover::after,
+.sad-hover:hover::after,
 .egor-button:hover::after {
   opacity: 1;
 }
 
-/* Всплывающая подпись при наведении */
-.egor-caption-tooltip {
-  content: attr(data-tooltip);
+/* Универсальная всплывающая подсказка */
+.tooltip {
+  content: attr(data-description);
   position: absolute;
   bottom: -38px;
   left: 50%;
@@ -171,10 +101,43 @@ body.landing {
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-/* Показывается при наведении */
-.egor-button:hover .egor-caption-tooltip {
+/* Показываем при наведении */
+.button-wrapper:hover .tooltip,
+.egor-button:hover .tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(-2px);
+}
+
+/* Егор Крид блок */
+.egor-wrapper {
+  position: absolute;
+  top: 20px;
+  left: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.egor-button {
+  padding: 10px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(to right, #ff69b4, #ff1493);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.egor-button:hover {
+  animation: pulse 1s infinite;
+  transform: scale(1.1) rotate(-1deg);
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
 }
 
 /* Анимация */
@@ -184,14 +147,7 @@ body.landing {
   100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
 }
 
-@keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Падающие эмоджи */
+/* Падающие эмодзи */
 .hearts-container {
   position: fixed;
   top: 0;
