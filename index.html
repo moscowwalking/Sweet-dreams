@@ -7,51 +7,45 @@
 </head>
 <body class="landing" data-emojis="love">
 
-  <!-- Егор Крид кнопка -->
   <div class="egor-wrapper">
     <a href="egorkreed.html" class="egor-button heart-icon">
       Егор Крид
-      <div class="tooltip" data-description="Открывай глаза спящая красавица">Открывай глаза спящая красавица</div>
+      <div class="tooltip">Открывай глаза спящая красавица</div>
     </a>
   </div>
 
-  <!-- Падающие сердечки -->
-  <div class="hearts-container" id="hearts-container"></div> 
+  <div class="hearts-container" id="hearts-container"></div>
 
-  <!-- Основные кнопки -->
   <div class="overlay">
-    <!-- Кнопка включения музыки -->
-    <div class="music-button-wrapper">
-      <button id="play-music-btn" class="main-button music-button pulse">▶ Включить музыку</button>
+    <div class="music-button-container">
+      <button id="play-audio" class="main-button play-icon pulse">▶ Включить музыку</button>
     </div>
-
     <div class="buttons">
       <div class="button-wrapper">
-        <a href="choise.html" class="main-button love-hover heart-icon">Летс гоууу</a>
-        <div class="tooltip pulse" data-description="Сююююда блииин">Сююююда блииин</div>
+        <a href="choise.html" class="main-button love-hover heart-icon pulse">Летс гоууу</a>
+        <div class="tooltip">Сююююда блииин</div>
       </div>
       <div class="button-wrapper">
-        <a href="sadd.html" class="main-button sad-hover sad-icon">Ноууу</a>
-        <div class="tooltip pulse" data-description="Не кому не отвечаю... я остался 1 😔">Не кому не отвечаю... я остался 1 😔</div>
+        <a href="sadd.html" class="main-button sad-hover sad-icon pulse">Ноууу</a>
+        <div class="tooltip">Не кому не отвечаю... я остался 1 😔</div>
       </div>
     </div>
   </div>
 
-  <!-- Аудио -->
   <audio id="audio-player" loop style="display: none">
     <source src="audio/egor_main.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Скрипт для управления музыкой -->
   <script>
-    const playBtn = document.getElementById('play-music-btn');
+    const playBtn = document.getElementById('play-audio');
     const audio = document.getElementById('audio-player');
+    let played = false;
 
     playBtn.addEventListener('click', () => {
-      audio.muted = false;
-      audio.play().catch(err => {
-        alert("Не удалось воспроизвести звук: " + err);
-      });
+      if (!played) {
+        audio.play();
+        played = true;
+      }
     });
   </script>
 
