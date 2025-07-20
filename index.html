@@ -8,9 +8,9 @@
 <body class="landing" data-emojis="love">
 
   <div class="egor-wrapper">
-    <a href="egorkreed.html" class="egor-button heart-icon">
+    <a href="egorkreed.html" class="egor-button heart-icon pulse"> <!-- Добавлен класс pulse -->
       Егор Крид
-      <div class="tooltip">Открывай глаза спящая красавица</div>
+      <div class="tooltip pulse">Открывай глаза спящая красавица</div> <!-- Добавлен класс pulse -->
     </a>
   </div>
 
@@ -18,34 +18,43 @@
 
   <div class="overlay">
     <div class="music-button-container">
-      <button id="play-audio" class="main-button play-icon pulse">▶ Включить музыку</button>
+      <button id="play-audio" class="main-button play-icon pulse">Нажмиии сюда!!!</button>
     </div>
     <div class="buttons">
       <div class="button-wrapper">
         <a href="choise.html" class="main-button love-hover heart-icon pulse">Летс гоууу</a>
-        <div class="tooltip">Сююююда блииин</div>
+        <div class="tooltip pulse">Сююююда блииин</div> <!-- Добавлен класс pulse -->
       </div>
       <div class="button-wrapper">
         <a href="sadd.html" class="main-button sad-hover sad-icon pulse">Ноууу</a>
-        <div class="tooltip">Не кому не отвечаю... я остался 1 😔</div>
+        <div class="tooltip pulse">Не кому не отвечаю... я остался 1 😔</div> <!-- Добавлен класс pulse -->
       </div>
     </div>
   </div>
 
-  <audio id="audio-player" loop style="display: none">
+  <audio id="audio-player" style="display: none">
     <source src="audio/egor_main.mp3" type="audio/mpeg">
   </audio>
 
   <script>
     const playBtn = document.getElementById('play-audio');
     const audio = document.getElementById('audio-player');
-    let played = false;
-
+    
     playBtn.addEventListener('click', () => {
-      if (!played) {
+      if (audio.paused) {
         audio.play();
-        played = true;
+        playBtn.classList.add('pulse');
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        playBtn.classList.remove('pulse');
       }
+    });
+    
+    // Остановка после окончания трека
+    audio.addEventListener('ended', () => {
+      audio.currentTime = 0;
+      playBtn.classList.remove('pulse');
     });
   </script>
 

@@ -133,6 +133,31 @@ body.landing {
   transform: translateX(-50%) translateY(8px);
 }
 
+/* Усиленная пульсация при наведении */
+.button-wrapper:hover .main-button,
+.egor-button:hover {
+  animation: pulseGlow 1.5s infinite !important;
+}
+
+.button-wrapper:hover .tooltip,
+.egor-wrapper:hover .tooltip {
+  animation: pulseGlow 1.8s infinite;
+  box-shadow: 0 0 15px rgba(255, 105, 180, 0.7);
+}
+
+/* Анимация для эмодзи */
+.heart-icon:hover::after,
+.sad-icon:hover::after {
+  animation: pulseEmoji 1.2s infinite;
+  transform-origin: center;
+}
+
+@keyframes pulseEmoji {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
 /* Егор Крид */
 .egor-wrapper {
   position: absolute;
