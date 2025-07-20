@@ -64,6 +64,36 @@ body.landing {
   box-shadow: 0 0 15px rgba(255, 105, 180, 0.6);
 }
 
+/* Музыкальная кнопка */
+.music-button-wrapper {
+  position: absolute;
+  top: 220px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  animation: fadeIn 1s ease;
+}
+
+/* Пульсация */
+.pulse {
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 6px rgba(255, 20, 147, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 20, 147, 0.9);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(255, 20, 147, 0.5);
+    transform: scale(1);
+  }
+}
+
 /* Эмодзи после кнопок */
 .love-hover::after,
 .sad-hover::after,
@@ -79,7 +109,7 @@ body.landing {
   opacity: 1;
 }
 
-/* Универсальная всплывающая подсказка */
+/* Подсказки */
 .tooltip {
   content: attr(data-description);
   position: absolute;
@@ -108,7 +138,7 @@ body.landing {
   transform: translateX(-50%) translateY(-2px);
 }
 
-/* Егор Крид блок */
+/* Егор Крид */
 .egor-wrapper {
   position: absolute;
   top: 20px;
@@ -140,11 +170,29 @@ body.landing {
   box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
 }
 
-/* Анимация */
-@keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
-  50% { transform: scale(1.05); box-shadow: 0 0 20px #ff1493; }
-  100% { transform: scale(1); box-shadow: 0 0 10px #ff69b4; }
+/* Эмодзи у кнопок */
+.heart-icon::after,
+.sad-icon::after {
+  content: "";
+  opacity: 0;
+  position: absolute;
+  top: -10px;
+  right: -30px;
+  font-size: 24px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.heart-icon:hover::after {
+  content: "💖";
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+.sad-icon:hover::after {
+  content: "😢";
+  opacity: 1;
+  transform: translateY(0px);
 }
 
 /* Падающие эмодзи */
@@ -171,28 +219,4 @@ body.landing {
     transform: translateY(110vh) rotate(360deg);
     opacity: 0;
   }
-}
-
-.heart-icon::after,
-.sad-icon::after {
-  content: "";
-  opacity: 0;
-  position: absolute;
-  top: -30px;
-  right: -40px;
-  font-size: 24px;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  pointer-events: none;
-}
-
-.heart-icon:hover::after {
-  content: "💖";
-  opacity: 1;
-  transform: translateY(-5px);
-}
-
-.sad-icon:hover::after {
-  content: "😢";
-  opacity: 1;
-  transform: translateY(-5px);
 }
