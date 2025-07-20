@@ -193,11 +193,12 @@ body.landing {
 /* Эмодзи у кнопок */
 .heart-icon::after,
 .sad-icon::after {
-  content: "";
+   content: "";
   opacity: 0;
   position: absolute;
-  top: -2px;
-  right: -25px;
+  top: 50%; /* Центрирование по вертикали */
+  transform: translateY(-50%); /* Точное центрирование */
+  right: -35px; /* Отступ от правого края кнопки */
   font-size: 24px;
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
