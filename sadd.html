@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Not this time...</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body.sad-page {
+      background-color: #ffe4ec;
+      overflow: hidden;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .overlay {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .sad-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sad-container h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      color: #f17b94;
+    }
+
+    .sad-container p {
+      font-size: 1.5em;
+      margin-bottom: 25px;
+      color: #020202;
+    }
+
+    .sad-container img {
+      width: 320px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      margin-bottom: 25px;
+    }
+
+    /* Новая кнопка */
+    .comeback-button {
+      padding: 14px 32px;
+      font-size: 18px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      position: relative;
+      margin-top: 15px;
+    }
+
+    .comeback-button:hover {
+      animation: pulseGlow 1.5s infinite;
+      transform: scale(1.08);
+    }
+
+    .comeback-button.heart-icon::after {
+      content: "";
+      opacity: 0;
+      position: absolute;
+      top: -2px;
+      right: -25px;
+      font-size: 24px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .comeback-button.heart-icon:hover::after {
+      content: "💖";
+      opacity: 1;
+      transform: translateY(0px);
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        box-shadow: 0 0 6px rgba(255, 20, 147, 0.5);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(255, 20, 147, 0.9);
+        transform: scale(1.05);
+      }
+      100% {
+        box-shadow: 0 0 6px rgba(255, 20, 147, 0.5);
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body class="sad-page" data-emojis="sad">
+  <div class="hearts-container" id="hearts-container"></div>
+
+  <div class="overlay">
+    <div class="sad-container">
+      <h1>Эх, не в этот раз...</h1>
+      <p>Режим хатико включен 😢😢</p>
+      <img src="image/sadcat.jpg" alt="Грустный кот">
+
+      
+      <a href="index.html" class="comeback-button heart-icon">А может всё-таки...</a>
+    </div>
+  </div>
+ <audio autoplay loop style="display: none">
+    <source src="audio/sad_sound.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      // если не получилось — покажем кнопку вручную
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script>  
+
+
+
+  <script src="script.js"></script>
+</body>
+</html>

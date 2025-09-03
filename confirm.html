@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>walkin dead</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('image/egora.gif') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: white;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    h2 {
+      font-size: 2em;
+      margin-top: 100px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 20px 30px;
+      border-radius: 15px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+    }
+
+    .title {
+      font-size: 2.5em;
+      margin-top: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      color: #ffffff;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .title span {
+      display: inline-block;
+      transition: transform 0.3s ease, color 0.3s ease;
+      cursor: default;
+    }
+
+    .title span:hover {
+      transform: scale(1.5);
+      color: #ff69b4;
+    }
+
+    form {
+      margin-top: 40px;
+    }
+
+    input[type="hidden"] {
+      display: none;
+    }
+
+    .hearts-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .falling-emoji {
+      position: absolute;
+      top: 0;
+      animation-name: fall;
+      animation-timing-function: linear;
+      animation-iteration-count: 1;
+      color: white;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 1rem;
+      background: #ff69b4;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      margin-top: 20px;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #ff1493;
+    }
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  background-color: #ff69b4;
+  color: white;
+  border-radius: 20px;
+  text-decoration: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #ff1493;
+  transform: scale(1.1);
+}
+
+
+
+  </style>
+</head>
+<body data-emojis="flowers">
+
+  <h2 id="message">Скоро увидимся! Не забудь: …</h2>
+
+  <h1 class="title">
+    <span>s</span><span>e</span><span>e</span>
+    <span> </span><span> </span>
+    <span> </span>
+    <span>u</span>
+    <span> </span>
+    <span> </span><span> </span>
+    <span>s</span><span>o</span><span>o</span><span>n</span><span>!</span>
+  </h1>
+
+  <form id="auto-form" action="https://formspree.io/f/mjkowjnz" method="POST" style="display: none;">
+    <input type="hidden" name="message" id="hidden-message">
+  </form>
+
+  <div class="hearts-container" id="hearts-container"></div>
+
+  <a href="index.html" class="back-button">← Назад на главную</a>
+  
+ <script>
+  const place = localStorage.getItem('selectedPlace') || 'неизвестно где';
+  const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
+  const time = localStorage.getItem('selectedTime') || 'неизвестно во сколько';
+
+  const finalMessage = `Скоро увидимся! Не забудь: ${place} ${date} в ${time}.`;
+  document.getElementById('message').textContent = finalMessage;
+
+  
+  window.onload = () => {
+    fetch("https://formspree.io/f/mjkowjnz", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: finalMessage
+      })
+    }).then(response => {
+      if (response.ok) {
+        console.log("Форма успешно отправлена!");
+        // можно показать сообщение или эмоджи ✨
+      } else {
+        console.error("Ошибка при отправке формы");
+      }
+    }).catch(error => {
+      console.error("Сбой сети:", error);
+    });
+  };
+</script>
+
+
+
+<audio autoplay loop style="display: none">
+    <source src="audio/egor_confirm.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script> 
+
+  <script src="script.js"></script>
+</body>
+</html>

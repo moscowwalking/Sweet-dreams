@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Егор Крид</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body.egor-page {
+      background: url('image/egor_bad.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
+      padding: 10px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      text-decoration: none;
+      z-index: 10;
+      animation: pulseGlow 2s infinite;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3em;
+      text-align: center;
+      background: linear-gradient(90deg, #ff69b4, #ff1493, #f0a7cb);
+      background-size: 200% auto;
+      background-clip:text ;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientMove 4s linear infinite;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+  </style>
+</head>
+<body class="egor-page" data-emojis="egor">
+
+  <a href="index.html" class="back-button heart-icon">← Пора возвращаться...</a>
+
+  <div class="center-text">
+    привет) это я егор крид 💋
+  </div>
+
+  <div class="hearts-container" id="hearts-container"></div>
+
+
+  <audio autoplay loop style="display: none">
+    <source src="audio/egor_sun.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      // если не получилось — покажем кнопку вручную
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script>  
+  <script src="script.js"></script>
+</body>
+</html>
