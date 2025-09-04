@@ -6,11 +6,23 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     body.egor-page {
-      background: url('audio/cute.MP4') no-repeat center center fixed;
-      background-size: cover;
+      margin: 0;
+      padding: 0;
       color: white;
       overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
+      position: relative;
+    }
+
+    /* Фоновое видео */
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
     }
 
     .back-button {
@@ -40,8 +52,8 @@
       text-align: center;
       background: linear-gradient(90deg, #ff69b4, #ff1493, #f0a7cb);
       background-size: 200% auto;
-      background-clip:text ;
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradientMove 4s linear infinite;
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -51,9 +63,20 @@
       0% { background-position: 0% center; }
       100% { background-position: 200% center; }
     }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 10px #ff69b4; }
+      50% { box-shadow: 0 0 20px #ff1493; }
+    }
   </style>
 </head>
 <body class="egor-page" data-emojis="egor">
+
+  <!-- Фоновое видео -->
+  <video autoplay muted loop class="video-bg" id="bg-video">
+    <source src="audio/cute1.mp4" type="video/mp4">
+    Ваш браузер не поддерживает видео.
+  </video>
 
   <a href="index.html" class="back-button heart-icon">← Пора возвращаться...</a>
 
@@ -63,25 +86,39 @@
 
   <div class="hearts-container" id="hearts-container"></div>
 
+  <script>
+    // Включаем звук после взаимодействия пользователя
+    const video = document.getElementById('bg-video');
+    video.muted = false; // Раскомментируй, если хочешь звук
 
-  <audio autoplay loop style="display: none">
-    <source src="audio/cute.MP4" type="audio/mpeg">
-    </audio>
-    <script>
-  window.addEventListener('load', () => {
-    const audio = document.getElementById('audio-player');
-    audio.muted = false;
-    audio.play().catch(() => {
-      // если не получилось — покажем кнопку вручную
+    // Показываем кнопку включения звука, если автоплей не сработал
+    video.play().catch(() => {
       const btn = document.createElement('button');
       btn.innerText = "▶ Включить музыку";
       btn.className = "gift-button";
-      btn.style.marginTop = "20px";
-      btn.onclick = () => audio.play();
+      btn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        background: #ff69b4;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 16px;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      btn.onclick = () => {
+        video.play();
+        btn.remove();
+      };
       document.body.appendChild(btn);
     });
-  });
-</script>  
+  </script>
+
   <script src="script.js"></script>
 </body>
 </html>

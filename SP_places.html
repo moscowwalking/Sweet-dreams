@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Парковкиии</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+
+
+.hearts-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 999;
+}
+
+.falling-emoji {
+  position: absolute;
+  top: 0;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  color: white;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+    :root {
+      --pink: #ff69b4;
+      --hotpink: #ff1493;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fff0f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 2.5em;
+      margin-top: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      color: #ffffff;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .title span {
+      display: inline-block;
+      transition: transform 0.3s ease, color 0.3s ease;
+      cursor: default;
+    }
+
+    .title span:hover {
+      transform: scale(1.3);
+      color: var(--pink);
+    }
+
+    #map {
+      width: 900px;
+      height: 620px;
+      margin: 40px 0;
+       margin-top:-12px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+
+    .custom-tooltip {
+      background: rgba(255, 255, 255, 0.95);
+      color: #000;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      z-index: 1000;
+      display: none;
+      text-align: center;
+    }
+
+    .modal h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .modal .yes {
+      background-color: var(--pink);
+      color: white;
+    }
+
+    .modal .no {
+      background-color: #eee;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 999;
+      display: none;
+    }
+
+    .leaflet-interactive {
+      transition: transform 0.25s ease;
+    }
+
+    .lift-up {
+      transform: scale(1.01);
+    }
+
+
+    .custom-place-wrapper {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.custom-place-trigger {
+  background-color: #555;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.custom-place-trigger:hover {
+  background-color: #ff69b4;
+}
+
+.custom-place-form {
+  display: none;
+  flex-direction: column;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.custom-place-form input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  width: 200px;
+}
+
+.custom-place-form button {
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.custom-place-form button:hover {
+  background-color: #ff1493;
+}
+  </style>
+</head>
+<body data-emojis= "parking" >
+  <h1 class="title">
+    <span>В</span><span>ы</span><span>б</span><span>е</span><span>р</span><span>и</span>
+    <span>  </span><span> </span><span>п</span><span>а</span><span>р</span><span>к</span>
+  </h1>
+
+  <div id="map">
+    <div class="custom-place-wrapper">
+  <div class="custom-place-trigger">Нет нужного места??</div>
+  <div class="custom-place-form">
+    <label for="customPlace">Предложи свое:</label>
+    <input type="text" id="customPlace" placeholder="Напиши место..."/>
+    <button onclick="saveCustomPlace()">OK</button>
+  </div>
+</div>
+  </div>
+
+  
+  <div class="overlay" id="overlay"></div>
+  <div class="modal" id="modal">
+    <h2 id="modal-text">Ты действительно уверена?</h2>
+    <button class="yes" onclick="location.href='time.html'">Да</button>
+    <button class="no" onclick="closeModal()">Нет</button>
+  </div>
+
+   
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([55.75, 37.61], 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const defaultStyle = {
+      color: '#ff69b4',
+      weight: 2,
+      fillOpacity: 0.3
+    };
+
+    const hoverStyle = {
+      color: '#ff1493',
+      weight: 4,
+      fillOpacity: 0.5
+    };
+
+    const overlay = document.getElementById('overlay');
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modal-text');
+
+    function showModal(parkName) {
+      modal.style.display = 'block';
+      overlay.style.display = 'block';
+      modalText.textContent = `Ты действительно уверена, что хочешь посетить ${parkName}?`;
+      localStorage.setItem('selectedPlace', parkName);
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+    }
+
+    fetch('SP_places.json')
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, {
+          style: defaultStyle,
+          onEachFeature: function (feature, layer) {
+            const parkName = Object.keys(feature.properties)
+              .find(key => !['stroke', 'stroke-width', 'stroke-opacity', 'fill', 'fill-opacity'].includes(key));
+
+            if (parkName) {
+              layer.bindTooltip(parkName, {
+                permanent: false,
+                direction: 'top',
+                offset: [0, -5],
+                opacity: 0.9,
+                className: 'custom-tooltip'
+              });
+            }
+
+            layer.on('mouseover', function () {
+              this.setStyle(hoverStyle);
+              const el = this.getElement();
+              if (el && !el.classList.contains('lift-up')) {
+                el.classList.add('lift-up');
+              }
+              this.openTooltip();
+            });
+
+            layer.on('mouseout', function () {
+              this.setStyle(defaultStyle);
+              this.getElement()?.classList.remove('lift-up');
+              this.closeTooltip();
+            });
+
+            layer.on('click', function () {
+              if (parkName) {
+                showModal(parkName);
+              }
+            });
+          }
+        }).addTo(map);
+      });
+
+  </script>
+
+  <audio autoplay loop style="display: none">
+    <source src="audio/ALBLAK_52.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script> 
+
+<script>
+  const trigger = document.querySelector('.custom-place-trigger');
+  const form = document.querySelector('.custom-place-form');
+
+  trigger.addEventListener('mouseenter', () => {
+    form.style.display = 'flex';
+  });
+
+  form.addEventListener('mouseleave', () => {
+    form.style.display = 'none';
+  });
+
+  function saveCustomPlace() {
+  const custom = document.getElementById('customPlace').value.trim();
+  if (custom) {
+    localStorage.setItem('selectedPlace', custom);
+    location.href = 'time.html';
+  } else {
+    alert("Напиши что-нибудь!");
+  }
+}
+</script>
+
+  <script src="script.js"></script>
+</body>
+</html>
