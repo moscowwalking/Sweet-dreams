@@ -23,8 +23,7 @@
       height: 100%;
       object-fit: cover;
       z-index: -1;
-      border: 5px solid red; /* ВРЕМЕННО — чтобы видеть границы */
-  opacity: 1; /* Убедимся, что не прозрачное */
+     
     }
 
     .back-button {
@@ -75,9 +74,9 @@
 <body class="egor-page" data-emojis="egor">
 
   <!-- Фоновое видео -->
-  <video autoplay muted loop class="video-bg" id="bg-video">
-    <source src="audio/cute.MP4" type="video/mp4">
-    Ваш браузер не поддерживает видео.
+  <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+    <source src="audio/cute1.mp4" type="video/mp4">
+    
   </video>
 
   <a href="index.html" class="back-button heart-icon">← Пора возвращаться...</a>
