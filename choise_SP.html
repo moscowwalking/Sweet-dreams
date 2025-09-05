@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тяжелый выбор...</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700" rel="stylesheet">
+  <style>
+
+.hearts-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 999;
+}
+
+.falling-emoji {
+  position: absolute;
+  top: 0;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  color: white;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+    :root {
+      --backgroundColor: #ffeaf3;
+      --colorShadeA: #e75480;
+      --colorShadeB: #ff8cb1;
+      --colorShadeC: #ffc1d8;
+      --colorShadeD: #ffdce8;
+      --colorShadeE: #fff2f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+       font-family: "Open Sans", sans-serif;
+        margin: 0;
+        background: url('image/choise1.jpg') no-repeat center center fixed;
+        background-size: cover;
+       min-height: 100vh;
+      width: 100vw;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    h1.title {
+      font-size: 2.5em;
+      margin-bottom: 40px;
+      text-align: center;
+      color: white;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .title span {
+      display: inline-block;
+      transition: transform 0.3s ease, color 0.3s ease;
+      cursor: default;
+      outline: none;
+       text-decoration: none;
+      user-select: none; 
+    }
+
+    .title span:hover {
+      transform: scale(1.5);
+      color: var(--colorShadeA);
+      
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    /* Активная кнопка — красивый 3D стиль */
+    .option-button.active {
+      position: relative;
+      padding: 1em 2em;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-transform: none !important;
+      background: var(--colorShadeE);
+      color: var(--colorShadeA);
+      border: 2px solid var(--colorShadeA);
+      border-radius: 1em;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: all 175ms cubic-bezier(0, 0, 1, 1);
+    }
+
+    .option-button.active::before {
+      position: absolute;
+      content: "";
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--colorShadeC);
+      border-radius: inherit;
+      box-shadow: 0 0 0 2px var(--colorShadeB), 0 0.75em 0 0 var(--colorShadeA);
+      transform: translate3d(0, 0.75em, -1em);
+      transition: all 175ms cubic-bezier(0, 0, 1, 1);
+      z-index: -1;
+    }
+
+    .option-button.active:hover {
+      background: var(--colorShadeD);
+      transform: translateY(0.375em);
+    }
+
+    .option-button.active:hover::before {
+      transform: translate3d(0, 0.75em, -1em);
+    }
+
+    .option-button.active:active {
+      transform: translateY(0.75em);
+    }
+
+    .option-button.active:active::before {
+      transform: translate3d(0, 0, -1em);
+      box-shadow: 0 0 0 2px var(--colorShadeB), 0 0.25em 0 0 var(--colorShadeB);
+    }
+
+    .option-button.active::after {
+      content: "С тобой куда угодно💖💖💖💖";
+    position: absolute;
+    top: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    margin-top: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10; 
+    }
+
+    .option-button.active:hover::after {
+      opacity: 1;
+      animation: pulseTooltip 1.5s infinite;
+    }
+
+    /* Отключённые кнопки */
+    .option-button.disabled {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ddd;
+      border: 2px solid #aaa;
+      border-radius: 1em;
+      padding: 1em 2em;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-transform:  none !important;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .option-button.disabled::after {
+      content: attr(data-joke);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    color: #000;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    margin-top: 6px;
+    z-index: 10;
+    }
+
+    .option-button.disabled:hover::after {
+      opacity: 1;
+      animation: pulseTooltip 1.5s infinite;
+    }
+
+    /* Кнопка Назад */
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      padding: 10px 25px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      color: white;
+      border-radius: 25px;
+      border: none;
+      cursor: default;
+      
+    }
+
+    .back-button::after {
+      content: "Другой город???";
+    position: absolute;
+    top: 90%;
+    left: 60%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    margin-top: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+    }
+
+    .back-button:hover::after {
+      opacity: 1;
+      animation: pulseTooltip 1.5s infinite;
+    }
+
+    @keyframes pulseTooltip {
+  0% { box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);transform: translateX(-50%) scale(1); }
+  50% {box-shadow: 0 0 20px rgba(255, 105, 180, 0.9); transform: translateX(-50%) scale(1.08); }
+  100% { box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);transform: translateX(-50%) scale(1); }
+}
+    
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 6px rgba(255, 105, 180, 0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(255, 105, 180, 0.9); transform: scale(1.05); }
+  100% { box-shadow: 0 0 6px rgba(255, 105, 180, 0.5); transform: scale(1); }
+    }
+
+  </style>
+</head>
+<body data-emojis="choise">
+  <h1 class="title">
+    <span>А</span>
+    <span> </span><span>е</span><span>с</span><span>л</span><span>и</span>
+    <span> </span><span>ч</span><span>у</span><span>т</span><span>ь</span>
+    <span> </span><span>к</span><span>о</span><span>н</span><span>к</span><span>р</span><span>е</span><span>т</span><span>н</span><span>е</span><span>е</span>
+   <span> </span><span>?</span><span>?</span><span>👼🏿</span><span>😍</span>
+  </h1>
+
+  <div class="options">
+    <button class="option-button active" onclick="location.href='parking.html'">Парки</button>
+    <button class="option-button active" onclick="location.href=''">Вкусно покушать</button>
+    <button class="option-button disabled" data-joke="В разработке..."> Культурный отдых</button>
+    <button class="option-button disabled" data-joke="В разработке...">Все вместе!! </button>
+  </div>
+
+  <button class="back-button" onclick="location.href='choise.html'">← Назад</button>
+
+ <audio autoplay loop style="display: none">
+    <source src="audio/Billie_Eilish.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script> 
+
+  <script src="script.js"></script>
+</body>
+</html>
