@@ -22,9 +22,21 @@
       overflow: hidden;
     }
 
+    /* Фоновое видео */
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      background: black;
+    }
+    
     h2 {
       font-size: 2em;
-      margin-top: 100px;
+      margin-top: 340px;
       background: rgba(255, 255, 255, 0.15);
       padding: 20px 30px;
       border-radius: 15px;
@@ -132,6 +144,10 @@
 </head>
 <body data-emojis="confirm">
 
+ <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+    <source src="audio/uscore.mp4" type="video/mp4">
+  </video>
+
   <h2 id="message">Скоро увидимся! Не забудь: …</h2>
 
   <h1 class="title">
@@ -158,7 +174,7 @@
   const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
   const time = localStorage.getItem('selectedTime') || 'неизвестно во сколько';
 
-  const finalMessage = `Скоро увидимся! Не забудь:${city}, ${place} ${date} в ${time}.`;
+  const finalMessage = `Скоро увидимся! Не забудь: ${city}, ${place} ${date} в ${time}.`;
   document.getElementById('message').textContent = finalMessage;
 
   
@@ -206,6 +222,38 @@
   });
 </script> 
 
+
+
+<script>
+    const video = document.getElementById('bg-video');
+    video.muted = false;
+
+    video.play().catch(() => {
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить видео";
+      btn.className = "gift-button";
+      btn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        background: #ff69b4;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 16px;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      btn.onclick = () => {
+        video.play();
+        btn.remove();
+      };
+      document.body.appendChild(btn);
+    });
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
