@@ -263,8 +263,8 @@
   </h1>
 
   <div class="options">
-    <button class="option-button active" onclick="location.href='choise_moscow.html'"> Москва🏙️🏙️</button>
-    <button class="option-button active" onclick="location.href='choise_SP.html'">Saint Питер🌉🌉</button>
+    <button class="option-button active" onclick="setCityAndGo('Москва', 'choise_moscow.html')"> Москва🏙️🏙️</button>
+    <button class="option-button active" onclick="setCityAndGo('Санкт-Петербург', 'choise_SP.html')">Saint Питер🌉🌉</button>
     <button class="option-button disabled" data-joke="В разработке..."> Поход </button>
     <button class="option-button disabled" data-joke="В разработке..."> Челябинск </button>
     <button class="option-button disabled" data-joke="В разработке..."> Тверь </button>
@@ -289,8 +289,15 @@
       document.body.appendChild(btn);
     });
   });
-</script> 
 
+  
+</script> 
+<script>
+  function setCityAndGo(city, link) {
+    localStorage.setItem('selectedCity', city);
+    window.location.href = link;
+  }
+</script>
   <script src="script.js"></script>
 </body>
 </html>

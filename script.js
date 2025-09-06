@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     emoji.classList.add('falling-emoji');
     emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
     emoji.style.left = Math.random() * 100 + 'vw';
-    emoji.style.animationDuration = (3 + Math.random() * 3) + 's';
+    emoji.style.animationDuration = (4 + Math.random() * 3) + 's';
     emoji.style.fontSize = (20 + Math.random() * 20) + 'px';
     emoji.style.top = '-50px';
     heartsContainer.appendChild(emoji);

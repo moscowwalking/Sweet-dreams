@@ -153,11 +153,12 @@
   <a href="index.html" class="back-button">← Назад на главную</a>
   
  <script>
+  const city = localStorage.getItem('selectedCity') || 'неизвестный город';
   const place = localStorage.getItem('selectedPlace') || 'неизвестно где';
   const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
   const time = localStorage.getItem('selectedTime') || 'неизвестно во сколько';
 
-  const finalMessage = `Скоро увидимся! Не забудь: ${place} ${date} в ${time}.`;
+  const finalMessage = `Скоро увидимся! Не забудь:${city}, ${place} ${date} в ${time}.`;
   document.getElementById('message').textContent = finalMessage;
 
   

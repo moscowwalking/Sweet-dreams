@@ -157,6 +157,27 @@
     localStorage.setItem('selectedTime', time);
     location.href = 'confirm.html';
   }
+
+   </script>
+
+  <audio autoplay loop style="display: none">
+    <source src="audio/Tyler.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script> 
   </script>
 
   <script src="script.js"></script>
