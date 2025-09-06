@@ -263,10 +263,10 @@
   </h1>
 
   <div class="options">
-    <button class="option-button active" onclick="location.href='parking.html'">Парки</button>
-    <button class="option-button active" onclick="location.href='time.html'">Вкусно покушать</button>
-    <button class="option-button active" onclick="location.href='time.html'"> Культурный отдых</button>
-    <button class="option-button active" onclick="location.href='time.html'">Все вместе!! </button>
+  <button class="option-button active" onclick="goWithPlace('Парки', 'parking.html')">Парки</button>
+  <button class="option-button active" onclick="goWithPlace('Вкусно покушать', 'time.html')">Вкусно покушать</button>
+  <button class="option-button active" onclick="goWithPlace('Культурный отдых', 'time.html')">Культурный отдых</button>
+  <button class="option-button active" onclick="goWithPlace('Все вместе!!', 'time.html')">Все вместе!!</button>
   </div>
 
   <button class="back-button" onclick="location.href='choise.html'">← Назад</button>
@@ -290,7 +290,12 @@
     });
   });
 </script> 
-
+<script>
+  function goWithPlace(place, link) {
+    localStorage.setItem('selectedPlace', place);
+    window.location.href = link;
+  }
+</script>
   <script src="script.js"></script>
 </body>
 </html>
