@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Цифровой букетик</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(to top, #ff69b4, #1e1e2f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      text-align: center;
+      overflow: hidden;
+    }
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      background: black;
+    }
+  
+    .content {
+      font-size: 2em;
+      animation: pulse 1.5s ease infinite alternate;
+    }
+
+    @keyframes pulse {
+      to { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body data-emojis="flowers">
+     <div class="content">
+    💐🌸🌹 ! Ты самый красивый цветочек 💕🌷🌻
+  </div>
+<div class="hearts-container" id="hearts-container"></div> 
+    <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+    <source src="audio/flowers.mp4" type="video/mp4">
+  </video>
+ 
+
+<audio autoplay loop style="display: none">
+    <source src="audio/flowers_song.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+  window.addEventListener('load', () => {
+    const audio = document.getElementById('audio-player');
+    audio.muted = false;
+    audio.play().catch(() => {
+      
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить музыку";
+      btn.className = "gift-button";
+      btn.style.marginTop = "20px";
+      btn.onclick = () => audio.play();
+      document.body.appendChild(btn);
+    });
+  });
+</script> 
+  <script>
+    const video = document.getElementById('bg-video');
+    video.muted = false;
+
+    video.play().catch(() => {
+      const btn = document.createElement('button');
+      btn.innerText = "▶ Включить видео";
+      btn.className = "gift-button";
+      btn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        background: #ff69b4;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 16px;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      btn.onclick = () => {
+        video.play();
+        btn.remove();
+      };
+      document.body.appendChild(btn);
+    });
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
