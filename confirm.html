@@ -176,35 +176,36 @@
     <source src="audio/Mac_Miller.mp3" type="audio/mpeg">
   </audio>
 
-  <script>
+   <script>
+    // Берем данные из localStorage
     const city = localStorage.getItem('selectedCity') || 'неизвестный город';
     const place = localStorage.getItem('selectedPlace') || 'неизвестно где';
     const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
     const time = localStorage.getItem('selectedTime') || 'неизвестно во сколько';
 
-    const finalMessage = `Скоро увидимся! Не забудь: ${city}, ${place} ${date} в ${time}.`;
-    document.getElementById('message').textContent = finalMessage;
+    const inviteData = { city, place, date, time };
 
-    window.onload = () => {
-      fetch("https://formspree.io/f/xzzakolk", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: finalMessage
-        })
-      }).then(response => {
-        if (response.ok) {
-          console.log("Форма успешно отправлена!");
-        } else {
-          console.error("Ошибка при отправке формы");
-        }
-      }).catch(error => {
-        console.error("Сбой сети:", error);
-      });
-    };
+    const messageEl = document.getElementById('message');
+
+    // Отправляем данные на локальный сервер
+    fetch('http://localhost:3001/send-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inviteData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        messageEl.textContent = 'Приглашение успешно отправлено на почту! 📩';
+      } else {
+        messageEl.textContent = 'Ошибка при отправке приглашения. ❌';
+        console.error(data.error);
+      }
+    })
+    .catch(err => {
+      messageEl.textContent = 'Не удалось связаться с сервером. ❌';
+      console.error(err);
+    });
   </script>
 
   <script>
