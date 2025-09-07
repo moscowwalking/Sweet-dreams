@@ -11,8 +11,7 @@ app.use(cors({
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:3000',
-    'https://moscowwalking.github.io/Sweet-dreams',
-    'https://sweet-dreams-rh2g.onrender.com'
+    'https://moscowwalking.github.io/Sweet-dreams/'
   ]
 }));
 
