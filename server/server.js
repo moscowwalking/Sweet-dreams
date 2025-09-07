@@ -15,6 +15,22 @@ app.use(cors({
   ]
 }));
 
+// --- DEBUG: логируем все входящие запросы и временно разрешаем CORS для всех (для отладки) ---
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} Origin: ${req.headers.origin}`);
+  next();
+});
+
+// Временно разрешаем всё (удалить/скорректировать для продакшена)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.header('Access-Control-Allow-Origin', origin);
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(bodyParser.json());
 
 // Настройка почты для Mail.ru
