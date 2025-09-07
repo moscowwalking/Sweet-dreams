@@ -11,7 +11,8 @@ app.use(cors({
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:3000',
-    'https://moscowwalking.github.io/Sweet-dreams/'
+    'https://moscowwalking.github.io/Sweet-dreams/',
+    'https://sweet-dreams-as7v.onrender.com'
   ]
 }));
 
@@ -36,7 +37,7 @@ app.post('/send-invite', async (req, res) => {
   try {
     const { city, place, date, time, email } = req.body;
 
-    const toEmail = (email || process.env.TO_EMAIL).split(',');
+    const toEmail = (email || process.env.TO_EMAIL).split(',').map(addr => addr.trim());
     if (!toEmail) {
       return res.status(400).json({ error: 'Не указан email получателя' });
     }
