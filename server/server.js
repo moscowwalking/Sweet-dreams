@@ -15,7 +15,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // origin == undefined, если запрос из curl или Postman
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -43,6 +42,20 @@ app.get('/', (_, res) => {
   res.send('ICS mail server is running ✅');
 });
 
+// Форматирование даты в локальном времени (Europe/Moscow)
+function formatDateLocal(d) {
+  const pad = n => (n < 10 ? '0' + n : n);
+  return (
+    d.getFullYear().toString() +
+    pad(d.getMonth() + 1) +
+    pad(d.getDate()) +
+    'T' +
+    pad(d.getHours()) +
+    pad(d.getMinutes()) +
+    pad(d.getSeconds())
+  );
+}
+
 app.post('/send-invite', async (req, res) => {
   try {
     const { city, place, date, time, email } = req.body;
@@ -64,21 +77,16 @@ app.post('/send-invite', async (req, res) => {
     const start = new Date(year, month - 1, day, hour, minute);
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
-    // Функция форматирования даты в формат iCal
-    function formatDate(d) {
-      return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    }
-
-    // Формируем .ics вручную
+    // Формируем .ics вручную (с TZID=Europe/Moscow)
     const icsString = `BEGIN:VCALENDAR
 VERSION:2.0
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
 UID:${Date.now()}@sweet-dreams
-DTSTAMP:${formatDate(new Date())}
-DTSTART:${formatDate(start)}
-DTEND:${formatDate(end)}
+DTSTAMP:${formatDateLocal(new Date())}
+DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
+DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
 SUMMARY:Встреча 💖
 DESCRIPTION:Скоро увидимся! ${city}, ${place}.
 LOCATION:${place}, ${city}
