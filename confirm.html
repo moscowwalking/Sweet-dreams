@@ -188,7 +188,7 @@
     const messageEl = document.getElementById('message');
 
     // Отправляем данные на локальный сервер
-    fetch('https://sweet-dreams-rh2g.onrender.com', {
+    fetch('https://sweet-dreams-rh2g.onrender.com/send-invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inviteData)
