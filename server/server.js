@@ -6,30 +6,25 @@ import bodyParser from 'body-parser';
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'http://localhost:3000',
+  'https://moscowwalking.github.io'
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5500',
-    'http://127.0.0.1:5500',
-    'http://localhost:3000',
-    'https://moscowwalking.github.io/Sweet-dreams/'
-  ]
+  origin: function (origin, callback) {
+    // origin == undefined, если запрос из curl или Postman
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      return callback(new Error('Not allowed by CORS'));
+    }
+  }
 }));
-
-// --- DEBUG: логируем все входящие запросы и временно разрешаем CORS для всех (для отладки) ---
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} Origin: ${req.headers.origin}`);
-  next();
-});
-
-// Временно разрешаем всё (удалить/скорректировать для продакшена)
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
 
 app.use(bodyParser.json());
 
