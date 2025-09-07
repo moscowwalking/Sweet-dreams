@@ -188,7 +188,7 @@
     const messageEl = document.getElementById('message');
 
     // Отправляем данные на локальный сервер
-    fetch('http://localhost:3001/send-invite', {
+    fetch('https://sweet-dreams-as7v.onrender.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inviteData)
