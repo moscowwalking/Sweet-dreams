@@ -196,7 +196,7 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        messageEl.textContent = 'Приглашение успешно отправлено на почту! 📩';
+        messageEl.textContent = 'Приглашение отправлено на почту! 📩';
       } else {
         messageEl.textContent = 'Ошибка при отправке приглашения. ❌';
         console.error(data.error);
