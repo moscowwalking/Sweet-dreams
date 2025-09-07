@@ -188,7 +188,7 @@
     const messageEl = document.getElementById('message');
 
     // Отправляем данные на локальный сервер
-    fetch('https://sweet-dreams-as7v.onrender.com', {
+    fetch('https://sweet-dreams-rh2g.onrender.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inviteData)
@@ -196,7 +196,7 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        messageEl.textContent = 'Приглашение отправлено на почту! 📩';
+        messageEl.textContent = 'Приглашение успешно отправлено на почту! 📩';
       } else {
         messageEl.textContent = 'Ошибка при отправке приглашения. ❌';
         console.error(data.error);
