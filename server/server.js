@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
 import bodyParser from 'body-parser';
+import path from 'path';
+import fs from 'fs';
 
 const app = express();
 
@@ -77,29 +79,40 @@ app.post('/send-invite', async (req, res) => {
     const start = new Date(year, month - 1, day, hour, minute);
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
-    // Формируем .ics вручную (с TZID=Europe/Moscow)
+    // Формируем .ics вручную
     const icsString = `BEGIN:VCALENDAR
-VERSION:2.0
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VEVENT
-UID:${Date.now()}@sweet-dreams
-DTSTAMP:${formatDateLocal(new Date())}
-DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
-DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
-SUMMARY:Встреча 💖
-DESCRIPTION:Скоро увидимся! ${city}, ${place}.
-LOCATION:${place}, ${city}
-STATUS:CONFIRMED
-SEQUENCE:0
-END:VEVENT
-END:VCALENDAR`;
+      VERSION:2.0
+      CALSCALE:GREGORIAN
+      METHOD:REQUEST
+      BEGIN:VEVENT
+      UID:${Date.now()}@sweet-dreams
+      DTSTAMP:${formatDateLocal(new Date())}
+      DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
+      DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
+      SUMMARY:Встреча 💖
+      DESCRIPTION:Скоро увидимся! ${city}, ${place}.
+      LOCATION:${place}, ${city}
+      STATUS:CONFIRMED
+      SEQUENCE:0
+      TRANSP:OPAQUE
+      END:VEVENT
+      END:VCALENDAR`;
+
+    // Сохраняем .ics временно, чтобы отдать по ссылке
+    const filePath = path.join(process.cwd(), 'event.ics');
+    fs.writeFileSync(filePath, icsString);
+
+    const appleCalendarLink = `${process.env.SERVER_URL}/download-ics`;
 
     const mailOptions = {
       from: process.env.MAIL_USER,
       to: toEmail,
       subject: 'Событие для календаря 💌',
-      text: `Событие: ${city}, ${place}, ${date} в ${time}`,
+      text: `Событие: ${city}, ${place}, ${date} в ${time}\nДобавить в календарь: ${appleCalendarLink}`,
+      html: `
+        <p>Событие: ${city}, ${place}, ${date} в ${time}</p>
+        <p><a href="${appleCalendarLink}">📅 Добавить в календарь</a></p>
+      `,
       attachments: [
         {
           filename: 'event.ics',
@@ -120,6 +133,16 @@ END:VCALENDAR`;
   } catch (e) {
     console.error('Server error:', e);
     return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// Роут для скачивания .ics
+app.get('/download-ics', (req, res) => {
+  const filePath = path.join(process.cwd(), 'event.ics');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'event.ics');
+  } else {
+    res.status(404).send('Файл не найден');
   }
 });
 
