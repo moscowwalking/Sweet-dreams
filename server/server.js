@@ -38,9 +38,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Храним последнее сгенерированное ICS в памяти
-let lastIcs = null;
-
 app.get('/', (_, res) => {
   res.send('ICS mail server is running ✅');
 });
@@ -99,20 +96,12 @@ app.post('/send-invite', async (req, res) => {
       END:VEVENT
       END:VCALENDAR`;
 
-    // Сохраняем в памяти
-    lastIcs = icsString;
-
-    const appleCalendarLink = `${process.env.SERVER_URL}/download-ics`;
-
     const mailOptions = {
       from: process.env.MAIL_USER,
       to: toEmail,
       subject: 'Событие для календаря 💌',
-      text: `Событие: ${city}, ${place}, ${date} в ${time}\nДобавить в календарь: ${appleCalendarLink}`,
-      html: `
-        <p>Событие: ${city}, ${place}, ${date} в ${time}</p>
-        <p><a href="${appleCalendarLink}">📅 Добавить в календарь</a></p>
-      `,
+      text: `Событие: ${city}, ${place}, ${date} в ${time}`,
+      html: `<p>Событие: ${city}, ${place}, ${date} в ${time}</p>`,
       attachments: [
         {
           filename: 'event.ics',
@@ -134,16 +123,6 @@ app.post('/send-invite', async (req, res) => {
     console.error('Server error:', e);
     return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
-});
-
-// Роут для отдачи ICS
-app.get('/download-ics', (req, res) => {
-  if (!lastIcs) {
-    return res.status(404).send('Файл еще не создан');
-  }
-  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
-  res.setHeader('Content-Disposition', 'inline; filename=event.ics');
-  res.send(lastIcs);
 });
 
 const PORT = process.env.PORT || 3001;
