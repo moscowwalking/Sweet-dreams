@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import nodemailer from 'nodemailer';
 import bodyParser from 'body-parser';
+import { Resend } from 'resend';
 
 const app = express();
 
@@ -10,7 +10,7 @@ const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
   'http://localhost:3000',
-  'https://moscowwalking.github.io'
+  'https://moscowwalking.github.io/Sweet-dreams/'
 ];
 
 app.use(cors({
@@ -27,22 +27,14 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Настройка почты для Mail.ru
-const transporter = nodemailer.createTransport({
-  host: 'smtp.mail.ru',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS
-  }
-});
+// Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.get('/', (_, res) => {
-  res.send('ICS mail server is running ✅');
+  res.send('ICS mail server with Resend is running ✅');
 });
 
-// Форматирование даты в локальном времени (Europe/Moscow)
+// Форматирование даты
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -69,16 +61,13 @@ app.post('/send-invite', async (req, res) => {
       return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD), timeStart (HH:mm) и timeEnd (HH:mm)' });
     }
 
-    // Разбираем дату/время
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = timeStart.split(':').map(Number);
     const [endHour, endMinute] = timeEnd.split(':').map(Number);
 
-    // Начало и конец (2 часа)
     const start = new Date(year, month - 1, day, startHour, startMinute);
     const end = new Date(year, month - 1, day, endHour, endMinute);
 
-    // Формируем .ics вручную
     const icsString = `BEGIN:VCALENDAR
       VERSION:2.0
       CALSCALE:GREGORIAN
@@ -97,33 +86,26 @@ app.post('/send-invite', async (req, res) => {
       END:VEVENT
       END:VCALENDAR`;
 
-    const mailOptions = {
-      from: process.env.MAIL_USER,
+    // Отправка через Resend
+    const data = await resend.emails.send({
+      from: process.env.FROM_EMAIL,
       to: toEmail,
       subject: 'Событие для календаря 💌',
-      text: `Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}`,
       html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
-
       attachments: [
         {
           filename: 'event.ics',
-          content: icsString,
-          contentType: 'text/calendar; charset=UTF-8; method=PUBLISH'
+          content: Buffer.from(icsString).toString('base64'),
+          type: 'text/calendar; charset=UTF-8; method=REQUEST'
         }
       ]
-    };
+    });
 
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log('Email sent:', info.response);
-      return res.json({ success: true });
-    } catch (e) {
-      console.error('Mail error:', e);
-      return res.status(500).json({ error: 'Ошибка отправки письма' });
-    }
+    console.log('Email sent:', data);
+    return res.json({ success: true, id: data.id });
   } catch (e) {
-    console.error('Server error:', e);
-    return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Resend error:', e);
+    return res.status(500).json({ error: 'Ошибка отправки письма' });
   }
 });
 

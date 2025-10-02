@@ -176,21 +176,23 @@
     <source src="audio/Mac_Miller.mp3" type="audio/mpeg">
   </audio>
 
-   <script>
+  <script>
   // Берем данные из localStorage
   const city = localStorage.getItem('selectedCity') || 'неизвестный город';
   const place = localStorage.getItem('selectedPlace') || 'неизвестно где';
   const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
-  const timeStart = localStorage.getItem('selectedTimeStart') || 'неизвестно во сколько';
-  const timeEnd = localStorage.getItem('selectedTimeEnd') || 'неизвестно до когда';
+  const timeStart = localStorage.getItem('selectedStartTime') || 'неизвестно во сколько';
+  const timeEnd = localStorage.getItem('selectedEndTime') || 'неизвестно до когда';
 
   const inviteData = { city, place, date, timeStart, timeEnd };
 
   const messageEl = document.getElementById('message');
+  
+  // Сначала показываем пользователю приглашение
   messageEl.textContent = `Скоро увидимся! Не забудь: ${place}, ${date} в ${timeStart}.`;
 
   // Отправляем данные на сервер
-  fetch('https://sweet-dreams-rh2g.onrender.com/send-invite', {
+  fetch('https://sweet-dreams-f8nc.onrender.com/send-invite', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inviteData)
@@ -198,15 +200,19 @@
   .then(response => response.json())
   .then(data => {
     if (data.success) {
+      messageEl.textContent += " 🎉 Приглашение успешно отправлено!";
       console.log("Письмо успешно отправлено");
     } else {
+      messageEl.textContent += " ⚠️ Ошибка при отправке приглашения.";
       console.error("Ошибка при отправке:", data.error);
     }
   })
   .catch(err => {
+    messageEl.textContent += " ❌ Ошибка сети. Попробуй еще раз.";
     console.error("Ошибка сети:", err);
   });
 </script>
+
 
   <script>
     window.addEventListener('load', () => {
