@@ -12,9 +12,6 @@
       --pink: #ff69b4;
       --hotpink: #ff1493;
     }
-
-
-
      .video-bg {
       position: fixed;
       top: 0;
@@ -83,13 +80,30 @@
 
     input[type="date"],
     input[type="time"] {
-      padding: 12px;
-      font-size: 1.1em;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      width: 250px;
+      padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
     }
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
 
+.time-range input {
+  flex: 1;
+}
+
+.time-range .to-label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #fff;
+}
     button {
       margin-top: 25px;
       padding: 12px 30px;
@@ -153,33 +167,46 @@
   </h1>
 
   <div class="form-container">
-    <label for="date">Дата:</label>
-    <input type="date" id="date" required>
+  <label for="date">Дата:</label>
+  <input type="date" id="date" required>
 
-    <label for="time">Время:</label>
-    <input type="time" id="time" required>
-
-    <button onclick="saveDateTime()">Продолжить</button>
+  <label for="timeStart">Время:</label>
+  <div class="time-range">
+    <input type="time" id="timeStart" required>
+    <span class="to-label">до</span>
+    <input type="time" id="timeEnd" required>
   </div>
+
+  <button onclick="saveDateTime()">Продолжить</button>
+</div>
+
 
   <div class="hearts-container" id="hearts-container"></div>
 
-  <script>
-     function saveDateTime() {
-    const date = document.getElementById('date').value;
-    const time = document.getElementById('time').value;
+ <script>
+    function saveDateTime() {
+      const date = document.getElementById('date').value;
+      const start = document.getElementById('timeStart').value;
+      const end = document.getElementById('timeEnd').value;
 
-    if (!date || !time) {
-      alert("Пожалуйста, выбери и дату, и время!");
-      return;
+      if (!date || !start || !end) {
+        alert("Пожалуйста, выбери дату, время начала и окончания!");
+        return;
+      }
+
+      if (end <= start) {
+        alert("Время окончания должно быть позже времени начала!");
+        return;
+      }
+
+      // Сохраняем всё отдельно
+      localStorage.setItem('selectedDate', date);
+      localStorage.setItem('selectedStartTime', start);
+      localStorage.setItem('selectedEndTime', end);
+
+      location.href = 'confirm.html';
     }
-    // Сохраняем раздельно
-    localStorage.setItem('selectedDate', date);
-    localStorage.setItem('selectedTime', time);
-    location.href = 'confirm.html';
-  }
-
-   </script>
+  </script>
 
   <audio autoplay loop style="display: none">
     <source src="audio/Tyler.mp3" type="audio/mpeg">

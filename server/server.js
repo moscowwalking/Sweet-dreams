@@ -58,24 +58,25 @@ function formatDateLocal(d) {
 
 app.post('/send-invite', async (req, res) => {
   try {
-    const { city, place, date, time, email } = req.body;
+    const { city, place, date, timeStart, timeEnd, email } = req.body;
 
     const toEmail = (email || process.env.TO_EMAIL).split(',').map(addr => addr.trim());
     if (!toEmail) {
       return res.status(400).json({ error: 'Не указан email получателя' });
     }
 
-    if (!city || !place || !date || !time) {
-      return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD) и time (HH:mm)' });
+    if (!city || !place || !date || !timeStart || !timeEnd) {
+      return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD), timeStart (HH:mm) и timeEnd (HH:mm)' });
     }
 
     // Разбираем дату/время
     const [year, month, day] = date.split('-').map(Number);
-    const [hour, minute] = time.split(':').map(Number);
+    const [startHour, startMinute] = timeStart.split(':').map(Number);
+    const [endHour, endMinute] = timeEnd.split(':').map(Number);
 
     // Начало и конец (2 часа)
-    const start = new Date(year, month - 1, day, hour, minute);
-    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    const start = new Date(year, month - 1, day, startHour, startMinute);
+    const end = new Date(year, month - 1, day, endHour, endMinute);
 
     // Формируем .ics вручную
     const icsString = `BEGIN:VCALENDAR
@@ -100,8 +101,9 @@ app.post('/send-invite', async (req, res) => {
       from: process.env.MAIL_USER,
       to: toEmail,
       subject: 'Событие для календаря 💌',
-      text: `Событие: ${city}, ${place}, ${date} в ${time}`,
-      html: `<p>Событие: ${city}, ${place}, ${date} в ${time}</p>`,
+      text: `Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}`,
+      html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
+
       attachments: [
         {
           filename: 'event.ics',
