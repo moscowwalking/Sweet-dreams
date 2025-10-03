@@ -2,9 +2,12 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { Resend } from 'resend';
+import sgMail from '@sendgrid/mail';
 
 const app = express();
+
+// Устанавливаем API Key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const allowedOrigins = [
   'http://localhost:5500',
@@ -27,11 +30,8 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 app.get('/', (_, res) => {
-  res.send('ICS mail server with Resend is running ✅');
+  res.send('ICS mail server with SendGrid is running ✅');
 });
 
 // Форматирование даты
@@ -53,7 +53,7 @@ app.post('/send-invite', async (req, res) => {
     const { city, place, date, timeStart, timeEnd, email } = req.body;
 
     const toEmail = (email || process.env.TO_EMAIL).split(',').map(addr => addr.trim());
-    if (!toEmail) {
+    if (!toEmail.length) {
       return res.status(400).json({ error: 'Не указан email получателя' });
     }
 
@@ -69,42 +69,44 @@ app.post('/send-invite', async (req, res) => {
     const end = new Date(year, month - 1, day, endHour, endMinute);
 
     const icsString = `BEGIN:VCALENDAR
-      VERSION:2.0
-      CALSCALE:GREGORIAN
-      METHOD:REQUEST
-      BEGIN:VEVENT
-      UID:${Date.now()}@sweet-dreams
-      DTSTAMP:${formatDateLocal(new Date())}
-      DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
-      DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
-      SUMMARY:Встреча 💖
-      DESCRIPTION:Скоро увидимся! ${city}, ${place}.
-      LOCATION:${place}, ${city}
-      STATUS:CONFIRMED
-      SEQUENCE:0
-      TRANSP:OPAQUE
-      END:VEVENT
-      END:VCALENDAR`;
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:${Date.now()}@sweet-dreams
+DTSTAMP:${formatDateLocal(new Date())}
+DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
+DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
+SUMMARY:Встреча 💖
+DESCRIPTION:Скоро увидимся! ${city}, ${place}.
+LOCATION:${place}, ${city}
+STATUS:CONFIRMED
+SEQUENCE:0
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR`;
 
-    // Отправка через Resend
-    const data = await resend.emails.send({
-      from: process.env.FROM_EMAIL,
+    const msg = {
       to: toEmail,
+      from: process.env.FROM_EMAIL, // должен быть подтверждённый email в SendGrid
       subject: 'Событие для календаря 💌',
       html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
       attachments: [
         {
-          filename: 'event.ics',
           content: Buffer.from(icsString).toString('base64'),
-          type: 'text/calendar; charset=UTF-8; method=REQUEST'
+          filename: 'event.ics',
+          type: 'text/calendar; charset=UTF-8; method=REQUEST',
+          disposition: 'attachment'
         }
       ]
-    });
+    };
 
-    console.log('Email sent:', data);
-    return res.json({ success: true, id: data.id });
+    await sgMail.send(msg);
+
+    console.log('Email sent successfully');
+    return res.json({ success: true });
   } catch (e) {
-    console.error('Resend error:', e);
+    console.error('SendGrid error:', e.response?.body || e);
     return res.status(500).json({ error: 'Ошибка отправки письма' });
   }
 });
