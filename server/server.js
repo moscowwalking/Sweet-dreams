@@ -13,7 +13,7 @@ const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
   'http://localhost:3000',
-  'https://moscowwalking.github.io/Sweet-dreams/'
+  'https://moscowwalking.github.io' 
 ];
 
 app.use(cors({
@@ -91,11 +91,11 @@ END:VCALENDAR`;
       from: process.env.FROM_EMAIL, // должен быть подтверждённый email в SendGrid
       subject: 'Событие для календаря 💌',
       html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
-      attachments: [
+          attachments: [
         {
-          content: Buffer.from(icsString).toString('base64'),
           filename: 'event.ics',
-          type: 'text/calendar; charset=UTF-8; method=REQUEST',
+          content: Buffer.from(icsString).toString('base64'),
+          type: 'text/calendar', 
           disposition: 'attachment'
         }
       ]
