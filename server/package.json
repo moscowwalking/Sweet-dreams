@@ -11,11 +11,11 @@
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "body-parser": "^1.20.3",
-    "node-fetch": "^3.3.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ics": "^3.7.6",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.14",
     "resend": "^6.1.2"
   },
