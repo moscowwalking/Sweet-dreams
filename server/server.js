@@ -2,39 +2,32 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import sgMail from '@sendgrid/mail';
+import fetch from 'node-fetch'; // важно для отправки запросов к API
 
 const app = express();
-
-// Устанавливаем API Key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
   'http://localhost:3000',
-  'https://moscowwalking.github.io' 
+  'https://moscowwalking.github.io'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      console.log('Blocked by CORS:', origin);
-      return callback(new Error('Not allowed by CORS'));
-    }
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    console.log('Blocked by CORS:', origin);
+    return callback(new Error('Not allowed by CORS'));
   }
 }));
 
 app.use(bodyParser.json());
 
 app.get('/', (_, res) => {
-  res.send('ICS mail server with SendGrid is running ✅');
+  res.send('ICS mail server with UniSender is running ✅');
 });
 
-// Форматирование даты
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -58,7 +51,7 @@ app.post('/send-invite', async (req, res) => {
     }
 
     if (!city || !place || !date || !timeStart || !timeEnd) {
-      return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD), timeStart (HH:mm) и timeEnd (HH:mm)' });
+      return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD), timeStart (HH:mm), timeEnd (HH:mm)' });
     }
 
     const [year, month, day] = date.split('-').map(Number);
@@ -86,28 +79,37 @@ TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR`;
 
-    const msg = {
-      to: toEmail,
-      from: process.env.FROM_EMAIL, // должен быть подтверждённый email в SendGrid
-      subject: 'Событие для календаря 💌',
-      html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
-          attachments: [
-        {
-          filename: 'event.ics',
-          content: Buffer.from(icsString).toString('base64'),
-          type: 'text/calendar', 
-          disposition: 'attachment'
-        }
-      ]
-    };
+    // UniSender требует Base64-вложение
+    const base64Ics = Buffer.from(icsString).toString('base64');
 
-    await sgMail.send(msg);
+    const formData = new URLSearchParams();
+    formData.append('api_key', process.env.UNISENDER_API_KEY);
+    formData.append('email', toEmail.join(','));
+    formData.append('sender_name', process.env.FROM_NAME || 'Sweet Dreams');
+    formData.append('sender_email', process.env.FROM_EMAIL);
+    formData.append('subject', 'Событие для календаря 💌');
+    formData.append('body', `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`);
+    formData.append('list_id', process.env.UNISENDER_LIST_ID || '');
+    formData.append('attachments[0][type]', 'text/calendar');
+    formData.append('attachments[0][name]', 'event.ics');
+    formData.append('attachments[0][content]', base64Ics);
 
-    console.log('Email sent successfully');
-    return res.json({ success: true });
+    const response = await fetch('https://api.unisender.com/ru/api/sendEmail?format=json', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    console.log('UniSender response:', result);
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    res.json({ success: true, result });
   } catch (e) {
-    console.error('SendGrid error:', e.response?.body || e);
-    return res.status(500).json({ error: 'Ошибка отправки письма' });
+    console.error('UniSender error:', e);
+    res.status(500).json({ error: e.message || 'Ошибка отправки письма' });
   }
 });
 
