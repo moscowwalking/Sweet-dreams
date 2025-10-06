@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import fetch from 'node-fetch'; // важно для отправки запросов к API
+import fetch from 'node-fetch'; // убедись, что установлен: npm install node-fetch@3
 
 const app = express();
 
@@ -25,9 +25,10 @@ app.use(cors({
 app.use(bodyParser.json());
 
 app.get('/', (_, res) => {
-  res.send('ICS mail server with UniSender is running ✅');
+  res.send('ICS mail server with UniSender Go is running ✅');
 });
 
+// Форматирование даты для ICS
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -45,13 +46,8 @@ app.post('/send-invite', async (req, res) => {
   try {
     const { city, place, date, timeStart, timeEnd, email } = req.body;
 
-    const toEmail = (email || process.env.TO_EMAIL).split(',').map(addr => addr.trim());
-    if (!toEmail.length) {
-      return res.status(400).json({ error: 'Не указан email получателя' });
-    }
-
-    if (!city || !place || !date || !timeStart || !timeEnd) {
-      return res.status(400).json({ error: 'Нужны поля city, place, date (YYYY-MM-DD), timeStart (HH:mm), timeEnd (HH:mm)' });
+    if (!email || !city || !place || !date || !timeStart || !timeEnd) {
+      return res.status(400).json({ error: 'Необходимы поля: email, city, place, date, timeStart, timeEnd' });
     }
 
     const [year, month, day] = date.split('-').map(Number);
@@ -79,37 +75,48 @@ TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR`;
 
-    // UniSender требует Base64-вложение
-    const base64Ics = Buffer.from(icsString).toString('base64');
+    // Формируем тело запроса для UniSender Go
+    const payload = {
+      api_key: process.env.UNISENDER_API_KEY,
+      message: {
+        recipients: [
+          { email: email.trim() }
+        ],
+        subject: `Встреча 💌: ${city}, ${place}`,
+        from_email: process.env.FROM_EMAIL,
+        body: {
+          html: `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
+          plaintext: `Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}`
+        },
+        attachments: [
+          {
+            type: 'text/calendar',
+            name: 'event.ics',
+            content: Buffer.from(icsString).toString('base64')
+          }
+        ]
+      }
+    };
 
-    const formData = new URLSearchParams();
-    formData.append('api_key', process.env.UNISENDER_API_KEY);
-    formData.append('email', toEmail.join(','));
-    formData.append('sender_name', process.env.FROM_NAME || 'Sweet Dreams');
-    formData.append('sender_email', process.env.FROM_EMAIL);
-    formData.append('subject', 'Событие для календаря 💌');
-    formData.append('body', `<p>Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`);
-    formData.append('list_id', process.env.UNISENDER_LIST_ID || '');
-    formData.append('attachments[0][type]', 'text/calendar');
-    formData.append('attachments[0][name]', 'event.ics');
-    formData.append('attachments[0][content]', base64Ics);
-
-    const response = await fetch('https://api.unisender.com/ru/api/sendEmail?format=json', {
+    const response = await fetch('https://go2.unisender.ru/ru/transactional/api/v1/email/send.json', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
-    console.log('UniSender response:', result);
+    const data = await response.json();
+    console.log('UniSender response:', data);
 
-    if (result.error) {
-      throw new Error(result.error);
+    if (response.ok && !data.error) {
+      return res.json({ success: true });
+    } else {
+      console.error('UniSender error:', data);
+      return res.status(500).json({ error: data.error || 'Ошибка UniSender' });
     }
 
-    res.json({ success: true, result });
-  } catch (e) {
-    console.error('UniSender error:', e);
-    res.status(500).json({ error: e.message || 'Ошибка отправки письма' });
+  } catch (err) {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
