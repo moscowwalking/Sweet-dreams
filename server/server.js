@@ -7,7 +7,7 @@ import fs from 'fs';
 
 const app = express();
 
-// ✅ Разрешённые источники для CORS
+// ✅ Разрешённые источники
 const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
@@ -16,9 +16,8 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
     console.log('🚫 Blocked by CORS:', origin);
     return callback(new Error('Not allowed by CORS'));
   }
@@ -30,7 +29,7 @@ app.get('/', (_, res) => {
   res.send('✅ ICS mail server with UniSender Go is running');
 });
 
-// Функция форматирования даты для ICS
+// Форматирование даты для ICS
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -43,24 +42,17 @@ function formatDateLocal(d) {
     pad(d.getSeconds())
   );
 }
+
 app.post('/send-invite', async (req, res) => {
   try {
-    console.log('📩 Получен запрос на /send-invite:');
-    console.log(req.body);
-
     const { city, place, date, timeStart, timeEnd, email } = req.body;
-
-    // Если email не передан — используем тестовый sandbox-адрес
-    const recipientEmail = email?.trim() || 'test@sandbox-7833842-f4b715.unigosendbox.com';
-    if (!email) {
-      console.log('⚠️ Email не передан — используется тестовый sandbox-адрес.');
-    }
 
     if (!city || !place || !date || !timeStart || !timeEnd) {
       return res.status(400).json({ error: 'Необходимы поля: city, place, date, timeStart, timeEnd' });
     }
 
-    // Создаём дату события
+    const recipientEmail = email?.trim() || 'test@sandbox-7833842-f4b715.unigosendbox.com';
+
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = timeStart.split(':').map(Number);
     const [endHour, endMinute] = timeEnd.split(':').map(Number);
@@ -68,7 +60,6 @@ app.post('/send-invite', async (req, res) => {
     const start = new Date(year, month - 1, day, startHour, startMinute);
     const end = new Date(year, month - 1, day, endHour, endMinute);
 
-    // Формируем ICS-файл
     const icsString = `BEGIN:VCALENDAR
 VERSION:2.0
 CALSCALE:GREGORIAN
@@ -87,81 +78,58 @@ TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR`;
 
-    // Сохраняем временно файл для логов (опционально)
     fs.writeFileSync('/tmp/invite.ics', icsString);
-    console.log('📎 Файл invite.ics создан успешно');
 
-    // ⚠️ ИСПРАВЛЕННАЯ СТРУКТУРА ЗАПРОСА
+    // ✅ Корректная структура запроса UniSender Go
     const payload = {
-      api_key: process.env.UNISENDER_API_KEY,
-      message: {
-        recipients: [
-          {
-            email: recipientEmail,
-            substitutions: {
-              to_name: "Дорогой друг" // Можно динамически передавать имя
-            }
-          }
-        ],
-        body: {
-          html: `<p>Событие: <b>${city}</b>, ${place}, ${date} с ${timeStart} до ${timeEnd}</p>`,
-          plaintext: `Событие: ${city}, ${place}, ${date} с ${timeStart} до ${timeEnd}`
-        },
-        subject: `💌 Встреча: ${city}, ${place}`,
-        from_email: process.env.FROM_EMAIL || 'test@sandbox-7833842-f4b715.unigosendbox.com',
-        from_name: "Sweet Dreams",
-        track_links: 0,
-        track_read: 0,
-        attachments: [
-          {
-            type: 'text/calendar',
-            name: 'invite.ics',
-            content: Buffer.from(icsString).toString('base64')
-          }
-        ]
+  api_key: process.env.UNISENDER_API_KEY, // сюда ключ
+  message: {
+    recipients: [
+      {
+        email: recipientEmail,
+        substitutions: { to_name: "Друг" },
+        metadata: { campaign_id: "test-invite" }
       }
-    };
+    ],
+    subject: `💌 Встреча: ${city}, ${place}`,
+    from_email: 'test@sandbox-7833842-f4b715.unigosendbox.com', // sandbox
+    from_name: 'Sweet Dreams',
+    body: {
+      html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
+      plaintext: `Скоро увидимся в ${city}, ${place}, ${date}, ${timeStart}–${timeEnd}`
+    },
+    attachments: [
+      {
+        type: 'text/calendar',
+        name: 'invite.ics',
+        content: Buffer.from(icsString).toString('base64')
+      }
+    ]
+  }
+};
 
     console.log('🚀 Отправляем письмо через UniSender...');
-    console.log('Payload:', JSON.stringify(payload, null, 2));
-
     const response = await fetch('https://go2.unisender.ru/ru/transactional/api/v1/email/send.json', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        
+      headers: {
+        'Authorization': `Bearer ${process.env.UNISENDER_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
 
-    let data;
-    try {
-      data = await response.json();
-    } catch (err) {
-      const text = await response.text();
-      console.error('❌ UniSender не вернул JSON. Ответ:', text);
-      return res.status(500).json({ error: 'Ошибка формата ответа UniSender' });
-    }
+    const data = await response.json();
+    console.log('📨 Ответ UniSender:', data);
 
-    console.log('📨 UniSender ответ:', data);
-
-    if (response.ok) {
-      console.log('✅ Письмо успешно отправлено.');
-      return res.json({ 
-        success: true, 
-        message: "Письмо отправлено успешно",
-        unisender_response: data 
-      });
+    if (response.ok && !data.error) {
+      res.json({ success: true, message: 'Письмо успешно отправлено!', data });
     } else {
-      console.error('💥 UniSender error:', data);
-      return res.status(500).json({ 
-        error: data.error || 'Ошибка UniSender',
-        details: data 
-      });
+      res.status(500).json({ error: data.error?.message || 'Ошибка UniSender', details: data });
     }
-
   } catch (err) {
-    console.error('🔥 Server error:', err);
+    console.error('🔥 Ошибка сервера:', err);
     res.status(500).json({ error: 'Ошибка сервера: ' + err.message });
   }
 });
+
+app.listen(3000, () => console.log('🚀 Server running on port 3000'));
