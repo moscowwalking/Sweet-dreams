@@ -53,7 +53,7 @@ app.post('/send-invite', async (req, res) => {
 
     const recipientEmails = [
     email?.trim() || 'n.s.55@inbox.ru', // 1️⃣ Основной email (из формы или дефолтный)
-    'amck69@mail.ru'                   // 2️⃣ Второй адрес получателя
+    'oda2002@mail.ru'                   // 2️⃣ Второй адрес получателя
 ];
 
     const [year, month, day] = date.split('-').map(Number);
