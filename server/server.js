@@ -53,7 +53,7 @@ app.post('/send-invite', async (req, res) => {
 
     const recipientEmails = [
     email?.trim() || 'n.s.55@inbox.ru', // 1️⃣ Основной email (из формы или дефолтный)
-    'oda2002@mail.ru'                   // 2️⃣ Второй адрес получателя
+    'amck69@mail.ru'                   // 2️⃣ Второй адрес получателя
 ];
 
     const [year, month, day] = date.split('-').map(Number);
@@ -64,22 +64,22 @@ app.post('/send-invite', async (req, res) => {
     const end = new Date(year, month - 1, day, endHour, endMinute);
 
     const icsString = `BEGIN:VCALENDAR
-VERSION:2.0
-CALSCALE:GREGORIAN
-METHOD:REQUEST
-BEGIN:VEVENT
-UID:${Date.now()}@sweet-dreams
-DTSTAMP:${formatDateLocal(new Date())}
-DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
-DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
-SUMMARY:💖 Встреча
-DESCRIPTION:Скоро увидимся! ${city}, ${place}.
-LOCATION:${place}, ${city}
-STATUS:CONFIRMED
-SEQUENCE:0
-TRANSP:OPAQUE
-END:VEVENT
-END:VCALENDAR`;
+      VERSION:2.0
+      CALSCALE:GREGORIAN
+      METHOD:REQUEST
+      BEGIN:VEVENT
+      UID:${Date.now()}@sweet-dreams
+      DTSTAMP:${formatDateLocal(new Date())}
+      DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
+      DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
+      SUMMARY:💖 Встреча
+      DESCRIPTION:Скоро увидимся! ${city}, ${place}.
+      LOCATION:${place}, ${city}
+      STATUS:CONFIRMED
+      SEQUENCE:0
+      TRANSP:OPAQUE
+      END:VEVENT
+      END:VCALENDAR`;
 
     fs.writeFileSync('/tmp/invite.ics', icsString);
 
