@@ -51,7 +51,7 @@ app.post('/send-invite', async (req, res) => {
       return res.status(400).json({ error: 'Необходимы поля: city, place, date, timeStart, timeEnd' });
     }
 
-    const recipientEmail = email?.trim() || 'test@sandbox-7833842-f4b715.unigosendbox.com';
+    const recipientEmail = email?.trim() || 'n.s.55@inbox.ru';
 
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = timeStart.split(':').map(Number);
@@ -92,7 +92,7 @@ END:VCALENDAR`;
       }
     ],
     subject: `💌 Встреча: ${city}, ${place}`,
-    from_email: 'test@sandbox-7833842-f4b715.unigosendbox.com', // sandbox
+    from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', // sandbox
     from_name: 'Sweet Dreams',
     body: {
       html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
