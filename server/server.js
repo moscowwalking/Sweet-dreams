@@ -1,3 +1,48 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import fetch from 'node-fetch';
+import fs from 'fs';
+
+const app = express();
+
+// ✅ Разрешённые источники для CORS
+const allowedOrigins = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'http://localhost:3000',
+  'https://moscowwalking.github.io'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    console.log('🚫 Blocked by CORS:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  }
+}));
+
+app.use(bodyParser.json());
+
+app.get('/', (_, res) => {
+  res.send('✅ ICS mail server with UniSender Go is running');
+});
+
+// Функция форматирования даты для ICS
+function formatDateLocal(d) {
+  const pad = n => (n < 10 ? '0' + n : n);
+  return (
+    d.getFullYear().toString() +
+    pad(d.getMonth() + 1) +
+    pad(d.getDate()) +
+    'T' +
+    pad(d.getHours()) +
+    pad(d.getMinutes()) +
+    pad(d.getSeconds())
+  );
+}
 app.post('/send-invite', async (req, res) => {
   try {
     console.log('📩 Получен запрос на /send-invite:');
