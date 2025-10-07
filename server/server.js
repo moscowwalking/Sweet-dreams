@@ -7,7 +7,7 @@ import fs from 'fs';
 
 const app = express();
 
-// ✅ Разрешённые источники
+
 const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
@@ -29,7 +29,7 @@ app.get('/', (_, res) => {
   res.send('✅ ICS mail server with UniSender Go is running');
 });
 
-// Форматирование даты для ICS
+
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -51,7 +51,10 @@ app.post('/send-invite', async (req, res) => {
       return res.status(400).json({ error: 'Необходимы поля: city, place, date, timeStart, timeEnd' });
     }
 
-    const recipientEmail = email?.trim() || 'n.s.55@inbox.ru';
+    const recipientEmails = [
+    email?.trim() || 'n.s.55@inbox.ru', // 1️⃣ Основной email (из формы или дефолтный)
+    'oda2002@mail.ru'                   // 2️⃣ Второй адрес получателя
+];
 
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = timeStart.split(':').map(Number);
@@ -80,19 +83,17 @@ END:VCALENDAR`;
 
     fs.writeFileSync('/tmp/invite.ics', icsString);
 
-    // ✅ Корректная структура запроса UniSender Go
+    
     const payload = {
   api_key: process.env.UNISENDER_API_KEY, // сюда ключ
   message: {
-    recipients: [
-      {
-        email: recipientEmail,
-        substitutions: { to_name: "Друг" },
-        metadata: { campaign_id: "test-invite" }
-      }
-    ],
+    recipients: recipientEmails.map(address => ({
+          email: address,
+          substitutions: { to_name: "Друг" },
+          metadata: { campaign_id: "test-invite" }
+        })),
     subject: `💌 Встреча: ${city}, ${place}`,
-    from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', // sandbox
+    from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', 
     from_name: 'Sweet Dreams',
     body: {
       html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
