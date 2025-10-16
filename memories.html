@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Memories — Карта воспоминаний</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+
+  <style>
+    :root { --pink:#ff69b4; --hotpink:#ff1493; }
+    body{
+      margin:0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(180deg,#fff0f5,#ffeef8);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+    }
+.leaflet-control-attribution {
+  display: none !important;
+}
+    .title {
+      margin:28px 0 6px;
+      font-size:2rem;
+      color:#fff;
+      text-shadow:1px 1px 6px rgba(0,0,0,0.35);
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+    .title span { display:inline-block; transition:transform .25s ease; }
+    .title span:hover { transform:scale(1.2); color:var(--pink); }
+
+    #map {
+      width: 92vw;
+      max-width: 1000px;
+      height: 80vh;
+      max-height: 800px;
+      border-radius:12px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.24);
+      overflow:hidden;
+      position:relative;
+    }
+
+    /* Upload panel */
+    .upload-panel {
+      position: absolute;
+      top:12px;
+      left:12px;
+      z-index:600;
+      background: rgba(255,255,255,0.95);
+      padding:8px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .upload-btn {
+      background: linear-gradient(90deg,var(--pink),var(--hotpink));
+      color:white;
+      border:none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .drop-area {
+      min-width:220px;
+      padding:8px;
+      border-radius:8px;
+      border:2px dashed rgba(200,200,200,0.6);
+      text-align:center;
+      font-size:0.9rem;
+      color:#444;
+      transition:background .15s ease, border-color .15s ease;
+    }
+    .drop-area.dragover { background: rgba(255,240,250,0.8); border-color: var(--hotpink); }
+
+    /* Simple gallery modal */
+    .overlay {
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.6);
+      z-index:1200;
+      align-items:center;
+      justify-content:center;
+    }
+    .gallery {
+      max-width:92vw;
+      max-height:86vh;
+      background:white;
+      border-radius:12px;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    }
+    .gallery .row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .gallery img {
+      max-width:100%;
+      max-height:64vh;
+      border-radius:8px;
+      display:block;
+      margin:0 auto;
+    }
+    .thumbs { display:flex; gap:8px; overflow:auto; }
+    .thumbs img { width:84px; height:84px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
+    .thumbs img.active { border-color:var(--pink); transform:scale(1.03); }
+
+
+    .hint {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      z-index: 600;
+      background: rgba(255,255,255,0.9);
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:0.9rem;
+      box-shadow:0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    /* small screens */
+    @media (max-width:640px){
+      .title { font-size:1.5rem }
+      .drop-area { min-width:150px; font-size:0.85rem; }
+      .thumbs img { width:60px; height:60px; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="title">
+    <span>К</span><span>а</span><span>р</span><span>т</span><span>а</span>
+    <span> </span><span>в</span><span>о</span><span>с</span><span>п</span><span>о</span><span>м</span><span>и</span><span>н</span><span>а</span><span>н</span><span>и</span><span>й</span>
+  </h1>
+
+  <div id="map">
+    <div class="upload-panel" id="uploadPanel">
+      <label class="upload-btn" for="fileInput">Загрузить фото</label>
+      <input id="fileInput" type="file" accept="image/*,image/heif,image/heic" multiple style="display:none">
+      <div id="dropArea" class="drop-area">Перетащи фото сюда или нажми «Загрузить»</div>
+    </div>
+
+    <div class="hint">Кликни на маркер — откроется галерея</div>
+  </div>
+
+ 
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="gallery" role="dialog" aria-modal="true">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <strong id="placeTitle">Место</strong>
+        <div>
+          <button id="closeGallery" style="background:var(--pink);color:white;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;">Закрыть</button>
+        </div>
+      </div>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+        <img id="galleryMain" src="" alt="Фото">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+  </div>
+
+ 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+ 
+  <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+
+  <script>
+   
+
+    const map = L.map('map', { zoomControl: false  }).setView([55.75, 37.61], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    L.control.zoom({
+  position: 'bottomright' // варианты: 'topleft', 'topright', 'bottomleft', 'bottomright'
+}).addTo(map);
+
+    const markers = L.markerClusterGroup();
+    map.addLayer(markers);
+
+    
+    const placesStore = new Map(); 
+
+    function coordsKey(lat, lon, precision = 4){
+      return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
+    }
+
+   
+    function createPlaceMarker(place){
+     
+      const [lat, lon] = place.coords;
+      const iconHtml = `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <img src="${place.photos[0].thumbUrl}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
+          <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;min-width:44px;text-align:center">${place.photos.length}</div>
+        </div>
+      `;
+      const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
+
+      const marker = L.marker([lat, lon], { icon });
+      marker.on('click', () => openGallery(place));
+      marker.bindTooltip(place.title || `${place.photos.length} фото`, { direction: 'top' });
+
+      return marker;
+    }
+
+  
+    async function loadPlaces(){
+      try {
+        const res = await fetch('places.json');
+        if(!res.ok) return;
+        const data = await res.json(); 
+      
+        for(const photo of data){
+          if(!photo.coords) continue;
+          const key = coordsKey(photo.coords[0], photo.coords[1]);
+          let place = placesStore.get(key);
+          if(!place){
+            place = { id: key, coords: photo.coords.slice(), photos: [], title: photo.placeTitle || null };
+            placesStore.set(key, place);
+          }
+          place.photos.push(photo);
+        }
+      
+        for(const [k, place] of placesStore.entries()){
+          const marker = createPlaceMarker(place);
+          place.marker = marker;
+          markers.addLayer(marker);
+        }
+      } catch (err){
+        console.warn('places load fail', err);
+      }
+    }
+
+    loadPlaces();
+
+    
+    const overlay = document.getElementById('overlay');
+    const galleryMain = document.getElementById('galleryMain');
+    const thumbs = document.getElementById('thumbs');
+    const placeTitleEl = document.getElementById('placeTitle');
+
+    function openGallery(place){
+      placeTitleEl.textContent = place.title || `Место — ${place.coords[0].toFixed(4)}, ${place.coords[1].toFixed(4)}`;
+      thumbs.innerHTML = '';
+      galleryMain.src = place.photos[0].origUrl || place.photos[0].thumbUrl;
+      place.photos.forEach((p, idx) => {
+        const img = document.createElement('img');
+        img.src = p.thumbUrl;
+        img.dataset.idx = idx;
+        if(idx === 0) img.classList.add('active');
+        img.onclick = () => {
+          document.querySelectorAll('.thumbs img').forEach(t => t.classList.remove('active'));
+          img.classList.add('active');
+          galleryMain.src = place.photos[idx].origUrl || place.photos[idx].thumbUrl;
+        };
+        thumbs.appendChild(img);
+      });
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden','false');
+    }
+
+    document.getElementById('closeGallery').addEventListener('click', () => {
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden','true');
+    });
+
+    const fileInput = document.getElementById('fileInput');
+    const dropArea = document.getElementById('dropArea');
+
+  
+    ['dragenter','dragover'].forEach(ev => {
+      dropArea.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropArea.classList.add('dragover'); });
+    });
+    ['dragleave','drop'].forEach(ev => {
+      dropArea.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropArea.classList.remove('dragover'); });
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+      const files = Array.from(e.dataTransfer.files || []);
+      handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []);
+      handleFiles(files);
+      fileInput.value = ''; 
+    });
+
+    async function handleFiles(files){
+      for(const file of files){
+       
+        let gps = null;
+        try {
+        
+          gps = await exifr.gps(file).catch(()=>null);
+        } catch(e){ gps = null; }
+
+        if(gps && gps.latitude && gps.longitude){
+
+          const tempKey = coordsKey(gps.latitude, gps.longitude, 5) + '-tmp-' + Date.now();
+          const tempPlace = { id: tempKey, coords: [gps.latitude, gps.longitude], photos: [{ thumbUrl: URL.createObjectURL(file), origUrl: URL.createObjectURL(file) }], title: 'Загруженное фото (черновик)' };
+          const tempMarker = createPlaceMarker(tempPlace);
+          markers.addLayer(tempMarker);
+        
+          map.setView([gps.latitude, gps.longitude], Math.max(map.getZoom(), 13), { animate: true });
+          // send to server
+          await uploadFileToServer(file, gps, tempPlace, tempMarker);
+        } else {
+        
+          alert('У фото нет геотегов. Нажми на карту, чтобы указать место для этого фото.');
+        
+          const coords = await waitForMapClick();
+          if(!coords) continue;
+          const tmpPlace = { id: 'manual-'+Date.now(), coords: coords, photos: [{ thumbUrl: URL.createObjectURL(file), origUrl: URL.createObjectURL(file)}], title: 'Ручной выбор места' };
+          const tmpMarker = createPlaceMarker(tmpPlace);
+          markers.addLayer(tmpMarker);
+          map.setView(coords, 14, { animate: true });
+          await uploadFileToServer(file, { latitude: coords[0], longitude: coords[1] }, tmpPlace, tmpMarker);
+        }
+      }
+    }
+
+
+    function waitForMapClick(){
+      return new Promise((resolve) => {
+        const onClick = (e) => {
+          map.off('click', onClick);
+          resolve([e.latlng.lat, e.latlng.lng]);
+        };
+       
+        const timeout = setTimeout(() => {
+          map.off('click', onClick);
+          resolve(null);
+        }, 30000);
+        map.on('click', onClick);
+      });
+    }
+
+
+    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker){
+      try {
+        const fd = new FormData();
+        fd.append('photo', file);
+        if(gps) fd.append('gps', JSON.stringify(gps));
+       
+        const resp = await fetch('/upload', { method: 'POST', body: fd });
+        if(!resp.ok) throw new Error('upload failed');
+        const res = await resp.json();
+       
+        const photo = res.photo;
+  
+        markers.removeLayer(tmpMarker);
+
+   
+        const lat = photo.coords[0], lon = photo.coords[1];
+        const key = coordsKey(lat, lon);
+        let place = placesStore.get(key);
+        if(!place){
+          place = { id: key, coords: [lat, lon], photos: [], title: photo.placeTitle || null };
+          placesStore.set(key, place);
+        }
+        place.photos.push(photo);
+
+       
+        if(place.marker) markers.removeLayer(place.marker);
+        const newMarker = createPlaceMarker(place);
+        place.marker = newMarker;
+        markers.addLayer(newMarker);
+
+        
+        map.setView([lat, lon], Math.max(map.getZoom(), 13), { animate: true });
+        openGallery(place);
+
+      } catch (err){
+        console.error('upload error', err);
+        alert('Ошибка загрузки. Проверь серверный endpoint /upload и CORS.');
+        // cleanup tmp marker
+        tmpMarker && markers.removeLayer(tmpMarker);
+      }
+    }
+
+    // initial note: ensure server handles HEIC/HEIF and returns the expected JSON structure.
+    // Example response shape expected:
+    // { photo: { id: 'uuid', coords: [lat,lon], thumbUrl: 'https://...', origUrl: 'https://...', placeTitle: '...' } }
+
+    // for local debug: if /upload not implemented, add a mock handler (optional)
+    // uncomment to test locally without server:
+    /*
+    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker){
+      // simulate server behavior
+      await new Promise(r=>setTimeout(r,800));
+      const fakePhoto = {
+        id: 'fake-' + Date.now(),
+        coords: tmpPlace.coords,
+        thumbUrl: tmpPlace.photos[0].thumbUrl,
+        origUrl: tmpPlace.photos[0].origUrl,
+        placeTitle: 'Тестовое место'
+      };
+      markers.removeLayer(tmpMarker);
+      const key = coordsKey(fakePhoto.coords[0], fakePhoto.coords[1]);
+      let place = placesStore.get(key);
+      if(!place){
+        place = { id:key, coords: fakePhoto.coords, photos: [], title: fakePhoto.placeTitle };
+        placesStore.set(key, place);
+      }
+      place.photos.push(fakePhoto);
+      if(place.marker) markers.removeLayer(place.marker);
+      place.marker = createPlaceMarker(place);
+      markers.addLayer(place.marker);
+      openGallery(place);
+    }
+    */
+
+    // optional: small helper to center on user's location
+    map.on('locationfound', (e) => {
+      // nothing by default
+    });
+
+    // mobile friendly: prompt user to allow geolocation for better UX
+    // map.locate({ setView:false, maxZoom: 13 });
+
+    // allow pressing Esc to close gallery
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') document.getElementById('closeGallery').click();
+    });
+
+  </script>
+</body>
+</html>
