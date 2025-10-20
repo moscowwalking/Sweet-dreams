@@ -5,6 +5,51 @@
   <title>walking ураа</title>
   <link rel="stylesheet" href="style.css">
 </head>
+<style>
+    #memoriesButton {
+      background: linear-gradient(90deg, #ffa6c9, #ffc3e0);
+      color: white;
+      font-size: 1.1em;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 25px;
+      margin-top: 35px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px rgba(255, 192, 203, 0.6);
+    }
+
+    #memoriesButton:hover {
+      transform: scale(1.08);
+      background: linear-gradient(90deg, #ff8fa3, #ffb6c1);
+      box-shadow: 0 0 20px rgba(255, 182, 193, 0.8);
+    }
+    
+    /* Новый класс для пульсирующей надписи */
+    .pulsing-text {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Изменения для расположения кнопок */
+    .buttons-row {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+    }
+    
+    .buttons-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+</style>
+
 <body class="landing" data-emojis="love">
 
   <div class="egor-wrapper">
@@ -27,14 +72,20 @@
     <div class="music-button-container">
       <button id="play-audio" class="main-button play-icon pulse">Нажмиии сюда!!!</button>
     </div>
-    <div class="buttons">
-      <div class="button-wrapper">
-        <a href="choise.html" class="main-button love-hover heart-icon pulse">Летс гоууу</a>
-        <div class="tooltip pulse">Летс гоу!!! Сюда блиииииин💅💅</div> 
+    <div class="buttons-column">
+      <div class="buttons-row">
+        <div class="button-wrapper">
+          <a href="choise.html" class="main-button love-hover heart-icon pulse">Летс гоууу</a>
+          <div class="tooltip pulse pulsing-text">Летс гоу!!! Сюда блиииииин💅💅</div> 
+        </div>
+        <div class="button-wrapper">
+          <a href="sadd.html" class="main-button sad-hover sad-icon pulse">Ноууу</a>
+          <div class="tooltip pulse pulsing-text">Дипрессия в 0 лет... 😔😔</div> 
+        </div>
       </div>
       <div class="button-wrapper">
-        <a href="sadd.html" class="main-button sad-hover sad-icon pulse">Ноууу</a>
-        <div class="tooltip pulse">Дипрессия в 0 лет... 😔😔</div> 
+        <a href="memories.html" id="memoriesButton" class="main-button memory-hover map-icon pulse">🗺️ Карта воспоминаний</a>
+        <div class="tooltip pulse pulsing-text">Посмотрим, где было весело 😍</div>
       </div>
     </div>
   </div>

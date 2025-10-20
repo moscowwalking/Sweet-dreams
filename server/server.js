@@ -4,6 +4,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import fetch from 'node-fetch';
 import fs from 'fs';
+import AWS from 'aws-sdk';
 
 const app = express();
 
@@ -29,6 +30,12 @@ app.get('/', (_, res) => {
   res.send('✅ ICS mail server with UniSender Go is running');
 });
 
+const s3 = new AWS.S3({
+  endpoint: process.env.YANDEX_ENDPOINT,
+  accessKeyId: process.env.YANDEX_ACCESS_KEY,
+  secretAccessKey: process.env.YANDEX_SECRET_KEY,
+  region: 'ru-central1',
+});
 
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
@@ -132,5 +139,38 @@ app.post('/send-invite', async (req, res) => {
     res.status(500).json({ error: 'Ошибка сервера: ' + err.message });
   }
 });
+
+app.post('/upload-photo', async (req, res) => {
+  try {
+    const { imageBase64, filename } = req.body;
+
+    if (!imageBase64 || !filename) {
+      return res.status(400).json({ error: 'Необходимы поля: imageBase64, filename' });
+    }
+
+    const buffer = Buffer.from(imageBase64, 'base64');
+
+    const params = {
+      Bucket: process.env.YANDEX_BUCKET,
+      Key: filename,
+      Body: buffer,
+      ContentType: 'image/jpeg',
+      ACL: 'public-read',
+    };
+
+    const upload = await s3.upload(params).promise();
+    console.log('✅ Фото загружено:', upload.Location);
+
+    res.json({
+      success: true,
+      message: 'Фото успешно загружено!',
+      url: upload.Location,
+    });
+  } catch (err) {
+    console.error('🔥 Ошибка загрузки фото:', err);
+    res.status(500).json({ error: 'Ошибка загрузки: ' + err.message });
+  }
+});
+
 
 app.listen(3000, () => console.log('🚀 Server running on port 3000'));

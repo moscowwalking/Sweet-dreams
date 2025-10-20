@@ -360,7 +360,7 @@
         fd.append('photo', file);
         if(gps) fd.append('gps', JSON.stringify(gps));
        
-        const resp = await fetch('/upload', { method: 'POST', body: fd });
+        const resp = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', { method: 'POST', body: fd });
         if(!resp.ok) throw new Error('upload failed');
         const res = await resp.json();
        
