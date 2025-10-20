@@ -190,66 +190,64 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ error: 'Файл не загружен' });
     }
 
+    // определяем тип файла сразу
+    let detectedMime = req.file.mimetype;
+
     console.log('📸 Received file:', {
       originalname: req.file.originalname,
       mimetype: detectedMime,
       size: req.file.size
     });
 
-        // Проверяем формат файла
-      if (
-        !SUPPORTED_FORMATS.includes(detectedMime) &&
-        detectedMime !== 'application/octet-stream'
-      ) {
-        return res.status(400).json({ error: `Неподдерживаемый формат файла: ${detectedMime}` });
-      }
+    // если пришёл неизвестный формат, пробуем определить по расширению
+    if (detectedMime === 'application/octet-stream') {
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      if (ext === '.heic' || ext === '.heif') detectedMime = 'image/heic';
+      else if (ext === '.jpg' || ext === '.jpeg') detectedMime = 'image/jpeg';
+      else if (ext === '.png') detectedMime = 'image/png';
+      else if (ext === '.gif') detectedMime = 'image/gif';
+      else if (ext === '.webp') detectedMime = 'image/webp';
+    }
 
-      // Если mimetype неизвестен (octet-stream), пробуем определить по расширению
-      let detectedMime = detectedMime;
-      if (detectedMime === 'application/octet-stream') {
-        const ext = path.extname(req.file.originalname).toLowerCase();
-        if (ext === '.heic' || ext === '.heif') detectedMime = 'image/heic';
-        else if (ext === '.jpg' || ext === '.jpeg') detectedMime = 'image/jpeg';
-        else if (ext === '.png') detectedMime = 'image/png';
-        else if (ext === '.gif') detectedMime = 'image/gif';
-        else if (ext === '.webp') detectedMime = 'image/webp';
-      }
+    // проверяем формат файла
+    if (!SUPPORTED_FORMATS.includes(detectedMime)) {
+      return res.status(400).json({ error: `Неподдерживаемый формат файла: ${detectedMime}` });
+    }
 
-    // Получаем GPS данные из запроса
+    // получаем координаты из тела запроса
     let gps = null;
     if (req.body.gps) {
       try {
         gps = JSON.parse(req.body.gps);
         console.log('📍 GPS from request:', gps);
-      } catch (e) {
-        console.log('Invalid GPS data');
+      } catch {
+        console.log('⚠️ Invalid GPS data');
       }
     }
 
+    // буфер и финальный тип
     let fileBuffer;
     let finalMimetype = detectedMime;
 
-    // Конвертируем HEIC/HEIF в JPEG
+    // конвертируем HEIC/HEIF в JPEG
     if (detectedMime === 'image/heic' || detectedMime === 'image/heif') {
       try {
         console.log('🔄 Converting HEIC to JPEG...');
-        fileBuffer = await sharp(req.file.path)
-          .jpeg({ quality: 90 })
-          .toBuffer();
+        fileBuffer = await sharp(req.file.path).jpeg({ quality: 90 }).toBuffer();
         finalMimetype = 'image/jpeg';
         console.log('✅ HEIC converted to JPEG');
-      } catch (conversionError) {
-        console.error('HEIC conversion failed:', conversionError);
-        // Если конвертация не удалась, пробуем загрузить оригинал
+      } catch (err) {
+        console.error('❌ HEIC conversion failed:', err);
         fileBuffer = fs.readFileSync(req.file.path);
       }
     } else {
       fileBuffer = fs.readFileSync(req.file.path);
     }
 
+    // имя файла и параметры для S3
     const fileExtension = finalMimetype.split('/')[1];
     const filename = `memory-${Date.now()}.${fileExtension}`;
-    
+
     const s3Params = {
       Bucket: process.env.YANDEX_BUCKET,
       Key: filename,
@@ -261,7 +259,6 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
     const s3Upload = await s3.upload(s3Params).promise();
     console.log('✅ Photo uploaded to Yandex Cloud:', s3Upload.Location);
 
-    // Создаем объект фото
     const photo = {
       id: Date.now().toString(),
       coords: gps ? [gps.latitude, gps.longitude] : [55.75, 37.61],
@@ -273,33 +270,21 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
       originalFilename: req.file.originalname
     };
 
-    console.log('📸 Created photo object:', photo);
-
-    // Добавляем фото в places.json
     initPlacesFile();
     const places = JSON.parse(fs.readFileSync(PLACES_FILE, 'utf8'));
     places.push(photo);
     fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
 
-    // Бэкапим в S3 после каждой загрузки
     await backupPlacesToS3();
-
-    // Удаляем временный файл
     fs.unlinkSync(req.file.path);
 
-    res.json({ 
-      success: true, 
-      photo: photo 
-    });
+    res.json({ success: true, photo });
 
   } catch (error) {
     console.error('Upload error:', error);
-    
-    // Удаляем временный файл в случае ошибки
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    
     res.status(500).json({ error: 'Ошибка загрузки файла: ' + error.message });
   }
 });
