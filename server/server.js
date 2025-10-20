@@ -56,8 +56,12 @@ const s3 = new AWS.S3({
   region: 'ru-central1',
 });
 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Файл для хранения мест
-const PLACES_FILE = 'places.json';
+const PLACES_FILE = path.join(__dirname, 'places.json');
 
 // Поддерживаемые форматы изображений
 const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heif', 'image/heic'];
@@ -439,9 +443,10 @@ app.post('/upload-photo', async (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 3000;
 // Восстанавливаем данные из S3 при старте
 restorePlacesFromS3().then(() => {
-  app.listen(3000, () => {
+  app.listen(PORT, () => {
     console.log('🚀 Server running on port 3000');
     console.log('📸 Available endpoints:');
     console.log('   GET  /health - проверка здоровья сервера');
