@@ -222,31 +222,73 @@
 
   
     async function loadPlaces(){
-      try {
-        const res = await fetch('places.json');
-        if(!res.ok) return;
-        const data = await res.json(); 
-      
-        for(const photo of data){
-          if(!photo.coords) continue;
-          const key = coordsKey(photo.coords[0], photo.coords[1]);
-          let place = placesStore.get(key);
-          if(!place){
-            place = { id: key, coords: photo.coords.slice(), photos: [], title: photo.placeTitle || null };
-            placesStore.set(key, place);
-          }
-          place.photos.push(photo);
-        }
-      
-        for(const [k, place] of placesStore.entries()){
-          const marker = createPlaceMarker(place);
-          place.marker = marker;
-          markers.addLayer(marker);
-        }
-      } catch (err){
-        console.warn('places load fail', err);
-      }
+  try {
+    console.log('🔄 Loading places from places.json...');
+    
+    const res = await fetch('places.json');
+    console.log('📡 Response status:', res.status);
+    
+    if(!res.ok) {
+      console.warn('❌ Response not OK:', res.status);
+      return;
     }
+    
+    const text = await res.text();
+    console.log('📄 Raw response length:', text.length);
+    
+    if (!text.trim()) {
+      console.warn('⚠️ Empty response from server');
+      return;
+    }
+    
+    const data = JSON.parse(text); 
+    console.log(`✅ Parsed ${data.length} photos`);
+    
+    // Очищаем предыдущие данные
+    placesStore.clear();
+    markers.clearLayers();
+    
+    for(const photo of data){
+      if(!photo.coords) {
+        console.warn('⚠️ Photo without coords:', photo);
+        continue;
+      }
+      
+      const key = coordsKey(photo.coords[0], photo.coords[1]);
+      let place = placesStore.get(key);
+      if(!place){
+        place = { 
+          id: key, 
+          coords: photo.coords.slice(), 
+          photos: [], 
+          title: photo.placeTitle || null 
+        };
+        placesStore.set(key, place);
+      }
+      
+      // ДЕБАГ: проверяем URL фото
+      console.log('📸 Photo URLs:', {
+        thumbUrl: photo.thumbUrl,
+        origUrl: photo.origUrl,
+        filename: photo.filename
+      });
+      
+      place.photos.push(photo);
+    }
+    
+    // Создаем маркеры
+    for(const [k, place] of placesStore.entries()){
+      const marker = createPlaceMarker(place);
+      place.marker = marker;
+      markers.addLayer(marker);
+    }
+    
+    console.log(`🗺️ Created ${placesStore.size} places on map`);
+    
+  } catch (err){
+    console.error('❌ Places load failed:', err);
+  }
+}
 
     loadPlaces();
 
