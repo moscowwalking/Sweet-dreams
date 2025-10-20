@@ -5,15 +5,17 @@ import bodyParser from 'body-parser';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import AWS from 'aws-sdk';
+import multer from 'multer';
+import path from 'path';
 
 const app = express();
-
 
 const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
   'http://localhost:3000',
-  'https://moscowwalking.github.io'
+  'https://moscowwalking.github.io',
+  'https://sweet-dreams-f8nc.onrender.com'
 ];
 
 app.use(cors({
@@ -25,16 +27,140 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
-app.get('/', (_, res) => {
-  res.send('✅ ICS mail server with UniSender Go is running');
+// Настройка multer для временного хранения файлов
+const upload = multer({ 
+  dest: '/tmp/uploads/',
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
 });
+
+// Создаем папку для временных файлов если её нет
+if (!fs.existsSync('/tmp/uploads')) {
+  fs.mkdirSync('/tmp/uploads', { recursive: true });
+}
 
 const s3 = new AWS.S3({
   endpoint: process.env.YANDEX_ENDPOINT,
   accessKeyId: process.env.YANDEX_ACCESS_KEY,
   secretAccessKey: process.env.YANDEX_SECRET_KEY,
   region: 'ru-central1',
+});
+
+// Файл для хранения мест
+const PLACES_FILE = 'places.json';
+
+// Инициализация файла places.json если его нет
+function initPlacesFile() {
+  if (!fs.existsSync(PLACES_FILE)) {
+    fs.writeFileSync(PLACES_FILE, JSON.stringify([]));
+    console.log('✅ Created places.json');
+  }
+}
+
+// Эндпоинт для получения мест
+app.get('/places.json', (req, res) => {
+  initPlacesFile();
+  try {
+    const data = fs.readFileSync(PLACES_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error reading places.json:', error);
+    res.json([]);
+  }
+});
+
+// Эндпоинт для загрузки фото (для карты воспоминаний)
+app.post('/upload', upload.single('photo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Файл не загружен' });
+    }
+
+    console.log('📸 Received file:', req.file.originalname);
+    
+    // Получаем GPS данные из запроса
+    let gps = null;
+    if (req.body.gps) {
+      try {
+        gps = JSON.parse(req.body.gps);
+        console.log('📍 GPS from request:', gps);
+      } catch (e) {
+        console.log('Invalid GPS data');
+      }
+    }
+
+    // Загружаем файл в Yandex Cloud
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const filename = `memory-${Date.now()}-${req.file.originalname}`;
+    
+    const s3Params = {
+      Bucket: process.env.YANDEX_BUCKET,
+      Key: filename,
+      Body: fileBuffer,
+      ContentType: req.file.mimetype,
+      ACL: 'public-read',
+    };
+
+    const s3Upload = await s3.upload(s3Params).promise();
+    console.log('✅ Photo uploaded to Yandex Cloud:', s3Upload.Location);
+
+    // Создаем объект фото
+    const photo = {
+      id: Date.now().toString(),
+      coords: gps ? [gps.latitude, gps.longitude] : [55.75, 37.61],
+      thumbUrl: s3Upload.Location,
+      origUrl: s3Upload.Location,
+      placeTitle: gps ? 'Новое место' : 'Место без геотегов',
+      timestamp: new Date().toISOString(),
+      filename: req.file.originalname
+    };
+
+    // Добавляем фото в places.json
+    initPlacesFile();
+    const places = JSON.parse(fs.readFileSync(PLACES_FILE, 'utf8'));
+    places.push(photo);
+    fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
+
+    // Удаляем временный файл
+    fs.unlinkSync(req.file.path);
+
+    res.json({ 
+      success: true, 
+      photo: photo 
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    
+    // Удаляем временный файл в случае ошибки
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    
+    res.status(500).json({ error: 'Ошибка загрузки файла: ' + error.message });
+  }
+});
+
+// Эндпоинт для получения всех фото
+app.get('/photos', (req, res) => {
+  initPlacesFile();
+  try {
+    const data = fs.readFileSync(PLACES_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (error) {
+    res.json([]);
+  }
+});
+
+// Статические файлы (если нужно)
+app.use('/uploads', express.static('public/uploads'));
+
+// Ваши существующие эндпоинты остаются без изменений
+app.get('/', (_, res) => {
+  res.send('✅ ICS mail server with UniSender Go is running');
 });
 
 function formatDateLocal(d) {
@@ -59,9 +185,9 @@ app.post('/send-invite', async (req, res) => {
     }
 
     const recipientEmails = [
-    email?.trim() || 'n.s.55@inbox.ru', // 1️⃣ Основной email (из формы или дефолтный)
-    'oda2002@mail.ru'                   // 2️⃣ Второй адрес получателя
-];
+      email?.trim() || 'n.s.55@inbox.ru',
+      'oda2002@mail.ru'
+    ];
 
     const [year, month, day] = date.split('-').map(Number);
     const [startHour, startMinute] = timeStart.split(':').map(Number);
@@ -90,31 +216,30 @@ app.post('/send-invite', async (req, res) => {
 
     fs.writeFileSync('/tmp/invite.ics', icsString);
 
-    
     const payload = {
-  api_key: process.env.UNISENDER_API_KEY, // сюда ключ
-  message: {
-    recipients: recipientEmails.map(address => ({
+      api_key: process.env.UNISENDER_API_KEY,
+      message: {
+        recipients: recipientEmails.map(address => ({
           email: address,
           substitutions: { to_name: "Друг" },
           metadata: { campaign_id: "test-invite" }
         })),
-    subject: `💌 Встреча: ${city}, ${place}`,
-    from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', 
-    from_name: 'Sweet Dreams',
-    body: {
-      html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
-      plaintext: `Скоро увидимся в ${city}, ${place}, ${date}, ${timeStart}–${timeEnd}`
-    },
-    attachments: [
-      {
-        type: 'text/calendar',
-        name: 'invite.ics',
-        content: Buffer.from(icsString).toString('base64')
+        subject: `💌 Встреча: ${city}, ${place}`,
+        from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', 
+        from_name: 'Sweet Dreams',
+        body: {
+          html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
+          plaintext: `Скоро увидимся в ${city}, ${place}, ${date}, ${timeStart}–${timeEnd}`
+        },
+        attachments: [
+          {
+            type: 'text/calendar',
+            name: 'invite.ics',
+            content: Buffer.from(icsString).toString('base64')
+          }
+        ]
       }
-    ]
-  }
-};
+    };
 
     console.log('🚀 Отправляем письмо через UniSender...');
     const response = await fetch('https://go2.unisender.ru/ru/transactional/api/v1/email/send.json', {
@@ -172,5 +297,12 @@ app.post('/upload-photo', async (req, res) => {
   }
 });
 
-
-app.listen(3000, () => console.log('🚀 Server running on port 3000'));
+app.listen(3000, () => {
+  console.log('🚀 Server running on port 3000');
+  console.log('📸 Available endpoints:');
+  console.log('   GET  /places.json - карта воспоминаний');
+  console.log('   POST /upload - загрузка фото с GPS');
+  console.log('   GET  /photos - все фото');
+  console.log('   POST /send-invite - отправка приглашений');
+  console.log('   POST /upload-photo - загрузка фото (base64)');
+});
