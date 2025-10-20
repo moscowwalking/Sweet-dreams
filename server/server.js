@@ -192,14 +192,28 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
 
     console.log('📸 Received file:', {
       originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
+      mimetype: detectedMime,
       size: req.file.size
     });
 
-    // Проверяем формат файла
-    if (!SUPPORTED_FORMATS.includes(req.file.mimetype)) {
-      return res.status(400).json({ error: 'Неподдерживаемый формат файла' });
-    }
+        // Проверяем формат файла
+      if (
+        !SUPPORTED_FORMATS.includes(detectedMime) &&
+        detectedMime !== 'application/octet-stream'
+      ) {
+        return res.status(400).json({ error: `Неподдерживаемый формат файла: ${detectedMime}` });
+      }
+
+      // Если mimetype неизвестен (octet-stream), пробуем определить по расширению
+      let detectedMime = detectedMime;
+      if (detectedMime === 'application/octet-stream') {
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if (ext === '.heic' || ext === '.heif') detectedMime = 'image/heic';
+        else if (ext === '.jpg' || ext === '.jpeg') detectedMime = 'image/jpeg';
+        else if (ext === '.png') detectedMime = 'image/png';
+        else if (ext === '.gif') detectedMime = 'image/gif';
+        else if (ext === '.webp') detectedMime = 'image/webp';
+      }
 
     // Получаем GPS данные из запроса
     let gps = null;
@@ -213,10 +227,10 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
     }
 
     let fileBuffer;
-    let finalMimetype = req.file.mimetype;
+    let finalMimetype = detectedMime;
 
     // Конвертируем HEIC/HEIF в JPEG
-    if (req.file.mimetype === 'image/heic' || req.file.mimetype === 'image/heif') {
+    if (detectedMime === 'image/heic' || detectedMime === 'image/heif') {
       try {
         console.log('🔄 Converting HEIC to JPEG...');
         fileBuffer = await sharp(req.file.path)
