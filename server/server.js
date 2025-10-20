@@ -7,7 +7,7 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import multer from 'multer';
 import path from 'path';
-import sharp from 'sharp';
+
 
 const app = express();
 
@@ -230,19 +230,11 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
     let finalMimetype = detectedMime;
 
     // конвертируем HEIC/HEIF в JPEG
-    if (detectedMime === 'image/heic' || detectedMime === 'image/heif') {
-      try {
-        console.log('🔄 Converting HEIC to JPEG...');
-        fileBuffer = await sharp(req.file.path).jpeg({ quality: 90 }).toBuffer();
-        finalMimetype = 'image/jpeg';
-        console.log('✅ HEIC converted to JPEG');
-      } catch (err) {
-        console.error('❌ HEIC conversion failed:', err);
-        fileBuffer = fs.readFileSync(req.file.path);
-      }
-    } else {
-      fileBuffer = fs.readFileSync(req.file.path);
-    }
+   if (detectedMime === 'image/heic' || detectedMime === 'image/heif') {
+  console.log('⚠️ Skipping HEIC conversion, uploading original file');
+  fileBuffer = fs.readFileSync(req.file.path);
+  finalMimetype = 'image/heic';
+}
 
     // имя файла и параметры для S3
     const fileExtension = finalMimetype.split('/')[1];
@@ -264,7 +256,7 @@ app.post('/upload', upload.single('photo'), async (req, res) => {
       coords: gps ? [gps.latitude, gps.longitude] : [55.75, 37.61],
       thumbUrl: s3Upload.Location,
       origUrl: s3Upload.Location,
-      placeTitle: getPlaceName(gps ? [gps.latitude, gps.longitude] : [55.75, 37.61]),
+      placeTitle: getPlaceName(photo.coords),
       timestamp: new Date().toISOString(),
       filename: filename,
       originalFilename: req.file.originalname
