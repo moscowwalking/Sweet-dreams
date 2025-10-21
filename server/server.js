@@ -123,16 +123,17 @@ async function backupPlacesToS3() {
 }
 
 // Функция для восстановления places.json из S3
+// Функция для восстановления places.json из S3
 async function restorePlacesFromS3() {
   try {
     const s3Params = {
       Bucket: process.env.YANDEX_BUCKET,
       Key: 'backups/places.json',
     };
-    
+
     console.log('🔄 Attempting to restore places from S3...');
     const data = await s3.getObject(s3Params).promise();
-    
+
     if (data.Body) {
       fs.writeFileSync(PLACES_FILE, data.Body);
       const places = JSON.parse(data.Body);
@@ -142,12 +143,34 @@ async function restorePlacesFromS3() {
     }
   } catch (error) {
     if (error.code === 'NoSuchKey') {
-      console.log('📝 No backup found in S3, starting fresh');
-      initPlacesFile();
+      console.log('📝 No backup found in S3.');
+      // Проверяем, существует ли локальный файл
+      if (fs.existsSync(PLACES_FILE)) {
+        console.log('🔍 Local places.json exists. Attempting to delete...');
+        try {
+          fs.unlinkSync(PLACES_FILE); // Удаляем локальный файл
+          console.log('🗑️ Local places.json deleted successfully.');
+        } catch (unlinkErr) {
+          console.error('❌ Failed to delete local places.json:', unlinkErr.message);
+          // Даже если не удалось удалить, инициализируем пустой файл
+          initPlacesFile();
+          return;
+        }
+      } else {
+        console.log('🔍 Local places.json does not exist, proceeding to init.');
+      }
+      initPlacesFile(); // Создаём новый пустой файл
+      console.log('📄 Fresh empty places.json initialized.');
     } else {
-      console.error('❌ Restore failed:', error.message);
-      // Создаем файл даже при ошибке восстановления
-      initPlacesFile();
+      console.error('❌ Restore from S3 failed with error:', error.message);
+      // Если восстановление из S3 не удалось по другой причине, всё равно убедимся, что файл существует
+      if (!fs.existsSync(PLACES_FILE)) {
+        console.log('🔄 Initializing places.json as it does not exist after error.');
+        initPlacesFile();
+      } else {
+        console.log('⚠️ Keeping existing local places.json after S3 error.');
+        
+      }
     }
   }
 }
