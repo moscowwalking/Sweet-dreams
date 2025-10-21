@@ -373,7 +373,8 @@
    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker) {
   try {
     const fd = new FormData();
-    fd.append('file', file);
+    // 👇 если сервер ждёт 'photo' (а не 'file')
+    fd.append('photo', file); // заменили 'file' → 'photo'
     fd.append('coords', JSON.stringify(tmpPlace.coords));
     fd.append('placeTitle', 'Новое место');
 
@@ -381,6 +382,8 @@
       method: 'POST',
       body: fd
     });
+
+    if (!r.ok) throw new Error('Ошибка ответа сервера: ' + r.status);
 
     const res = await r.json();
     if (!res.success) throw new Error('Ошибка при загрузке файла');
@@ -409,6 +412,7 @@
     markers.removeLayer(tmpMarker);
   }
 }
+
 
     function updateMarkerSizes() {
       const zoom = map.getZoom();
