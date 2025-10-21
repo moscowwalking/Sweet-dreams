@@ -213,7 +213,7 @@
   });
 }
 
-  async function renderPlaces(places) {
+ async function renderPlaces(places) {
   markers.clearLayers();
 
   for (let place of places) {
@@ -222,59 +222,44 @@
     if (marker) {
       markers.addLayer(marker);
 
-      // Сохраняем маркер в placesStore для масштабирования
+      // сохраняем маркер в placesStore
       const key = coordsKey(...place.coords);
-      if (!placesStore.has(key)) {
-        placesStore.set(key, { ...place, marker });
-      } else {
-        placesStore.get(key).marker = marker;
-      }
+      placesStore.set(key, { ...place, marker });
     }
   }
 
-  updateMarkerSizes(); // пересчет размеров после загрузки всех картинок
-  console.log('✅ Все маркеры пересчитаны после загрузки фото');
+  updateMarkerSizes();
+  console.log('✅ Все маркеры добавлены и масштабированы');
 }
-
     let placesData = [];
 
     async function loadPlaces() {
-      console.log('📥 Загружаем places.json...');
-      try {
-        const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
-        console.log('Fetching:', url);
-        const res = await fetch(url);
-        if (!res.ok) {
-          console.warn('⚠️ places.json не найден на сервере, статус:', res.status);
-          return;
-        }
-        const text = await res.text();
-        if (!text.trim()) {
-          console.log('⚠️ Пустой places.json — пропускаем рендер');
-          return;
-        }
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (parseErr) {
-          console.error('❌ Ошибка парсинга JSON:', parseErr, 'Полученный текст:', text);
-          return;
-        }
-        if (!Array.isArray(data)) {
-          console.warn('⚠️ places.json не является массивом:', data);
-          return;
-        }
-        console.log(`✅ Загружено ${data.length} мест`);
-        placesData = data;
-        renderPlaces(data.map(p => ({
-          id: p.id,
-          coords: p.coords,
-          photos: [{ thumbUrl: p.thumbUrl, origUrl: p.origUrl }]
-        })));
-      } catch (err) {
-        console.error('❌ Ошибка загрузки places.json:', err);
-      }
-    }
+  console.log('📥 Загружаем places.json...');
+  try {
+    const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
+    const res = await fetch(url);
+    if (!res.ok) return console.warn('⚠️ places.json не найден');
+
+    const text = await res.text();
+    if (!text.trim()) return console.log('⚠️ Пустой places.json');
+
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) return console.warn('⚠️ places.json не является массивом');
+
+    console.log(`✅ Загружено ${data.length} мест`);
+    placesData = data;
+
+    // Рендерим сразу при первой загрузке
+    renderPlaces(data.map(p => ({
+      id: p.id,
+      coords: p.coords,
+      photos: [{ thumbUrl: p.thumbUrl, origUrl: p.origUrl }]
+    })));
+
+  } catch (err) {
+    console.error('❌ Ошибка загрузки places.json:', err);
+  }
+}
 
     loadPlaces();
 
