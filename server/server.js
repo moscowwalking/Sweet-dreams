@@ -7,10 +7,13 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import multer from 'multer';
 import path from 'path';
-
+import { fileURLToPath } from 'url';
 
 const app = express();
+app.use(cors());
 
+
+// --- Разрешённые источники ---
 const allowedOrigins = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
@@ -19,12 +22,7 @@ const allowedOrigins = [
   'https://sweet-dreams-f8nc.onrender.com'
 ];
 
-// Middleware для логирования запросов
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
-  next();
-});
-
+// --- Middleware ---
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
@@ -32,23 +30,16 @@ app.use(cors({
     return callback(new Error('Not allowed by CORS'));
   }
 }));
-
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Настройка multer для временного хранения файлов
-const upload = multer({ 
-  dest: '/tmp/uploads/',
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
+// --- Настройка multer ---
+const upload = multer({
+  storage: multer.memoryStorage(), // <== Исправлено: используем буфер, а не tmp
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
-// Создаем папку для временных файлов если её нет
-if (!fs.existsSync('/tmp/uploads')) {
-  fs.mkdirSync('/tmp/uploads', { recursive: true });
-}
-
+// --- Настройки AWS S3 (Яндекс) ---
 const s3 = new AWS.S3({
   endpoint: process.env.YANDEX_ENDPOINT,
   accessKeyId: process.env.YANDEX_ACCESS_KEY,
@@ -56,273 +47,152 @@ const s3 = new AWS.S3({
   region: 'ru-central1',
 });
 
-import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Файл для хранения мест
 const PLACES_FILE = path.join(__dirname, 'places.json');
 
-// Поддерживаемые форматы изображений
-const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heif', 'image/heic'];
-
-// Инициализация файла places.json если его нет
-function initPlacesFile() {
-  if (!fs.existsSync(PLACES_FILE)) {
-    fs.writeFileSync(PLACES_FILE, JSON.stringify([]));
-    console.log('✅ Created places.json');
-  }
-}
-
-// Функция для получения названия места по координатам
-function getPlaceName(coords) {
-  const [lat, lon] = coords;
-  // Простая логика - можно подключить геокодинг позже
-  if (lat > 55.7 && lat < 55.8 && lon > 37.5 && lon < 37.7) {
-    return 'Москва';
-  }
-  return 'Новое место';
-}
-
-// Функция для получения количества мест
+// --- Подсчёт мест ---
 function getPlacesCount() {
   try {
     if (fs.existsSync(PLACES_FILE)) {
       const data = fs.readFileSync(PLACES_FILE, 'utf8');
-      const places = JSON.parse(data);
-      return places.length;
+      return JSON.parse(data).length || 0;
     }
-  } catch (error) {
-    console.error('Error counting places:', error);
+  } catch {
+    return 0;
   }
   return 0;
 }
 
-// Функция для сохранения places.json в S3
+// --- Бэкап в S3 ---
 async function backupPlacesToS3() {
   try {
-    if (!fs.existsSync(PLACES_FILE)) {
-      console.log('No places.json to backup');
-      return;
-    }
-    
+    if (!fs.existsSync(PLACES_FILE)) return;
     const data = fs.readFileSync(PLACES_FILE);
-    const s3Params = {
+    await s3.upload({
       Bucket: process.env.YANDEX_BUCKET,
       Key: 'backups/places.json',
       Body: data,
       ContentType: 'application/json',
-      ACL: 'public-read',
-    };
-    
-    await s3.upload(s3Params).promise();
+      ACL: 'public-read'
+    }).promise();
     console.log('✅ places.json backed up to S3');
-  } catch (error) {
-    console.error('❌ Backup failed:', error);
+  } catch (err) {
+    console.error('❌ Backup failed:', err.message);
   }
 }
 
-// Функция для восстановления places.json из S3
-// Функция для восстановления places.json из S3
+// --- Восстановление из S3 ---
 async function restorePlacesFromS3() {
   try {
-    const s3Params = {
+    const data = await s3.getObject({
       Bucket: process.env.YANDEX_BUCKET,
-      Key: 'backups/places.json',
-    };
-
-    console.log('🔄 Attempting to restore places from S3...');
-    const data = await s3.getObject(s3Params).promise();
+      Key: 'backups/places.json'
+    }).promise();
 
     if (data.Body) {
       fs.writeFileSync(PLACES_FILE, data.Body);
-      const places = JSON.parse(data.Body);
-      console.log(`✅ places.json restored from S3 with ${places.length} photos`);
-    } else {
-      throw new Error('Empty backup file');
+      const count = JSON.parse(data.Body).length;
+      console.log(`✅ places.json restored from S3 with ${count} places`);
     }
   } catch (error) {
-    if (error.code === 'NoSuchKey') {
-      console.log('📝 No backup found in S3.');
-      // Проверяем, существует ли локальный файл
+    if (error.code === 'NoSuchKey' || error.message.includes('404')) {
+      console.log('📝 No backup found in S3. places.json will NOT be recreated.');
       if (fs.existsSync(PLACES_FILE)) {
-        console.log('🔍 Local places.json exists. Attempting to delete...');
-        try {
-          fs.unlinkSync(PLACES_FILE); // Удаляем локальный файл
-          console.log('🗑️ Local places.json deleted successfully.');
-        } catch (unlinkErr) {
-          console.error('❌ Failed to delete local places.json:', unlinkErr.message);
-          // Даже если не удалось удалить, инициализируем пустой файл
-          initPlacesFile();
-          return;
-        }
-      } else {
-        console.log('🔍 Local places.json does not exist, proceeding to init.');
+        fs.unlinkSync(PLACES_FILE);
+        console.log('🗑️ Local places.json deleted because backup missing.');
       }
-      initPlacesFile(); // Создаём новый пустой файл
-      console.log('📄 Fresh empty places.json initialized.');
     } else {
-      console.error('❌ Restore from S3 failed with error:', error.message);
-      // Если восстановление из S3 не удалось по другой причине, всё равно убедимся, что файл существует
-      if (!fs.existsSync(PLACES_FILE)) {
-        console.log('🔄 Initializing places.json as it does not exist after error.');
-        initPlacesFile();
-      } else {
-        console.log('⚠️ Keeping existing local places.json after S3 error.');
-        
-      }
+      console.error('❌ Restore from S3 failed:', error.message);
     }
   }
 }
 
-// Эндпоинт для проверки здоровья сервера
+// --- Проверка здоровья ---
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     placesCount: getPlacesCount()
   });
 });
 
-// Эндпоинт для получения мест
+// --- Получение мест ---
 app.get('/places.json', (req, res) => {
-  initPlacesFile();
+  if (!fs.existsSync(PLACES_FILE)) {
+    console.log('⚠️ places.json not found, returning empty array');
+    return res.json([]);
+  }
+
   try {
     const data = fs.readFileSync(PLACES_FILE, 'utf8');
-    
-    // Добавляем проверку на пустой файл
-    if (!data || data.trim() === '') {
-      console.log('places.json is empty, returning empty array');
-      return res.json([]);
-    }
-    
-    const places = JSON.parse(data);
-    console.log(`✅ Returning ${places.length} places from places.json`);
+    const places = data.trim() ? JSON.parse(data) : [];
+    console.log(`✅ Returning ${places.length} places`);
     res.json(places);
-  } catch (error) {
-    console.error('❌ Error reading places.json:', error);
-    // Всегда возвращаем валидный JSON, даже при ошибке
+  } catch (err) {
+    console.error('❌ Error reading places.json:', err.message);
     res.json([]);
   }
 });
 
-// Эндпоинт для загрузки фото (для карты воспоминаний)
-app.post('/upload', upload.single('photo'), async (req, res) => {
+// --- Загрузка фото с GPS ---
+app.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Файл не загружен' });
-    }
+    if (!req.file) return res.status(400).json({ error: 'Файл не получен' });
 
-    // определяем тип файла сразу
-    let detectedMime = req.file.mimetype;
+    const fileName = `memory-${Date.now()}.jpeg`;
+    const filePath = `memories/${fileName}`;
 
-    console.log('📸 Received file:', {
-      originalname: req.file.originalname,
-      mimetype: detectedMime,
-      size: req.file.size
-    });
-
-    // если пришёл неизвестный формат, пробуем определить по расширению
-    if (detectedMime === 'application/octet-stream') {
-      const ext = path.extname(req.file.originalname).toLowerCase();
-      if (ext === '.heic' || ext === '.heif') detectedMime = 'image/heic';
-      else if (ext === '.jpg' || ext === '.jpeg') detectedMime = 'image/jpeg';
-      else if (ext === '.png') detectedMime = 'image/png';
-      else if (ext === '.gif') detectedMime = 'image/gif';
-      else if (ext === '.webp') detectedMime = 'image/webp';
-    }
-
-    // проверяем формат файла
-    if (!SUPPORTED_FORMATS.includes(detectedMime)) {
-      return res.status(400).json({ error: `Неподдерживаемый формат файла: ${detectedMime}` });
-    }
-
-    // получаем координаты из тела запроса
-    let gps = null;
-    if (req.body.gps) {
-      try {
-        gps = JSON.parse(req.body.gps);
-        console.log('📍 GPS from request:', gps);
-      } catch {
-        console.log('⚠️ Invalid GPS data');
-      }
-    }
-
-    // буфер и финальный тип
-    let fileBuffer;
-    let finalMimetype = detectedMime;
-
-    // конвертируем HEIC/HEIF в JPEG
-   if (detectedMime === 'image/heic' || detectedMime === 'image/heif') {
-  console.log('⚠️ Skipping HEIC conversion, uploading original file');
-  fileBuffer = fs.readFileSync(req.file.path);
-  finalMimetype = 'image/heic';
-}
-
-    // имя файла и параметры для S3
-    const fileExtension = finalMimetype.split('/')[1];
-    const filename = `memory-${Date.now()}.${fileExtension}`;
-
-    const s3Params = {
-      Bucket: process.env.YANDEX_BUCKET,
-      Key: filename,
-      Body: fileBuffer,
-      ContentType: finalMimetype,
+    // Загружаем фото в Yandex Cloud
+    await s3.upload({
+      Bucket: BUCKET_NAME,
+      Key: filePath,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
       ACL: 'public-read',
-    };
+    }).promise();
 
-    const s3Upload = await s3.upload(s3Params).promise();
-    console.log('✅ Photo uploaded to Yandex Cloud:', s3Upload.Location);
+    const fileUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${filePath}`;
 
-    const photo = {
+    // Пытаемся загрузить актуальный places.json
+    let places = [];
+    try {
+      const data = await s3.getObject({ Bucket: BUCKET_NAME, Key: PLACES_FILE }).promise();
+      places = JSON.parse(data.Body.toString('utf-8'));
+    } catch (err) {
+      console.log('⚠️ places.json не найден — создаём новый');
+    }
+
+    // Добавляем новую запись
+    const newPlace = {
       id: Date.now().toString(),
-      coords: gps ? [gps.latitude, gps.longitude] : [55.75, 37.61],
-      thumbUrl: s3Upload.Location,
-      origUrl: s3Upload.Location,
-      placeTitle: getPlaceName(photo.coords),
+      coords: req.body.coords ? JSON.parse(req.body.coords) : null,
+      thumbUrl: fileUrl,
+      origUrl: fileUrl,
+      placeTitle: req.body.placeTitle || 'Новое место',
       timestamp: new Date().toISOString(),
-      filename: filename,
-      originalFilename: req.file.originalname
+      filename: fileName,
     };
 
-    initPlacesFile();
-    const places = JSON.parse(fs.readFileSync(PLACES_FILE, 'utf8'));
-    places.push(photo);
-    fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
+    places.push(newPlace);
 
-    await backupPlacesToS3();
-    fs.unlinkSync(req.file.path);
+    // Загружаем обновлённый JSON в облако
+    await s3.upload({
+      Bucket: BUCKET_NAME,
+      Key: PLACES_FILE,
+      Body: JSON.stringify(places, null, 2),
+      ContentType: 'application/json',
+      ACL: 'public-read',
+    }).promise();
 
-    res.json({ success: true, photo });
-
+    res.json({ success: true, fileUrl });
   } catch (error) {
     console.error('Upload error:', error);
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    res.status(500).json({ error: 'Ошибка загрузки файла: ' + error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Эндпоинт для получения всех фото
-app.get('/photos', (req, res) => {
-  initPlacesFile();
-  try {
-    const data = fs.readFileSync(PLACES_FILE, 'utf8');
-    res.json(JSON.parse(data));
-  } catch (error) {
-    res.json([]);
-  }
-});
-
-// Статические файлы (если нужно)
-app.use('/uploads', express.static('public/uploads'));
-
-// Ваши существующие эндпоинты остаются без изменений
-app.get('/', (_, res) => {
-  res.send('✅ ICS mail server with UniSender Go is running');
-});
-
+// --- Отправка приглашений (оставляем без изменений) ---
 function formatDateLocal(d) {
   const pad = n => (n < 10 ? '0' + n : n);
   return (
@@ -357,51 +227,41 @@ app.post('/send-invite', async (req, res) => {
     const end = new Date(year, month - 1, day, endHour, endMinute);
 
     const icsString = `BEGIN:VCALENDAR
-      VERSION:2.0
-      CALSCALE:GREGORIAN
-      METHOD:REQUEST
-      BEGIN:VEVENT
-      UID:${Date.now()}@sweet-dreams
-      DTSTAMP:${formatDateLocal(new Date())}
-      DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
-      DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
-      SUMMARY:💖 Встреча
-      DESCRIPTION:Скоро увидимся! ${city}, ${place}.
-      LOCATION:${place}, ${city}
-      STATUS:CONFIRMED
-      SEQUENCE:0
-      TRANSP:OPAQUE
-      END:VEVENT
-      END:VCALENDAR`;
-
-    fs.writeFileSync('/tmp/invite.ics', icsString);
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:${Date.now()}@sweet-dreams
+DTSTAMP:${formatDateLocal(new Date())}
+DTSTART;TZID=Europe/Moscow:${formatDateLocal(start)}
+DTEND;TZID=Europe/Moscow:${formatDateLocal(end)}
+SUMMARY:💖 Встреча
+DESCRIPTION:Скоро увидимся! ${city}, ${place}.
+LOCATION:${place}, ${city}
+STATUS:CONFIRMED
+SEQUENCE:0
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR`;
 
     const payload = {
       api_key: process.env.UNISENDER_API_KEY,
       message: {
-        recipients: recipientEmails.map(address => ({
-          email: address,
-          substitutions: { to_name: "Друг" },
-          metadata: { campaign_id: "test-invite" }
-        })),
+        recipients: recipientEmails.map(email => ({ email })),
         subject: `💌 Встреча: ${city}, ${place}`,
-        from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com', 
+        from_email: 'invite@sandbox-7833842-f4b715.unigosendbox.com',
         from_name: 'Sweet Dreams',
         body: {
-          html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`,
-          plaintext: `Скоро увидимся в ${city}, ${place}, ${date}, ${timeStart}–${timeEnd}`
+          html: `<p>Скоро увидимся в <b>${city}</b>!<br>📍 ${place}<br>📅 ${date}<br>⏰ ${timeStart}–${timeEnd}</p>`
         },
-        attachments: [
-          {
-            type: 'text/calendar',
-            name: 'invite.ics',
-            content: Buffer.from(icsString).toString('base64')
-          }
-        ]
+        attachments: [{
+          type: 'text/calendar',
+          name: 'invite.ics',
+          content: Buffer.from(icsString).toString('base64')
+        }]
       }
     };
 
-    console.log('🚀 Отправляем письмо через UniSender...');
     const response = await fetch('https://go2.unisender.ru/ru/transactional/api/v1/email/send.json', {
       method: 'POST',
       headers: {
@@ -412,63 +272,20 @@ app.post('/send-invite', async (req, res) => {
     });
 
     const data = await response.json();
-    console.log('📨 Ответ UniSender:', data);
-
     if (response.ok && !data.error) {
-      res.json({ success: true, message: 'Письмо успешно отправлено!', data });
+      res.json({ success: true });
     } else {
-      res.status(500).json({ error: data.error?.message || 'Ошибка UniSender', details: data });
+      res.status(500).json({ error: data.error?.message || 'Ошибка UniSender' });
     }
   } catch (err) {
-    console.error('🔥 Ошибка сервера:', err);
     res.status(500).json({ error: 'Ошибка сервера: ' + err.message });
   }
 });
 
-app.post('/upload-photo', async (req, res) => {
-  try {
-    const { imageBase64, filename } = req.body;
-
-    if (!imageBase64 || !filename) {
-      return res.status(400).json({ error: 'Необходимы поля: imageBase64, filename' });
-    }
-
-    const buffer = Buffer.from(imageBase64, 'base64');
-
-    const params = {
-      Bucket: process.env.YANDEX_BUCKET,
-      Key: filename,
-      Body: buffer,
-      ContentType: 'image/jpeg',
-      ACL: 'public-read',
-    };
-
-    const upload = await s3.upload(params).promise();
-    console.log('✅ Фото загружено:', upload.Location);
-
-    res.json({
-      success: true,
-      message: 'Фото успешно загружено!',
-      url: upload.Location,
-    });
-  } catch (err) {
-    console.error('🔥 Ошибка загрузки фото:', err);
-    res.status(500).json({ error: 'Ошибка загрузки: ' + err.message });
-  }
-});
-
+// --- Запуск ---
 const PORT = process.env.PORT || 3000;
-// Восстанавливаем данные из S3 при старте
 restorePlacesFromS3().then(() => {
   app.listen(PORT, () => {
-    console.log('🚀 Server running on port 3000');
-    console.log('📸 Available endpoints:');
-    console.log('   GET  /health - проверка здоровья сервера');
-    console.log('   GET  /places.json - карта воспоминаний');
-    console.log('   POST /upload - загрузка фото с GPS');
-    console.log('   GET  /photos - все фото');
-    console.log('   POST /send-invite - отправка приглашений');
-    console.log('   POST /upload-photo - загрузка фото (base64)');
-    console.log(`📍 Currently have ${getPlacesCount()} photos in database`);
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 });
