@@ -137,17 +137,6 @@
       border-color: var(--pink);
       transform: scale(1.03);
     }
-    .hint {
-      position: absolute;
-      right: 12px;
-      top: 12px;
-      z-index: 600;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-    }
     @media (max-width: 640px) {
       .title {
         font-size: 1.5rem;
@@ -215,50 +204,81 @@
       return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
     }
 
-    function renderPlaces(places) {
-      markers.clearLayers();
-      places.forEach(place => {
-        const marker = createPlaceMarker(place);
-        if (marker) markers.addLayer(marker);
-      });
-    }
-    let placesData = [];
-    async function loadPlaces() {
-  try {
-    const res = await fetch('https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now());
-    if (!res.ok) {
-      console.warn('⚠️ places.json не найден на сервере');
-      return;
-    }
-
-    const text = await res.text();
-    if (!text.trim()) {
-      console.log('⚠️ Пустой places.json — пропускаем рендер');
-      return;
-    }
-
-    const data = JSON.parse(text);
-    if (!Array.isArray(data)) {
-      console.warn('⚠️ Неверный формат places.json');
-      return;
-    }
-
-    renderPlaces(data.map(p => ({
-      id: p.id,
-      coords: p.coords,
-      photos: [{ thumbUrl: p.thumbUrl, origUrl: p.origUrl }]
-    })));
-
-    console.log('✅ Места загружены');
-  } catch (err) {
-    console.error('Ошибка загрузки places.json:', err);
-  }
+    function waitImageLoad(url) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => res(true);
+    img.onerror = () => res(false);
+    img.src = url;
+  });
 }
 
+  async function renderPlaces(places) {
+  markers.clearLayers();
+
+  for (let place of places) {
+    await waitImageLoad(place.photos[0].thumbUrl); // ждем загрузки миниатюры
+    const marker = createPlaceMarker(place);
+    if (marker) {
+      markers.addLayer(marker);
+
+      // Сохраняем маркер в placesStore для масштабирования
+      const key = coordsKey(...place.coords);
+      if (!placesStore.has(key)) {
+        placesStore.set(key, { ...place, marker });
+      } else {
+        placesStore.get(key).marker = marker;
+      }
+    }
+  }
+
+  updateMarkerSizes(); // пересчет размеров после загрузки всех картинок
+  console.log('✅ Все маркеры пересчитаны после загрузки фото');
+}
+
+    let placesData = [];
+
+    async function loadPlaces() {
+      console.log('📥 Загружаем places.json...');
+      try {
+        const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
+        console.log('Fetching:', url);
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn('⚠️ places.json не найден на сервере, статус:', res.status);
+          return;
+        }
+        const text = await res.text();
+        if (!text.trim()) {
+          console.log('⚠️ Пустой places.json — пропускаем рендер');
+          return;
+        }
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseErr) {
+          console.error('❌ Ошибка парсинга JSON:', parseErr, 'Полученный текст:', text);
+          return;
+        }
+        if (!Array.isArray(data)) {
+          console.warn('⚠️ places.json не является массивом:', data);
+          return;
+        }
+        console.log(`✅ Загружено ${data.length} мест`);
+        placesData = data;
+        renderPlaces(data.map(p => ({
+          id: p.id,
+          coords: p.coords,
+          photos: [{ thumbUrl: p.thumbUrl, origUrl: p.origUrl }]
+        })));
+      } catch (err) {
+        console.error('❌ Ошибка загрузки places.json:', err);
+      }
+    }
 
     loadPlaces();
 
-    function createPlaceMarker(place, isTemp = false) {
+        function createPlaceMarker(place, isTemp = false) {
       const [lat, lon] = place.coords;
       const size = isTemp ? 40 : 56;
       const opacity = isTemp ? 0.5 : 1;
@@ -321,7 +341,6 @@
 
     async function handleFiles(files) {
       for (let file of files) {
-        let originalFile = file;
         let gps = null;
         try {
           gps = await exifr.gps(file);
@@ -370,71 +389,68 @@
       });
     }
 
-   async function uploadFileToServer(file, gps, tmpPlace, tmpMarker) {
-  try {
-    const fd = new FormData();
-    // 👇 если сервер ждёт 'photo' (а не 'file')
-    fd.append('photo', file); // заменили 'file' → 'photo'
-    fd.append('coords', JSON.stringify(tmpPlace.coords));
-    fd.append('placeTitle', 'Новое место');
+    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker) {
+      console.log('📤 Отправка файла на сервер:', file.name, file.size + 'B');
+      try {
+        const fd = new FormData();
+        fd.append('file', file); // сервер должен ожидать поле 'file'
+        fd.append('coords', JSON.stringify(tmpPlace.coords));
+        fd.append('placeTitle', 'Новое место');
 
-    const r = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', {
-      method: 'POST',
-      body: fd
-    });
+        const r = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', {
+          method: 'POST',
+          body: fd
+        });
 
-    if (!r.ok) throw new Error('Ошибка ответа сервера: ' + r.status);
+        console.log('Ответ сервера статус:', r.status);
+        const res = await r.json().catch(() => ({ success: false, error: 'Некорректный JSON от сервера' }));
 
-    const res = await r.json();
-    if (!res.success) throw new Error('Ошибка при загрузке файла');
+        if (!res.success) throw new Error(res.error || 'Ошибка при загрузке файла');
 
-    const [lat, lon] = tmpPlace.coords;
-    const fileUrl = res.fileUrl;
+        console.log('✅ Файл успешно загружен:', res.fileUrl);
 
-    markers.removeLayer(tmpMarker);
+        markers.removeLayer(tmpMarker);
+        const key = coordsKey(...tmpPlace.coords);
+        let place = placesStore.get(key);
+        if (!place) {
+          place = { id: key, coords: [...tmpPlace.coords], photos: [] };
+          placesStore.set(key, place);
+        }
+        place.photos.push({ thumbUrl: res.fileUrl, origUrl: res.fileUrl });
 
-    const key = coordsKey(lat, lon);
-    let place = placesStore.get(key);
-    if (!place) {
-      place = { id: key, coords: [lat, lon], photos: [] };
-      placesStore.set(key, place);
+        if (place.marker) markers.removeLayer(place.marker);
+        place.marker = createPlaceMarker(place);
+        markers.addLayer(place.marker);
+
+        console.log('✅ Маркер обновлён на карте');
+      } catch (e) {
+        console.error('❌ Ошибка при загрузке файла на сервер:', e);
+        markers.removeLayer(tmpMarker);
+        alert('Ошибка при загрузке: ' + e.message);
+      }
     }
-
-    place.photos.push({ thumbUrl: fileUrl, origUrl: fileUrl });
-
-    if (place.marker) markers.removeLayer(place.marker);
-    place.marker = createPlaceMarker(place);
-    markers.addLayer(place.marker);
-
-    console.log('✅ Фото успешно добавлено на карту');
-  } catch (e) {
-    console.error('Ошибка при загрузке файла:', e);
-    markers.removeLayer(tmpMarker);
-  }
-}
-
 
     function updateMarkerSizes() {
-      const zoom = map.getZoom();
-      const scale = Math.pow(2, zoom - 13);
-      const size = Math.max(20, Math.min(56, 40 * scale));
-      placesStore.forEach(place => {
-        if (!place.marker) return;
-        const iconHtml = `
-          <div style="display:flex;align-items:center;gap:6px;">
-            <img src="${place.photos[0].thumbUrl}" style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
-            <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
-          </div>
-        `;
-        const icon = L.divIcon({
-          html: iconHtml,
-          className: '',
-          iconSize: [size + 50, size],
-          iconAnchor: [size / 2, size / 2]
-        });
-        place.marker.setIcon(icon);
-      });
-    }
+  const zoom = map.getZoom();
+  const scale = Math.pow(2, zoom - 13);
+  const size = Math.max(20, Math.min(56, 40 * scale));
+  placesStore.forEach(place => {
+    if (!place.marker) return;
+    const iconHtml = `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <img src="${place.photos[0].thumbUrl}" style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
+        <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
+      </div>
+    `;
+    const icon = L.divIcon({
+      html: iconHtml,
+      className: '',
+      iconSize: [size + 50, size],
+      iconAnchor: [size / 2, size / 2]
+    });
+    place.marker.setIcon(icon);
+  });
+}
 
     map.on('zoom', updateMarkerSizes);
   </script>
