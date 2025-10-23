@@ -126,6 +126,7 @@
       overflow: auto;
     }
     .thumbs img {
+      display: none !important;
       width: 84px;
       height: 84px;
       object-fit: cover;
@@ -185,7 +186,18 @@
   cursor: pointer;
   font-weight: 700;
 }
-
+#photoCaption {
+ text-align: center;
+  margin-top: 10px;
+  color: #333;
+  font-style: italic;
+  font-size: 15px;
+  cursor: pointer;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  transition: opacity 0.5s ease;
+}
 
   </style>
 </head>
@@ -203,22 +215,15 @@
     </div>
   </div>
 <div class="button-wrapper" style="position:absolute;top:12px;left:12px;z-index:700;">
-  <a href="index.html" class="main-button" style="
-      background: linear-gradient(90deg, var(--pink), var(--hotpink));
-      color:white;
-      text-decoration:none;
-      padding:6px 12px;
-      border-radius:8px;
-      font-weight:700;
-      display:inline-block;
-  ">← Назад</a>
+  <a href="index.html" class="main-button" style="background: linear-gradient(90deg, var(--pink), var(--hotpink));color:white;text-decoration:none;padding:6px 12px;border-radius:8px;font-weight:700;display:inline-block;">← Назад</a>
 </div>
   <div id="overlay" class="overlay" aria-hidden="true">
     <div class="gallery" role="dialog" aria-modal="true">
-      <div class="row">
-        <strong id="placeTitle">Место</strong>
-        <button id="closeGallery" style="background:var(--pink);color:white;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;">Закрыть</button>
-      </div>
+      <div class="row" style="flex-direction: column; align-items: center;">
+        <button id="closeGallery" style="background: var(--pink);color: white;border: none;padding: 6px 10px;border-radius: 8px;cursor: pointer;margin-top: 8px;">Закрыть</button>
+  <strong id="placeTitle" style="text-align: center;font-size: 18px;font-weight: 700;color: #444;">Место</strong>
+  
+</div>
       <div style="flex:1; display:flex; align-items:center; justify-content:center;">
         <img id="galleryMain" src="" alt="Фото">
       </div>
@@ -231,48 +236,63 @@
   <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
   <script>
-    const map = L.map('map', { zoomControl: false }).setView([55.75, 37.61], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    const map = L.map('map', { zoomControl: false }).setView([55.75, 37.61], 5);
+    const SERVER_URL = 'https://sweet-dreams-f8nc.onrender.com';
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    const markers = L.markerClusterGroup();
-    map.addLayer(markers);
-    const placesStore = new Map();
+  const markers = L.markerClusterGroup();
+  map.addLayer(markers);
+  const placesStore = new Map();
 
-    function coordsKey(lat, lon, precision = 4) {
-      return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
-    }
+  function coordsKey(lat, lon, precision = 4) {
+    return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
+  }
 
-    function waitImageLoad(url) {
-  return new Promise(res => {
-    const img = new Image();
-    img.onload = () => res(true);
-    img.onerror = () => res(false);
-    img.src = url;
-  });
-}
+  function waitImageLoad(url) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => res(true);
+      img.onerror = () => res(false);
+      img.src = url;
+    });
+  }
 
- async function renderPlaces(places) {
+  async function renderPlaces(places) {
   markers.clearLayers();
+  let skipped = 0;
 
   for (let place of places) {
-    await waitImageLoad(place.photos[0].thumbUrl); // ждем загрузки миниатюры
+    const photo = place.photos[0];
+    // ✅ Проверка — если нет ни одной ссылки, пропускаем
+    if (!photo.thumbUrl && !photo.origUrl) {
+      skipped++;
+      console.warn('⚠️ Пропущено место без фото:', place.id);
+      continue;
+    }
+
+    const url = photo.thumbUrl || photo.origUrl;
+    const ok = await waitImageLoad(url);
+    if (!ok) {
+      skipped++;
+      console.warn('⚠️ Пропущено (битая ссылка):', url);
+      continue;
+    }
+
     const marker = createPlaceMarker(place);
     if (marker) {
       markers.addLayer(marker);
-
-      // сохраняем маркер в placesStore
       const key = coordsKey(...place.coords);
       placesStore.set(key, { ...place, marker });
     }
   }
 
-  updateMarkerSizes();
-  console.log('✅ Все маркеры добавлены и масштабированы');
+  console.log(`✅ Добавлено ${places.length - skipped} маркеров, пропущено ${skipped}`);
 }
-    let placesData = [];
 
-    async function loadPlaces() {
+  let placesData = [];
+
+  async function loadPlaces() {
   console.log('📥 Загружаем places.json...');
   try {
     const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
@@ -285,24 +305,36 @@
     const data = JSON.parse(text);
     if (!Array.isArray(data)) return console.warn('⚠️ places.json не является массивом');
 
-    console.log(`✅ Загружено ${data.length} мест`);
-    placesData = data;
+    // ✅ Отбрасываем все элементы без ссылок на фото
+    const validData = data.filter(p =>
+      (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
+      (p.origUrl && p.origUrl.startsWith('http'))
+    );
 
-    // Рендерим сразу при первой загрузке
-    renderPlaces(data.map(p => ({
+    console.log(`✅ Загружено ${validData.length} валидных мест из ${data.length}`);
+
+    // Преобразуем в структуру, удобную для отрисовки
+    const places = validData.map(p => ({
       id: p.id,
       coords: p.coords,
-      photos: [{ thumbUrl: p.thumbUrl, origUrl: p.origUrl }]
-    })));
+      photos: [{
+        thumbUrl: p.thumbUrl,
+        origUrl: p.origUrl,
+        date: p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : '',
+        caption: p.caption || '' // ИЗМЕНИТЬ: используем p.caption вместо p.placeTitle
+      }]
+    }));
 
+    renderPlaces(places);
   } catch (err) {
     console.error('❌ Ошибка загрузки places.json:', err);
   }
 }
 
-    loadPlaces();
-
+  loadPlaces();
+    
         function createPlaceMarker(place, isTemp = false) {
+          
       const [lat, lon] = place.coords;
       const size = isTemp ? 40 : 56;
       const opacity = isTemp ? 0.5 : 1;
@@ -324,23 +356,165 @@
     const thumbs = document.getElementById('thumbs');
     const placeTitleEl = document.getElementById('placeTitle');
 
-    function openGallery(place) {
-      placeTitleEl.textContent = '';
-      thumbs.innerHTML = '';
-      galleryMain.src = place.photos[0].origUrl;
-      place.photos.forEach((p, i) => {
-        const img = document.createElement('img');
-        img.src = p.thumbUrl;
-        if (i === 0) img.classList.add('active');
-        img.onclick = () => {
-          document.querySelectorAll('.thumbs img').forEach(t => t.classList.remove('active'));
-          img.classList.add('active');
-          galleryMain.src = p.origUrl;
-        };
-        thumbs.appendChild(img);
-      });
-      overlay.style.display = 'flex';
+function openGallery(place) {
+  const overlay = document.getElementById('overlay');
+  const galleryMain = document.getElementById('galleryMain');
+  const thumbs = document.getElementById('thumbs');
+  const placeTitleEl = document.getElementById('placeTitle');
+
+  thumbs.innerHTML = '';
+
+  const photoList = Array.isArray(place.photos) && place.photos.length
+    ? place.photos
+    : [{ 
+        origUrl: place.origUrl, 
+        thumbUrl: place.thumbUrl, 
+        date: place.date || (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU') : ''), 
+        caption: place.caption || '' // УБИРАЕМ place.placeTitle отсюда
+      }];
+
+  const first = photoList[0];
+  const src = first?.origUrl || first?.thumbUrl || '';
+  if (!src) return;
+  
+  galleryMain.src = src;
+
+  const dateText = first?.date ||
+    (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' }) : '') ||
+    'Без даты';
+  placeTitleEl.textContent = dateText;
+
+  // Удаляем старую подпись
+  let captionEl = document.getElementById('photoCaption');
+  if (captionEl) captionEl.remove();
+
+  // Создаем новую подпись
+  captionEl = document.createElement('div');
+  captionEl.id = 'photoCaption';
+  captionEl.style.textAlign = 'center';
+  captionEl.style.marginTop = '12px';
+  captionEl.style.color = '#333';
+  captionEl.style.fontStyle = 'italic';
+  captionEl.style.fontSize = '15px';
+  captionEl.style.cursor = 'pointer';
+  captionEl.style.maxWidth = '90%';
+  captionEl.style.marginLeft = 'auto';
+  captionEl.style.marginRight = 'auto';
+  captionEl.style.transition = 'opacity 0.3s ease';
+  
+  // Вставляем после контейнера с фото
+  const photoContainer = galleryMain.parentElement;
+  photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
+
+  let currentIndex = 0;
+  
+  // ИСПРАВЛЕНИЕ: используем только caption, не placeTitle
+  const initialCaption = first.caption || 'Добавь подпись ✍️';
+  captionEl.textContent = initialCaption;
+
+  captionEl.onclick = () => {
+  const oldText = captionEl.textContent === 'Добавь подпись ✍️' ? '' : captionEl.textContent;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldText;
+  input.style.display = 'block';
+  input.style.margin = '10px auto';
+  input.style.width = '80%';
+  input.style.textAlign = 'center';
+  input.style.fontSize = '15px';
+  input.style.padding = '6px';
+  input.style.borderRadius = '10px';
+  input.style.border = '1px solid #ccc';
+
+  // Заменяем captionEl на input
+  if (captionEl.parentNode) {
+    captionEl.replaceWith(input);
+  } else {
+    const photoContainer = galleryMain.parentElement;
+    photoContainer.parentNode.insertBefore(input, photoContainer.nextSibling);
+  }
+  
+  input.focus();
+  input.select();
+
+
+   const finish = async () => {
+  const newCaption = input.value.trim();
+  photoList[currentIndex].caption = newCaption;
+  
+  // ПРОВЕРЯЕМ, что input все еще в DOM перед заменой
+  if (input.parentNode) {
+    input.replaceWith(captionEl);
+  } else {
+    // Если input уже удален, просто восстанавливаем captionEl
+    const photoContainer = galleryMain.parentElement;
+    photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
+  }
+  
+  captionEl.textContent = newCaption || 'Добавь подпись ✍️';
+  captionEl.style.opacity = '0.6';
+  setTimeout(() => (captionEl.style.opacity = '1'), 300);
+
+  try {
+    const payload = {
+      coords: place.coords,
+      photoIndex: currentIndex,
+      caption: newCaption
+    };
+    const resp = await fetch(`${SERVER_URL}/update-caption`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    // Обрабатываем случай, когда сервер возвращает HTML вместо JSON
+    const contentType = resp.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await resp.json();
+    } else {
+      const text = await resp.text();
+      throw new Error(`Server returned ${resp.status}: ${text.substring(0, 100)}`);
     }
+    
+    if (!resp.ok || !data.success) {
+      throw new Error(data.error || `server responded ${resp.status}`);
+    }
+    console.log('✅ Подпись успешно сохранена на сервере');
+    
+    // Обновляем локальное хранилище
+    try {
+      const key = coordsKey(...place.coords);
+      const st = placesStore.get(key);
+      if (st) {
+        if (Array.isArray(st.photos) && st.photos[currentIndex]) {
+          st.photos[currentIndex].caption = newCaption;
+        } else {
+          st.caption = newCaption;
+        }
+        placesStore.set(key, st);
+      }
+    } catch (e) { /* не критично */ }
+  } catch (err) {
+    console.error('❌ Не удалось сохранить подпись:', err);
+    alert('Не удалось сохранить подпись: ' + (err.message || err));
+  }
+};
+
+    input.addEventListener('blur', finish);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') finish();
+      if (e.key === 'Escape') {
+        input.replaceWith(captionEl);
+        captionEl.textContent = oldText || 'Добавь подпись ✍️';
+      }
+    });
+  };
+
+  overlay.style.display = 'flex';
+}
+
+
 
     document.getElementById('closeGallery').onclick = () => overlay.style.display = 'none';
 
@@ -390,7 +564,7 @@
         const tempPlace = {
           id: 'tmp-' + Date.now(),
           coords,
-          photos: [{ thumbUrl: URL.createObjectURL(file), origUrl: URL.createObjectURL(file) }]
+          photos: [{ thumbUrl: URL.createObjectURL(file), origUrl: URL.createObjectURL(file),date: new Date().toLocaleDateString('ru-RU'), caption: '' }]
         };
 
         const tmpMarker = createPlaceMarker(tempPlace, true);

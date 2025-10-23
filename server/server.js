@@ -66,6 +66,58 @@ async function restorePlacesFromS3() {
   }
 }
 
+app.post('/update-caption', async (req, res) => {
+  try {
+    const { coords, photoIndex = 0, caption } = req.body;
+    console.log('📥 Получен запрос на обновление подписи:', { coords, photoIndex, caption });
+
+    // Загружаем текущий places.json из бакета (AWS SDK v2 стиль)
+    const fileData = await s3.getObject({
+      Bucket: BUCKET_NAME,
+      Key: 'backups/places.json'
+    }).promise();
+
+    const places = JSON.parse(fileData.Body.toString());
+
+    // Находим нужное место по координатам
+    const foundIndex = places.findIndex(p => 
+      p.coords && 
+      Array.isArray(p.coords) &&
+      p.coords.length === 2 &&
+      Math.abs(p.coords[0] - coords[0]) < 0.0001 &&
+      Math.abs(p.coords[1] - coords[1]) < 0.0001
+    );
+
+    if (foundIndex === -1) {
+      console.warn('⚠️ Место не найдено для координат:', coords);
+      return res.status(404).json({ success: false, error: 'Место не найдено' });
+    }
+
+    const found = places[foundIndex];
+    
+    // Обновляем подпись
+    if (found.photos && Array.isArray(found.photos) && found.photos[photoIndex]) {
+      found.photos[photoIndex].caption = caption;
+    } else {
+      found.caption = caption;
+    }
+
+    // Сохраняем обратно (AWS SDK v2 стиль)
+    await s3.putObject({
+      Bucket: BUCKET_NAME,
+      Key: 'backups/places.json',
+      Body: JSON.stringify(places, null, 2),
+      ContentType: 'application/json'
+    }).promise();
+
+    console.log(`✅ Подпись сохранена у места [${coords}]`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Ошибка при обновлении подписи:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- Загрузка фото с логированием ---
 app.post('/upload', (req, res) => {
   console.log('📥 /upload request received');
@@ -239,6 +291,28 @@ END:VCALENDAR`;
   }
 });
 
+function cleanPlacesJson() {
+  try {
+    const path = './places.json';
+    if (!fs.existsSync(path)) return;
+
+    const raw = fs.readFileSync(path, 'utf8');
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return;
+
+    const before = data.length;
+    const cleaned = data.filter(p => p.origUrl || p.thumbUrl);
+    if (cleaned.length !== before) {
+      fs.writeFileSync(path, JSON.stringify(cleaned, null, 2));
+      console.log(`🧹 Очищен places.json: удалено ${before - cleaned.length} пустых записей`);
+    }
+  } catch (err) {
+    console.error('❌ Ошибка очистки places.json:', err);
+  }
+}
+
+// вызываем после загрузки сервера
+cleanPlacesJson();
 // --- Запуск сервера ---
 const PORT = process.env.PORT || 3000;
 restorePlacesFromS3().then(() => {
