@@ -199,6 +199,60 @@
   transition: opacity 0.5s ease;
 }
 
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  background: var(--pink);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.close-button:hover {
+  background: var(--hotpink);
+  transform: scale(1.1);
+}
+
+.gallery {
+  position: relative; /* Для позиционирования кнопки закрытия */
+  max-width: 92vw;
+  max-height: 86vh;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.gallery-date {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #444;
+  margin: 0;
+}
+
+.photo-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0; /* Важно для flex-контейнера */
+}
+
   </style>
 </head>
 <body>
@@ -217,18 +271,23 @@
 <div class="button-wrapper" style="position:absolute;top:12px;left:12px;z-index:700;">
   <a href="index.html" class="main-button" style="background: linear-gradient(90deg, var(--pink), var(--hotpink));color:white;text-decoration:none;padding:6px 12px;border-radius:8px;font-weight:700;display:inline-block;">← Назад</a>
 </div>
-  <div id="overlay" class="overlay" aria-hidden="true">
-    <div class="gallery" role="dialog" aria-modal="true">
-      <div class="row" style="flex-direction: column; align-items: center;">
-        <button id="closeGallery" style="background: var(--pink);color: white;border: none;padding: 6px 10px;border-radius: 8px;cursor: pointer;margin-top: 8px;">Закрыть</button>
-  <strong id="placeTitle" style="text-align: center;font-size: 18px;font-weight: 700;color: #444;">Место</strong>
-  
-</div>
-      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-        <img id="galleryMain" src="" alt="Фото">
-      </div>
-      <div class="thumbs" id="thumbs"></div>
+ <div id="overlay" class="overlay" aria-hidden="true">
+  <div class="gallery" role="dialog" aria-modal="true">
+    <!-- Кнопка закрытия в правом верхнем углу -->
+    <button id="closeGallery" class="close-button">×</button>
+    
+    <!-- Дата по центру -->
+    <strong id="placeTitle" class="gallery-date">Место</strong>
+    
+    <!-- Фото -->
+    <div class="photo-container">
+      <img id="galleryMain" src="" alt="Фото">
     </div>
+    
+    <!-- Миниатюры -->
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+</div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
