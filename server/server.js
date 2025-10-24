@@ -147,7 +147,20 @@ app.post('/upload', (req, res) => {
     try {
       const fileName = `memory-${Date.now()}.jpeg`;
       const filePath = `memories/${fileName}`;
-
+      let exifDate = null;
+            try {
+              const exifData = await exifr.parse(file.buffer);
+              if (exifData && exifData.DateTimeOriginal) {
+                exifDate = new Date(exifData.DateTimeOriginal).toLocaleDateString('ru-RU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                });
+                console.log('✅ EXIF дата найдена:', exifDate);
+              }
+            } catch (exifErr) {
+              console.log('⚠️ EXIF дата не найдена:', exifErr.message);
+            }
       console.log('🚀 Загружаем файл в S3:', filePath);
 
       await s3.upload({

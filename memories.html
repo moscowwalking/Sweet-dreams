@@ -363,7 +363,7 @@
 
     const data = JSON.parse(text);
     if (!Array.isArray(data)) return console.warn('⚠️ places.json не является массивом');
-
+ч
     // ✅ Отбрасываем все элементы без ссылок на фото
     const validData = data.filter(p =>
       (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
@@ -373,14 +373,14 @@
     console.log(`✅ Загружено ${validData.length} валидных мест из ${data.length}`);
 
     // Преобразуем в структуру, удобную для отрисовки
-    const places = validData.map(p => ({
+   const places = validData.map(p => ({
       id: p.id,
       coords: p.coords,
       photos: [{
         thumbUrl: p.thumbUrl,
         origUrl: p.origUrl,
-        date: p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : '',
-        caption: p.caption || '' // ИЗМЕНИТЬ: используем p.caption вместо p.placeTitle
+        date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''), // ИСПОЛЬЗУЕМ exifDate
+        caption: p.caption || ''
       }]
     }));
 
@@ -438,9 +438,16 @@ function openGallery(place) {
   
   galleryMain.src = src;
 
-  const dateText = first?.date ||
-    (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' }) : '') ||
-    'Без даты';
+    const dateText = 
+        first?.exifDate ||                    // Сначала дата из EXIF
+        first?.date ||                        // Затем дата из данных места
+        (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : '') ||
+        'Без даты';
+  
   placeTitleEl.textContent = dateText;
 
   // Удаляем старую подпись
