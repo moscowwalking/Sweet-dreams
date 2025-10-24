@@ -378,7 +378,7 @@
       photos: [{
         thumbUrl: p.thumbUrl,
         origUrl: p.origUrl,
-        date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''), // ИСПОЛЬЗУЕМ exifDate
+        date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''), 
         caption: p.caption || ''
       }]
     }));

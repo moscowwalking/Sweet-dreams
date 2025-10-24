@@ -8,6 +8,7 @@ import AWS from 'aws-sdk';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import exifr from 'exifr';
 
 const app = express();
 
@@ -185,14 +186,15 @@ app.post('/upload', (req, res) => {
       }
 
       const newPlace = {
-        id: Date.now().toString(),
-        coords: req.body.coords ? JSON.parse(req.body.coords) : null,
-        thumbUrl: fileUrl,
-        origUrl: fileUrl,
-        placeTitle: req.body.placeTitle || 'Новое место',
-        timestamp: new Date().toISOString(),
-        filename: fileName,
-      };
+          id: Date.now().toString(),
+          coords: req.body.coords ? JSON.parse(req.body.coords) : null,
+          thumbUrl: fileUrl,
+          origUrl: fileUrl,
+          placeTitle: req.body.placeTitle || 'Новое место',
+          timestamp: new Date().toISOString(),
+          filename: fileName,
+          exifDate: exifDate, // ДОБАВЬТЕ ЭТУ СТРОКУ
+        };
 
       places.push(newPlace);
       fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
