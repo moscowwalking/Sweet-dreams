@@ -149,20 +149,35 @@ app.post('/upload', (req, res) => {
       const fileName = `memory-${Date.now()}.jpeg`;
       const filePath = `memories/${fileName}`;
       let exifDate = null;
-            try {
-              const exifData = await exifr.parse(file.buffer);
-              if (exifData && exifData.DateTimeOriginal) {
-                exifDate = new Date(exifData.DateTimeOriginal).toLocaleDateString('ru-RU', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                });
-                console.log('✅ EXIF дата найдена:', exifDate);
-              }
-            } catch (exifErr) {
-              console.log('⚠️ EXIF дата не найдена:', exifErr.message);
-            }
-      console.log('🚀 Загружаем файл в S3:', filePath);
+                try {
+                  const exifData = await exifr.parse(file.buffer);
+                  console.log('🔍 EXIF данные:', exifData);
+                  
+                  if (exifData && exifData.DateTimeOriginal) {
+                    const date = new Date(exifData.DateTimeOriginal);
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const year = date.getFullYear().toString().slice(-2);
+                    exifDate = `${day}.${month}.${year}`;
+                    console.log('✅ EXIF дата найдена:', exifDate);
+                  } else {
+                    // Если нет EXIF даты, используем текущую дату
+                    const date = new Date();
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const year = date.getFullYear().toString().slice(-2);
+                    exifDate = `${day}.${month}.${year}`;
+                    console.log('⚠️ EXIF дата не найдена, используем текущую:', exifDate);
+                  }
+                } catch (exifErr) {
+                  // При ошибке тоже используем текущую дату
+                  const date = new Date();
+                  const day = date.getDate().toString().padStart(2, '0');
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const year = date.getFullYear().toString().slice(-2);
+                  exifDate = `${day}.${month}.${year}`;
+                  console.log('❌ Ошибка EXIF, используем текущую дату:', exifDate);
+                }
 
       await s3.upload({
         Bucket: BUCKET_NAME,
@@ -193,7 +208,7 @@ app.post('/upload', (req, res) => {
           placeTitle: req.body.placeTitle || 'Новое место',
           timestamp: new Date().toISOString(),
           filename: fileName,
-          exifDate: exifDate, // ДОБАВЬТЕ ЭТУ СТРОКУ
+          exifDate: exifDate, 
         };
 
       places.push(newPlace);

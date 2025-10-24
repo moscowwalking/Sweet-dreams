@@ -372,16 +372,35 @@
     console.log(`✅ Загружено ${validData.length} валидных мест из ${data.length}`);
 
     // Преобразуем в структуру, удобную для отрисовки
-   const places = validData.map(p => ({
-      id: p.id,
-      coords: p.coords,
-      photos: [{
-        thumbUrl: p.thumbUrl,
-        origUrl: p.origUrl,
-        date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''), 
-        caption: p.caption || ''
-      }]
-    }));
+    const places = validData.map(p => {
+      
+      let displayDate = '';
+      
+      if (p.exifDate) {
+        
+        displayDate = p.exifDate;
+      } else if (p.timestamp) {
+        
+        const date = new Date(p.timestamp);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear().toString().slice(-2);
+        displayDate = `${day}.${month}.${year}`;
+      }
+      
+      return {
+        id: p.id,
+        coords: p.coords,
+        exifDate: p.exifDate, 
+        timestamp: p.timestamp, 
+        photos: [{
+          thumbUrl: p.thumbUrl,
+          origUrl: p.origUrl,
+          date: displayDate, 
+          caption: p.caption || ''
+        }]
+      };
+    });
 
     renderPlaces(places);
   } catch (err) {
@@ -415,6 +434,9 @@
     const placeTitleEl = document.getElementById('placeTitle');
 
 function openGallery(place) {
+  console.log('🔍 FULL PLACE DATA:', place);
+  console.log('🔍 Place exifDate:', place.exifDate);
+  console.log('🔍 First photo:', place.photos[0]);
   const overlay = document.getElementById('overlay');
   const galleryMain = document.getElementById('galleryMain');
   const thumbs = document.getElementById('thumbs');
@@ -437,15 +459,10 @@ function openGallery(place) {
   
   galleryMain.src = src;
 
-    const dateText = 
-        first?.exifDate ||                    // Сначала дата из EXIF
-        first?.date ||                        // Затем дата из данных места
-        (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }) : '') ||
-        'Без даты';
+   const dateText = first?.date || 'Без даты';
+  placeTitleEl.textContent = dateText;
+  
+  
   
   placeTitleEl.textContent = dateText;
 
