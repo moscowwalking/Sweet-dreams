@@ -620,41 +620,64 @@ function openGallery(place) {
     });
 
     async function handleFiles(files) {
-      for (let file of files) {
-        let gps = null;
-        try {
-          gps = await exifr.gps(file);
-        } catch {}
+  for (let file of files) {
+    let gps = null;
+    let exifDate = null;
 
-        const isHEIC = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
-        if (isHEIC) {
-          try {
-            const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-            file = new File([converted], 'converted.jpg', { type: 'image/jpeg' });
-            console.log('✅ HEIC converted to JPG');
-          } catch (err) {
-            console.error('HEIC convert failed', err);
-          }
-        }
-
-        const coords = gps && gps.latitude && gps.longitude
-          ? [gps.latitude, gps.longitude]
-          : await waitForMapClick();
-
-        if (!coords) continue;
-
-        const tempPlace = {
-          id: 'tmp-' + Date.now(),
-          coords,
-          photos: [{ thumbUrl: URL.createObjectURL(file), origUrl: URL.createObjectURL(file),date: new Date().toLocaleDateString('ru-RU'), caption: '' }]
-        };
-
-        const tmpMarker = createPlaceMarker(tempPlace, true);
-        markers.addLayer(tmpMarker);
-        await uploadFileToServer(file, gps, tempPlace, tmpMarker);
+    // Извлекаем EXIF данные
+    try {
+      const exifData = await exifr.parse(file);
+      console.log('🔍 EXIF данные из оригинала:', exifData);
+      
+      if (exifData && exifData.DateTimeOriginal) {
+        const date = new Date(exifData.DateTimeOriginal);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear().toString().slice(-2);
+        exifDate = `${day}.${month}.${year}`;
+        console.log('✅ EXIF дата найдена:', exifDate);
       }
+    } catch (exifErr) {
+      console.log('⚠️ EXIF дата не найдена:', exifErr.message);
     }
 
+    try {
+      gps = await exifr.gps(file);
+    } catch {}
+
+    const isHEIC = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+    if (isHEIC) {
+      try {
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+        file = new File([converted], 'converted.jpg', { type: 'image/jpeg' });
+        console.log('✅ HEIC converted to JPG');
+      } catch (err) {
+        console.error('HEIC convert failed', err);
+      }
+    }
+    const coords = gps && gps.latitude && gps.longitude
+      ? [gps.latitude, gps.longitude]
+      : await waitForMapClick();
+
+    if (!coords) continue;
+    const tempPlace = {
+      id: 'tmp-' + Date.now(),
+      coords,
+      photos: [{ 
+        thumbUrl: URL.createObjectURL(file), 
+        origUrl: URL.createObjectURL(file),
+        date: exifDate || new Date().toLocaleDateString('ru-RU'), 
+        caption: '' 
+      }]
+    };
+
+    const tmpMarker = createPlaceMarker(tempPlace, true);
+    markers.addLayer(tmpMarker);
+    
+    
+    await uploadFileToServer(file, gps, tempPlace, tmpMarker, exifDate);
+  }
+}
     function waitForMapClick() {
       return new Promise(res => {
         const onClick = e => {
@@ -669,46 +692,60 @@ function openGallery(place) {
       });
     }
 
-    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker) {
-      console.log('📤 Отправка файла на сервер:', file.name, file.size + 'B');
-      try {
-        const fd = new FormData();
-        fd.append('file', file); // сервер должен ожидать поле 'file'
-        fd.append('coords', JSON.stringify(tmpPlace.coords));
-        fd.append('placeTitle', 'Новое место');
-
-        const r = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', {
-          method: 'POST',
-          body: fd
-        });
-
-        console.log('Ответ сервера статус:', r.status);
-        const res = await r.json().catch(() => ({ success: false, error: 'Некорректный JSON от сервера' }));
-
-        if (!res.success) throw new Error(res.error || 'Ошибка при загрузке файла');
-
-        console.log('✅ Файл успешно загружен:', res.fileUrl);
-
-        markers.removeLayer(tmpMarker);
-        const key = coordsKey(...tmpPlace.coords);
-        let place = placesStore.get(key);
-        if (!place) {
-          place = { id: key, coords: [...tmpPlace.coords], photos: [] };
-          placesStore.set(key, place);
-        }
-        place.photos.push({ thumbUrl: res.fileUrl, origUrl: res.fileUrl });
-
-        if (place.marker) markers.removeLayer(place.marker);
-        place.marker = createPlaceMarker(place);
-        markers.addLayer(place.marker);
-
-        console.log('✅ Маркер обновлён на карте');
-      } catch (e) {
-        console.error('❌ Ошибка при загрузке файла на сервер:', e);
-        markers.removeLayer(tmpMarker);
-        alert('Ошибка при загрузке: ' + e.message);
-      }
+    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
+  console.log('📤 Отправка файла на сервер:', file.name, file.size + 'B');
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('coords', JSON.stringify(tmpPlace.coords));
+    fd.append('placeTitle', 'Новое место');
+    
+ 
+    if (exifDate) {
+      fd.append('exifDate', exifDate);
     }
+
+    const r = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', {
+      method: 'POST',
+      body: fd
+    });
+
+    console.log('Ответ сервера статус:', r.status);
+    const res = await r.json().catch(() => ({ success: false, error: 'Некорректный JSON от сервера' }));
+
+    if (!res.success) throw new Error(res.error || 'Ошибка при загрузке файла');
+
+    console.log('✅ Файл успешно загружен:', res.fileUrl);
+
+    markers.removeLayer(tmpMarker);
+    const key = coordsKey(...tmpPlace.coords);
+    let place = placesStore.get(key);
+    if (!place) {
+      place = { 
+        id: key, 
+        coords: [...tmpPlace.coords], 
+        photos: [],
+        exifDate: exifDate 
+      };
+      placesStore.set(key, place);
+    }
+    place.photos.push({ 
+      thumbUrl: res.fileUrl, 
+      origUrl: res.fileUrl,
+      date: exifDate || new Date().toLocaleDateString('ru-RU') 
+    });
+
+    if (place.marker) markers.removeLayer(place.marker);
+    place.marker = createPlaceMarker(place);
+    markers.addLayer(place.marker);
+
+    console.log('✅ Маркер обновлён на карте');
+  } catch (e) {
+    console.error('❌ Ошибка при загрузке файла на сервер:', e);
+    markers.removeLayer(tmpMarker);
+    alert('Ошибка при загрузке: ' + e.message);
+  }
+}
 
     function updateMarkerSizes() {
   const zoom = map.getZoom();

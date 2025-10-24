@@ -139,6 +139,7 @@ app.post('/upload', (req, res) => {
     console.log(req.body);  // все остальные поля
 
     // ищем файл с полем 'file'
+    const exifDateFromClient = req.body.exifDate
     const file = req.files?.find(f => f.fieldname === 'file');
     if (!file) {
       console.warn('⚠️ Файл "file" не найден в запросе');
@@ -208,7 +209,7 @@ app.post('/upload', (req, res) => {
           placeTitle: req.body.placeTitle || 'Новое место',
           timestamp: new Date().toISOString(),
           filename: fileName,
-          exifDate: exifDate, 
+         exifDate: exifDateFromClient || exifDate, 
         };
 
       places.push(newPlace);
