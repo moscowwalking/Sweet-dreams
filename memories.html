@@ -363,7 +363,6 @@
 
     const data = JSON.parse(text);
     if (!Array.isArray(data)) return console.warn('⚠️ places.json не является массивом');
-ч
     // ✅ Отбрасываем все элементы без ссылок на фото
     const validData = data.filter(p =>
       (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
