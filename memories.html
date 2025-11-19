@@ -300,7 +300,11 @@
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  const markers = L.markerClusterGroup();
+  const markers = L.markerClusterGroup({
+  showCoverageOnHover: false,   //  отключает синюю линию
+  spiderfyOnMaxZoom: true,      
+  zoomToBoundsOnClick: true     
+});
   map.addLayer(markers);
   const placesStore = new Map();
 
@@ -351,60 +355,109 @@
   let placesData = [];
 
   async function loadPlaces() {
-  console.log('📥 Загружаем places.json...');
+  console.log('📥 Загружаем places.json (с кешированием)...');
+
+  const CACHE_KEY = 'places_cache_v3';
+  const CACHE_TIME_KEY = 'places_cache_time_v3';
+  const CACHE_TTL = 1000 * 60 * 5; // 5 минут
+
+  // --- 1. Пытаемся загрузить кеш ---
+  const cachedText = localStorage.getItem(CACHE_KEY);
+  const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY), 10);
+
+  const isCacheValid =
+    cachedText &&
+    cachedTime &&
+    Date.now() - cachedTime < CACHE_TTL;
+
+  if (isCacheValid) {
+    console.log('⚡ Загружаем places.json из кеша');
+    try {
+      const data = JSON.parse(cachedText);
+      return processPlaces(data);
+    } catch (e) {
+      console.warn('⚠️ Ошибка чтения кеша, загружаем заново', e);
+    }
+  }
+
+  // --- 2. Грузим с сервера ---
   try {
     const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
     const res = await fetch(url);
-    if (!res.ok) return console.warn('⚠️ places.json не найден');
+
+    if (!res.ok) {
+      console.warn('⚠️ places.json не найден, пробуем кеш');
+      if (cachedText) processPlaces(JSON.parse(cachedText));
+      return;
+    }
 
     const text = await res.text();
-    if (!text.trim()) return console.log('⚠️ Пустой places.json');
+    if (!text.trim()) {
+      console.log('⚠️ Пустой places.json, пробуем кеш');
+      if (cachedText) processPlaces(JSON.parse(cachedText));
+      return;
+    }
+
+    // --- 3. Сохраняем кеш ---
+    localStorage.setItem(CACHE_KEY, text);
+    localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
 
     const data = JSON.parse(text);
-    if (!Array.isArray(data)) return console.warn('⚠️ places.json не является массивом');
-    // ✅ Отбрасываем все элементы без ссылок на фото
-    const validData = data.filter(p =>
-      (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
-      (p.origUrl && p.origUrl.startsWith('http'))
-    );
+    processPlaces(data);
 
-    console.log(`✅ Загружено ${validData.length} валидных мест из ${data.length}`);
-
-    // Преобразуем в структуру, удобную для отрисовки
-    const places = validData.map(p => {
-      
-      let displayDate = '';
-      
-      if (p.exifDate) {
-        
-        displayDate = p.exifDate;
-      } else if (p.timestamp) {
-        
-        const date = new Date(p.timestamp);
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear().toString().slice(-2);
-        displayDate = `${day}.${month}.${year}`;
-      }
-      
-      return {
-        id: p.id,
-        coords: p.coords,
-        exifDate: p.exifDate, 
-        timestamp: p.timestamp, 
-        photos: [{
-          thumbUrl: p.thumbUrl,
-          origUrl: p.origUrl,
-          date: displayDate, 
-          caption: p.caption || ''
-        }]
-      };
-    });
-
-    renderPlaces(places);
   } catch (err) {
     console.error('❌ Ошибка загрузки places.json:', err);
+    if (cachedText) {
+      console.log('📦 Загружаем из кеша из-за ошибки сервера');
+      processPlaces(JSON.parse(cachedText));
+    }
   }
+}
+
+// --- 4. Обработка и рендер ---
+function processPlaces(data) {
+  if (!Array.isArray(data)) {
+    return console.warn('⚠️ places.json не является массивом');
+  }
+
+  const validData = data.filter(
+    p =>
+      (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
+      (p.origUrl && p.origUrl.startsWith('http'))
+  );
+
+  console.log(`✅ Валидных мест: ${validData.length} из ${data.length}`);
+
+  const places = validData.map(p => {
+    let displayDate = '';
+
+    if (p.exifDate) {
+      displayDate = p.exifDate;
+    } else if (p.timestamp) {
+      const date = new Date(p.timestamp);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear().toString().slice(-2);
+      displayDate = `${day}.${month}.${year}`;
+    }
+
+    return {
+      id: p.id,
+      coords: p.coords,
+      exifDate: p.exifDate,
+      timestamp: p.timestamp,
+      photos: [
+        {
+          thumbUrl: p.thumbUrl,
+          origUrl: p.origUrl,
+          date: displayDate,
+          caption: p.caption || ''
+        }
+      ]
+    };
+  });
+
+  renderPlaces(places);
 }
 
   loadPlaces();
