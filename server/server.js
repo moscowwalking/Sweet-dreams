@@ -69,10 +69,9 @@ async function restorePlacesFromS3() {
 
 app.post('/update-caption', async (req, res) => {
   try {
-    const { coords, photoIndex = 0, caption } = req.body;
-    console.log('📥 Получен запрос на обновление подписи:', { coords, photoIndex, caption });
+    const { id, photoIndex = 0, caption } = req.body;
+    console.log('📥 Получен запрос на обновление подписи:', { id, photoIndex, caption });
 
-    // Загружаем текущий places.json из бакета (AWS SDK v2 стиль)
     const fileData = await s3.getObject({
       Bucket: BUCKET_NAME,
       Key: 'backups/places.json'
@@ -80,22 +79,16 @@ app.post('/update-caption', async (req, res) => {
 
     const places = JSON.parse(fileData.Body.toString());
 
-    // Находим нужное место по координатам
-    const foundIndex = places.findIndex(p => 
-      p.coords && 
-      Array.isArray(p.coords) &&
-      p.coords.length === 2 &&
-      Math.abs(p.coords[0] - coords[0]) < 0.0001 &&
-      Math.abs(p.coords[1] - coords[1]) < 0.0001
-    );
+    // Находим по ID (уникальный и точный)
+    const foundIndex = places.findIndex(p => p.id === id);
 
     if (foundIndex === -1) {
-      console.warn('⚠️ Место не найдено для координат:', coords);
+      console.warn('⚠️ Место не найдено для id:', id);
       return res.status(404).json({ success: false, error: 'Место не найдено' });
     }
 
     const found = places[foundIndex];
-    
+
     // Обновляем подпись
     if (found.photos && Array.isArray(found.photos) && found.photos[photoIndex]) {
       found.photos[photoIndex].caption = caption;
@@ -103,7 +96,6 @@ app.post('/update-caption', async (req, res) => {
       found.caption = caption;
     }
 
-    // Сохраняем обратно (AWS SDK v2 стиль)
     await s3.putObject({
       Bucket: BUCKET_NAME,
       Key: 'backups/places.json',
@@ -111,7 +103,7 @@ app.post('/update-caption', async (req, res) => {
       ContentType: 'application/json'
     }).promise();
 
-    console.log(`✅ Подпись сохранена у места [${coords}]`);
+    console.log(`✅ Подпись сохранена у места id=${id}`);
     res.json({ success: true });
   } catch (err) {
     console.error('❌ Ошибка при обновлении подписи:', err);

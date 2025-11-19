@@ -121,7 +121,7 @@ body.landing {
 .tooltip {
   position: absolute;
   top: 100%;
-  left: -5%;
+  left: -3%;
   transform: translateX(-50%) translateY(5px);
   background: rgba(255, 255, 255, 0.95);
   color: #000;

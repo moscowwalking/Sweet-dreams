@@ -341,8 +341,7 @@
     const marker = createPlaceMarker(place);
     if (marker) {
       markers.addLayer(marker);
-      const key = coordsKey(...place.coords);
-      placesStore.set(key, { ...place, marker });
+      placesStore.set(place.id, { ...place, marker });
     }
   }
 
@@ -539,7 +538,7 @@ function openGallery(place) {
 
   try {
     const payload = {
-      coords: place.coords,
+      coords: place.id,
       photoIndex: currentIndex,
       caption: newCaption
     };
@@ -566,15 +565,14 @@ function openGallery(place) {
     
     // Обновляем локальное хранилище
     try {
-      const key = coordsKey(...place.coords);
-      const st = placesStore.get(key);
+      const st = placesStore.get(place.id);
       if (st) {
         if (Array.isArray(st.photos) && st.photos[currentIndex]) {
           st.photos[currentIndex].caption = newCaption;
         } else {
           st.caption = newCaption;
         }
-        placesStore.set(key, st);
+        placesStore.set(place.id, st);
       }
     } catch (e) { /* не критично */ }
   } catch (err) {
