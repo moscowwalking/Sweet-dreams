@@ -48,9 +48,82 @@
       flex-direction: column;
       align-items: center;
     }
+    
+  
+    .secret-input-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: flex-end;
+      align-items: flex-end;
+      z-index: 9999;
+    }
+    
+    .secret-input-container {
+      background: linear-gradient(135deg,#ff69b4, #ff1493 100%);
+      padding: 30px;
+      border-radius: 20px 0 0 0;
+      box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+      width: 400px;
+      max-width: 90vw;
+    }
+    
+    .secret-input-title {
+      color: white;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .secret-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1.2em;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    
+    .secret-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .secret-input:focus {
+      border-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .secret-hint {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9em;
+      margin-top: 10px;
+      text-align: center;
+    }
 </style>
 
 <body class="landing" data-emojis="love">
+
+  <!-- Секретное окно ввода -->
+  <div class="secret-input-overlay" id="secretOverlay">
+    <div class="secret-input-container">
+      <div class="secret-input-title">🔐 Секретная фраза</div>
+      <input type="text" 
+             class="secret-input" 
+             id="secretInput" 
+             placeholder="Введите волшебную фразу..."
+             autocomplete="off">
+      <div class="secret-hint">Подсказка: На листочке написано!! </div>
+    </div>
+  </div>
 
   <div class="egor-wrapper">
     <a href="cute.html" class="egor-button heart-icon pulse"> 
@@ -109,10 +182,80 @@
       }
     });
     
-    
     audio.addEventListener('ended', () => {
       audio.currentTime = 0;
       playBtn.classList.remove('pulse');
+    });
+  </script>
+
+  <script>
+    // Секретный функционал - счётчик кликов и окно ввода
+    let clickCount = 0;
+    const clickTimeout = 3000; // 3 секунды для сброса счётчика
+    let clickTimer;
+    
+    // Элементы секретного окна
+    const secretOverlay = document.getElementById('secretOverlay');
+    const secretInput = document.getElementById('secretInput');
+    
+    // Обработчик кликов по всему документу
+    document.addEventListener('click', (e) => {
+      // Увеличиваем счётчик
+      clickCount++;
+      
+      // Сбрасываем таймер
+      clearTimeout(clickTimer);
+      
+      // Запускаем новый таймер для сброса счётчика
+      clickTimer = setTimeout(() => {
+        clickCount = 0;
+        console.log('Счётчик кликов сброшен');
+      }, clickTimeout);
+      
+      // Проверяем, достигли ли 5 кликов
+      if (clickCount === 5) {
+        // Сбрасываем счётчик
+        clickCount = 0;
+        
+        // Показываем секретное окно
+        secretOverlay.style.display = 'flex';
+        secretInput.focus();
+        
+        console.log('Секретное окно открыто!');
+      }
+    });
+    
+    // Обработчик ввода в секретное поле
+    secretInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const inputValue = secretInput.value.trim();
+        
+        // Проверяем секретную фразу
+        if (inputValue.toUpperCase() === 'NYTOGETHER') {
+          // Переходим на страницу gifts.html
+          window.location.href = 'gifts.html';
+        }
+        
+        // Скрываем окно в любом случае
+        secretOverlay.style.display = 'none';
+        secretInput.value = '';
+      }
+    });
+    
+    // Закрытие окна при клике вне поля ввода
+    secretOverlay.addEventListener('click', (e) => {
+      if (e.target === secretOverlay) {
+        secretOverlay.style.display = 'none';
+        secretInput.value = '';
+      }
+    });
+    
+    // Дополнительно: закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && secretOverlay.style.display === 'flex') {
+        secretOverlay.style.display = 'none';
+        secretInput.value = '';
+      }
     });
   </script>
 
