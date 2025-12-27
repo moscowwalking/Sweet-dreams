@@ -173,39 +173,13 @@
       display: block;
     }
 
-    /* Инструкция */
-    .instructions {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 20px;
-      border-radius: 15px;
-      margin: 25px 0;
-      border-left: 5px solid #ff6b6b;
-      text-align: left;
-    }
-
-    .instructions h3 {
-      color: #ffd700;
-      margin-bottom: 10px;
-      font-size: 1.4em;
-    }
-
-    .instructions ol {
-      padding-left: 20px;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .instructions li {
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
     /* Кнопки */
     .button-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 20px;
       justify-content: center;
-      margin-top: 20px;
+      margin-top: 10px;
     }
 
     .gift-button {
@@ -222,7 +196,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 200px;
+      min-width: 180px;
       justify-content: center;
     }
 
@@ -253,37 +227,74 @@
       box-shadow: 0 10px 20px rgba(255, 209, 102, 0.6);
     }
 
-    /* Новогоднее сообщение */
-    .christmas-message {
-      margin-top: 30px;
-      padding: 20px;
-      background: linear-gradient(135deg, rgba(220, 20, 60, 0.2), rgba(255, 20, 147, 0.2));
-      border-radius: 15px;
-      border: 2px dashed #ffd700;
-      position: relative;
-      animation: pulse-border 3s infinite;
-    }
-
-    @keyframes pulse-border {
-      0%, 100% { border-color: #ffd700; }
-      50% { border-color: #ff6b6b; }
-    }
-
-    .christmas-message p {
-      font-size: 1.2em;
-      line-height: 1.6;
+    /* Кнопка поздравительного сообщения */
+    .voice-button {
+      background: linear-gradient(135deg, #9b59b6, #8e44ad);
       color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(155, 89, 182, 0.5);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 180px;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    .christmas-message .heart {
-      color: #ff6b6b;
-      animation: heartbeat 1.5s infinite;
-      display: inline-block;
+    .voice-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(155, 89, 182, 0.7);
+      background: linear-gradient(135deg, #8e44ad, #7d3c98);
     }
 
-    @keyframes heartbeat {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
+    .voice-button.playing {
+      animation: pulse-voice 1.5s infinite;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    @keyframes pulse-voice {
+      0%, 100% { 
+        box-shadow: 0 5px 20px rgba(231, 76, 60, 0.5);
+      }
+      50% { 
+        box-shadow: 0 5px 30px rgba(231, 76, 60, 0.8);
+      }
+    }
+
+    /* Индикатор проигрывания голосового сообщения */
+    .voice-indicator {
+      display: none;
+      margin-top: 25px;
+      padding: 10px 20px;
+      background: rgba(155, 89, 182, 0.2);
+      border-radius: 20px;
+      color: white;
+      font-size: 0.9em;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Сообщение о музыке */
+    .music-info {
+      font-size: 0.9em;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      animation: fadeIn 1s ease 1s both;
     }
 
     /* Адаптивность */
@@ -296,6 +307,11 @@
         font-size: 2.2em;
       }
       
+      .title::after {
+        right: -35px;
+        font-size: 0.8em;
+      }
+      
       .subtitle {
         font-size: 1.1em;
       }
@@ -306,19 +322,41 @@
       }
       
       .button-container {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
+        gap: 15px;
       }
       
-      .gift-button {
+      .gift-button, .voice-button {
+        width: auto;
+        max-width: 250px;
+        font-size: 1.1em;
+        padding: 14px 25px;
+        min-width: 160px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .button-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .gift-button, .voice-button {
         width: 100%;
-        max-width: 300px;
+        max-width: 280px;
+        padding: 12px 25px;
       }
     }
 
     @media (max-width: 480px) {
       .title {
         font-size: 1.8em;
+      }
+      
+      .title::after {
+        right: -30px;
+        font-size: 0.7em;
       }
       
       .qr-image {
@@ -329,111 +367,141 @@
       .gift-container {
         padding: 20px;
       }
+      
+      .gift-button, .voice-button {
+        padding: 12px 20px;
+        font-size: 1em;
+        min-width: 140px;
+      }
     }
   </style>
 </head>
 <body data-emojis="snow">
   
-  <!-- Новогодние украшения -->
   <div class="ornament ornament-1">🎄</div>
   <div class="ornament ornament-2">🎁</div>
   <div class="ornament ornament-3">🌟</div>
   <div class="ornament ornament-4">❄️</div>
 
-  <!-- Автовоспроизведение музыки -->
-  <audio id="audio-player" autoplay loop style="display: none">
-    <source src="audio/Christmas.mp3" type="audio/mpeg"><!-- тут песня  -->
+  <audio id="background-music" loop style="display: none">
+    <source src="audio/Christmas.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио элемент.
+  </audio>
+
+  <audio id="voice-message" style="display: none">
+    <source src="audio/main.mp3" type="audio/mpeg">
     Ваш браузер не поддерживает аудио элемент.
   </audio>
 
   <div class="gift-container">
-    <h1 class="title">Твой Новогодний Подарок</h1>
+    <h1 class="title">Новогодний Подарок</h1>
     <p class="subtitle">Сканируй QR-код, чтобы открыть сюрприз! 🎄✨</p>
     
     <div class="qr-container">
-      <!-- ЗДЕСЬ ВСТАВЬ СВОЙ QR-КОД -->
       <img src="qr.jpg" alt="QR-код подарка" class="qr-image">
-      <!-- Если нет изображения, можно вставить div с классом placeholder-qr -->
-      <!-- <div class="placeholder-qr" style="width:250px;height:250px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;border-radius:15px;color:#666;font-weight:bold;">QR-код будет здесь</div> -->
     </div>
-   
+    
+    <div id="voiceIndicator" class="voice-indicator">
+      🔊 Идет голосовое сообщение...
+    </div>
+    
     <div class="button-container">
+      <button id="voiceButton" class="voice-button">
+        <span>🎤</span> Поздравление
+      </button>
+      
       <button onclick="window.location.href='index.html'" class="gift-button tertiary">
-        <span>🏠</span> Вернуться назад
+        <span>🏠</span> Назад
       </button>
     </div>
     
-    <div class="christmas-message">
-      <p>С наилучшими пожеланиями в Новом Году! <span class="heart">❤️</span><br>
-      Пусть этот год принесёт тебе много счастья, улыбок и волшебных моментов!<br>
-      <strong>С любовью и теплом в сердце! 🎄🎅✨</strong></p>
-    </div>
-  </div>
-
   <script>
-    // Автовоспроизведение музыки с fallback
+    const backgroundMusic = document.getElementById('background-music');
+    const voiceMessage = document.getElementById('voice-message');
+    const voiceButton = document.getElementById('voiceButton');
+    const voiceIndicator = document.getElementById('voiceIndicator');
+    
+    let backgroundMusicPosition = 0;
+    let isVoicePlaying = false;
+    
+    // Автоматическое включение фоновой музыки
     window.addEventListener('load', () => {
-      const audio = document.getElementById('audio-player');
-      
-      // Пытаемся включить музыку автоматически
-      audio.play().catch((error) => {
+      backgroundMusic.volume = 0.4; // Установи громкость 40%
+      backgroundMusic.play().catch((error) => {
         console.log('Автовоспроизведение заблокировано:', error);
-        
-        // Создаём кнопку для включения музыки
-        const musicBtn = document.getElementById('musicButton');
-        musicBtn.innerHTML = '<span>🔇</span> Включить музыку (нажми)';
-        musicBtn.style.background = 'linear-gradient(135deg, #666, #888)';
-        
-        // Добавляем обработчик для ручного включения
-        musicBtn.onclick = () => {
-          audio.play().then(() => {
-            musicBtn.innerHTML = '<span>🎵</span> Музыка играет!';
-            musicBtn.style.background = 'linear-gradient(135deg, #4ecdc4, #6ae6dd)';
-          });
-        };
+        // Просто логируем ошибку, не показываем кнопку
       });
     });
-
-    // Кнопка управления музыкой
-    document.getElementById('musicButton').addEventListener('click', function() {
-      const audio = document.getElementById('audio-player');
+    
+    // Обработчик кнопки голосового сообщения
+    voiceButton.addEventListener('click', () => {
+      if (isVoicePlaying) {
+        // Если голосовое сообщение уже играет, остановить его
+        voiceMessage.pause();
+        voiceMessage.currentTime = 0;
+        stopVoiceMessage();
+      } else {
+        // Запустить голосовое сообщение
+        playVoiceMessage();
+      }
+    });
+    
+    // Функция воспроизведения голосового сообщения
+    function playVoiceMessage() {
+      // Сохраняем текущую позицию фоновой музыки
+      backgroundMusicPosition = backgroundMusic.currentTime;
       
-      if (audio.paused) {
-        audio.play();
-        this.innerHTML = '<span>🎵</span> Музыка играет!';
-        this.style.background = 'linear-gradient(135deg, #4ecdc4, #6ae6dd)';
-      } else {
-        audio.pause();
-        this.innerHTML = '<span>🔇</span> Включить музыку';
-        this.style.background = 'linear-gradient(135deg, #666, #888)';
-      }
+      // Приостанавливаем фоновую музыку
+      backgroundMusic.pause();
+      
+      // Запускаем голосовое сообщение
+      voiceMessage.volume = 1.0;
+      voiceMessage.play()
+        .then(() => {
+          isVoicePlaying = true;
+          voiceButton.classList.add('playing');
+          voiceButton.innerHTML = '<span>⏸️</span> Пауза';
+          voiceIndicator.style.display = 'block';
+          voiceIndicator.innerHTML = '🔊 Поздравляю я тебя...';
+        })
+        .catch(error => {
+          console.error('Ошибка воспроизведения голосового сообщения:', error);
+          voiceIndicator.style.display = 'block';
+          voiceIndicator.innerHTML = '❌ Файл voice-message.mp3 не найден';
+          voiceIndicator.style.color = '#ff6b6b';
+          voiceIndicator.style.background = 'rgba(231, 76, 60, 0.2)';
+          
+          // Возвращаем фоновую музыку
+          backgroundMusic.currentTime = backgroundMusicPosition;
+          backgroundMusic.play();
+        });
+    }
+    
+    // Функция остановки голосового сообщения
+    function stopVoiceMessage() {
+      isVoicePlaying = false;
+      voiceButton.classList.remove('playing');
+      voiceButton.innerHTML = '<span>🎤</span> Поздравление';
+      voiceIndicator.style.display = 'none';
+      
+      // Возвращаем фоновую музыку с сохраненной позиции
+      backgroundMusic.currentTime = backgroundMusicPosition;
+      backgroundMusic.play();
+    }
+    
+    voiceMessage.addEventListener('ended', () => {
+      stopVoiceMessage();
+      voiceIndicator.style.display = 'block';
+      voiceIndicator.innerHTML = 'Поздравил?! С новым годом!!!';
+      voiceIndicator.style.background = 'rgba(46, 204, 113, 0.2)';
+      
+      setTimeout(() => {
+        voiceIndicator.style.display = 'none';
+        voiceIndicator.style.background = 'rgba(155, 89, 182, 0.2)';
+      }, 3000);
     });
-
-    // Кнопка "Больше снега!" - увеличивает количество падающих эмодзи
-    document.getElementById('snowButton').addEventListener('click', function() {
-      // Если у вас уже есть функция для добавления снега в script.js
-      // Можно вызвать её здесь
-      if (typeof window.addMoreSnow === 'function') {
-        window.addMoreSnow();
-      } else {
-        // Альтернатива: просто меняем тему на более интенсивную
-        document.body.setAttribute('data-emojis', 'snow-intense');
-        this.innerHTML = '<span>❄️❄️❄️</span> Ещё больше снега!';
-        
-        // Меняем цвет кнопки
-        this.style.background = 'linear-gradient(135deg, #74b9ff, #0984e3)';
-        
-        // Через 3 секунды возвращаем обратно
-        setTimeout(() => {
-          this.innerHTML = '<span>❄️</span> Больше снега!';
-          this.style.background = 'linear-gradient(135deg, #4ecdc4, #6ae6dd)';
-        }, 3000);
-      }
-    });
-
-    // Добавляем больше интерактивности
+    
     document.addEventListener('DOMContentLoaded', function() {
-      // Анимация появления элементов
       const elements = document.querySelectorAll('.gift-container > *');
       elements.forEach((el, index) => {
         el.style.opacity = '0';
@@ -446,30 +514,11 @@
         }, 300 + (index * 150));
       });
       
-      // Случайные вспышки "огней" на фоне
-      setInterval(() => {
-        const spark = document.createElement('div');
-        spark.style.position = 'fixed';
-        spark.style.width = Math.random() * 10 + 5 + 'px';
-        spark.style.height = spark.style.width;
-        spark.style.background = `hsl(${Math.random() * 360}, 100%, 70%)`;
-        spark.style.borderRadius = '50%';
-        spark.style.left = Math.random() * 100 + 'vw';
-        spark.style.top = Math.random() * 100 + 'vh';
-        spark.style.boxShadow = '0 0 15px currentColor';
-        spark.style.zIndex = '-1';
-        spark.style.opacity = '0.7';
-        
-        document.body.appendChild(spark);
-        
-        // Анимация исчезновения
-        setTimeout(() => {
-          spark.style.transition = 'opacity 1s ease';
-          spark.style.opacity = '0';
-          setTimeout(() => spark.remove(), 1000);
-        }, 500);
-      }, 800);
+      setTimeout(() => {
+        voiceButton.style.animation = 'pulse-voice 2s infinite 3s';
+      }, 2000);
     });
+    
   </script>
 
   <script src="script.js"></script>
