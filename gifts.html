@@ -44,7 +44,7 @@
       50% { transform: translateY(-20px) rotate(5deg); }
     }
 
-    /* Контейнер подарка */
+    /* Контейнер подарка почему */
     .gift-container {
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
       backdrop-filter: blur(10px);
@@ -115,7 +115,6 @@
       50% { transform: translateY(-15px); }
     }
 
-    /* Подзаголовок */
     .subtitle {
       font-size: 1.3em;
       margin-bottom: 30px;
@@ -124,7 +123,6 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* QR код контейнер */
     .qr-container {
       background: white;
       padding: 20px;
@@ -164,8 +162,6 @@
       0%, 100% { opacity: 0.3; transform: scale(0.8); }
       50% { opacity: 1; transform: scale(1.2); }
     }
-
-    /* Изображение QR */
     .qr-image {
       width: 250px;
       height: 250px;
@@ -173,7 +169,6 @@
       display: block;
     }
 
-    /* Кнопки */
     .button-container {
       display: flex;
       flex-wrap: wrap;
@@ -285,7 +280,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Сообщение о музыке */
     .music-info {
       font-size: 0.9em;
       color: rgba(255, 255, 255, 0.7);
@@ -297,7 +291,6 @@
       animation: fadeIn 1s ease 1s both;
     }
 
-    /* Адаптивность */
     @media (max-width: 768px) {
       .gift-container {
         padding: 25px;
@@ -389,16 +382,16 @@
   </audio>
 
   <audio id="voice-message" style="display: none">
-    <source src="audio/main.mp3" type="audio/mpeg">
+    <source src="audio/gift.mp3" type="audio/mpeg">
     Ваш браузер не поддерживает аудио элемент.
   </audio>
 
   <div class="gift-container">
-    <h1 class="title">Новогодний Подарок</h1>
-    <p class="subtitle">Сканируй QR-код, чтобы открыть сюрприз! 🎄✨</p>
+    <h1 class="title">Подарочекккк</h1>
+    <p class="subtitle">Сканируй QR-код 🎄✨</p>
     
     <div class="qr-container">
-      <img src="qr.jpg" alt="QR-код подарка" class="qr-image">
+      <img src="image/gift.jpg" alt="QR-код подарка" class="qr-image">
     </div>
     
     <div id="voiceIndicator" class="voice-indicator">
@@ -426,35 +419,28 @@
     
     // Автоматическое включение фоновой музыки
     window.addEventListener('load', () => {
-      backgroundMusic.volume = 0.4; // Установи громкость 40%
+      backgroundMusic.volume = 0.4; // громкость 40%
       backgroundMusic.play().catch((error) => {
         console.log('Автовоспроизведение заблокировано:', error);
-        // Просто логируем ошибку, не показываем кнопку
       });
     });
     
     // Обработчик кнопки голосового сообщения
     voiceButton.addEventListener('click', () => {
       if (isVoicePlaying) {
-        // Если голосовое сообщение уже играет, остановить его
         voiceMessage.pause();
         voiceMessage.currentTime = 0;
         stopVoiceMessage();
       } else {
-        // Запустить голосовое сообщение
         playVoiceMessage();
       }
     });
     
-    // Функция воспроизведения голосового сообщения
     function playVoiceMessage() {
-      // Сохраняем текущую позицию фоновой музыки
       backgroundMusicPosition = backgroundMusic.currentTime;
       
-      // Приостанавливаем фоновую музыку
       backgroundMusic.pause();
       
-      // Запускаем голосовое сообщение
       voiceMessage.volume = 1.0;
       voiceMessage.play()
         .then(() => {
