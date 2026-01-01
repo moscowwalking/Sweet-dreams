@@ -1,3 +1,364 @@
+/* 1. Сброс для Safe Area (вырез и бамперы) */
+@supports (padding: max(0px)) {
+  body,
+  .safe-area-padding {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  
+  /* Фикс для кнопок внизу экрана */
+  .bottom-fixed {
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* 2. Оптимизация тач-событий для iOS */
+html {
+  -webkit-tap-highlight-color: transparent; /* Убирает синий оверлей при тапе */
+  -webkit-touch-callout: none; /* Отключает меню при долгом нажатии */
+  -webkit-text-size-adjust: 100%; /* Фикс масштабирования текста */
+}
+
+/* 3. Фикс для 120Hz ProMotion дисплеев */
+@media screen and (min-width: 375px) and (max-width: 430px) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Плавная анимация для ProMotion */
+  @media (prefers-reduced-motion: no-preference) {
+    .smooth-animation {
+      animation-duration: 0.5s;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
+/* 4. Фиксы для конкретных моделей iPhone */
+/* iPhone 11/XR: 828×1792 */
+@media only screen 
+  and (device-width: 414px) 
+  and (device-height: 896px) 
+  and (-webkit-device-pixel-ratio: 2) {
+  
+  /* Увеличиваем тап-зоны для больших пальцев */
+  button, 
+  .main-button,
+  a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Фикс для нижнего индикатора жестов */
+  body {
+    padding-bottom: 34px;
+  }
+}
+
+/* iPhone 12/13/14: 390×844 */
+@media only screen 
+  and (device-width: 390px) 
+  and (device-height: 844px) 
+  and (-webkit-device-pixel-ratio: 3) {
+  
+  .main-button {
+    padding: 18px 42px;
+    font-size: 18px;
+  }
+  
+  /* Улучшаем читаемость текста */
+  .title, h1, h2 {
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+  }
+  
+  /* Фикс для динамического острова */
+  .notch-aware {
+    margin-top: 59px;
+  }
+}
+
+/* iPhone 11 Pro/12 Pro/13 Pro: 390×844 с вырезом */
+@media only screen 
+  and (device-width: 390px) 
+  and (device-height: 844px) 
+  and (-webkit-device-pixel-ratio: 3)
+  and (orientation: portrait) {
+  
+  /* Дополнительный отступ для статус-бара */
+  .status-bar-padding {
+    padding-top: 47px;
+  }
+}
+
+/* iPhone 12/13 mini: 375×812 */
+@media only screen 
+  and (device-width: 375px) 
+  and (device-height: 812px) 
+  and (-webkit-device-pixel-ratio: 3) {
+  
+  /* Уменьшаем отступы для компактного экрана */
+  .container {
+    padding: 15px;
+  }
+  
+  .main-button {
+    padding: 16px 32px;
+    font-size: 17px;
+  }
+  
+  /* Оптимизация карточек */
+  .card {
+    margin: 8px;
+    border-radius: 16px;
+  }
+}
+
+/* 5. Фикс для скролла на iOS */
+.ios-scroll-fix {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 6. Фикс для fixed элементов на iOS */
+.fixed-element {
+  position: fixed;
+  /* Fallback для старых iOS */
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+/* 7. Предотвращение зума при фокусе на iOS */
+@media screen and (max-width: 768px) {
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Фикс масштабирования iOS */
+  }
+}
+
+/* 8. Оптимизация анимаций для iOS */
+@media (prefers-reduced-motion: no-preference) {
+  .ios-optimized-animation {
+    animation-duration: 0.4s;
+    will-change: transform, opacity;
+  }
+  
+  /* Отключаем тяжелые анимации на скролл */
+  @media (max-width: 768px) {
+    .parallax, 
+    .complex-transform {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+/* 9. Фикс для hover на touch-устройствах */
+@media (hover: none) and (pointer: coarse) {
+  /* Заменяем hover на active */
+  button:hover, 
+  .main-button:hover,
+  a:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  button:active, 
+  .main-button:active,
+  a:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9 !important;
+    transition: transform 0.1s ease !important;
+  }
+  
+  /* Отключаем тултипы по ховеру */
+  .tooltip, 
+  .tooltipp {
+    display: none;
+  }
+  
+  /* Альтернатива: показывать тултипы по долгому нажатию */
+  .has-tooltip:active::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    z-index: 1000;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* 10. Оптимизация памяти для больших страниц */
+.ios-memory-optimize {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 11. Специфичные фиксы для ваших страниц */
+@media (max-width: 430px) {
+  /* Для memories.html с картой */
+  #map {
+    width: 100vw !important;
+    height: 70vh !important;
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+  
+  .upload-panel {
+    flex-direction: column !important;
+    width: 90% !important;
+    left: 5% !important;
+  }
+  
+  .drop-area {
+    min-width: auto !important;
+    width: 100% !important;
+  }
+  
+  /* Для landing страницы */
+  .builder_core {
+    right: 20px !important;
+    top: 10px !important;
+  }
+  
+  .egor-wrapper {
+    left: 20px !important;
+    top: 10px !important;
+  }
+  
+  .buttons {
+    gap: 30px !important;
+    margin-top: 20px !important;
+  }
+  
+  .main-button {
+    padding: 14px 28px !important;
+    font-size: 17px !important;
+  }
+  
+  .music-button-container {
+    margin-top: 60px !important;
+  }
+  
+  /* Уменьшаем анимацию падающих эмодзи для производительности */
+  .falling-emoji {
+    max-width: 24px !important;
+    max-height: 24px !important;
+    animation-duration: 8s !important;
+  }
+  
+  /* Отключаем сложные тени на мобильных */
+  .main-button,
+  .egor-button {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+  }
+}
+
+/* 12. Динамический размер шрифта для iPhone */
+@media (max-width: 430px) {
+  html {
+    font-size: 15px;
+  }
+  
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.3rem; }
+  
+  .title span {
+    font-size: 1.6rem;
+  }
+}
+
+/* 13. Фикс для видео и iframe на iOS */
+video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 14. Оптимизация рендеринга для производительности */
+.hardware-accelerate {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* 15. Медиа-запрос для темной темы iOS */
+@media (prefers-color-scheme: dark) {
+  .ios-dark-optimize {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .main-button {
+    background: linear-gradient(135deg, #ff4d94, #ff0066);
+  }
+}
+
+/* 16. Отключаем выделение текста для интерактивных элементов */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 17. Фикс для input type="date" на iOS */
+input[type="date"] {
+  min-height: 44px;
+}
+
+/* 18. Улучшение для landscape режима */
+@media (orientation: landscape) and (max-height: 430px) {
+  .hide-in-landscape {
+    display: none !important;
+  }
+  
+  #map {
+    height: 85vh !important;
+  }
+  
+  .buttons {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* 19. Классы для быстрой оптимизации */
+.ios-btn {
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-text {
+  font-size: 17px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ios-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 20. Отладка (можно отключить в production) 
+.ios-debug-border {
+  /* border: 1px solid rgba(255,0,0,0.3); */ /* Раскомментировать для отладки 
+}*/ 
+
+
 /* Сброс */
 body, html {
   margin: 0;
