@@ -303,7 +303,8 @@
   const markers = L.markerClusterGroup({
   showCoverageOnHover: false,   //  отключает синюю линию
   spiderfyOnMaxZoom: true,      
-  zoomToBoundsOnClick: true     
+  zoomToBoundsOnClick: true,
+  spiderfyDistanceMultiplier: 2.5    
 });
   map.addLayer(markers);
   const placesStore = new Map();
@@ -323,36 +324,43 @@
 
   async function renderPlaces(places) {
   markers.clearLayers();
-  placesStore.clear();
-
   let skipped = 0;
 
   for (let place of places) {
-    if (!Array.isArray(place.photos) || !place.photos.length) {
+    const photo = place.photos[0];
+    // ✅ Проверка — если нет ни одной ссылки, пропускаем
+    if (!photo.thumbUrl && !photo.origUrl) {
       skipped++;
+      console.warn('⚠️ Пропущено место без фото:', place.id);
       continue;
     }
 
-    place.photos.forEach((photo, index) => {
-      if (!photo.thumbUrl && !photo.origUrl) return;
+    const url = photo.thumbUrl || photo.origUrl;
+    const ok = await waitImageLoad(url);
+    if (!ok) {
+      skipped++;
+      console.warn('⚠️ Пропущено (битая ссылка):', url);
+      continue;
+    }
 
-      const marker = createPhotoMarker(place, photo, index);
+    const marker = createPlaceMarker(place);
+    if (marker) {
       markers.addLayer(marker);
-    });
-
-    placesStore.set(place.id, place);
+      placesStore.set(place.id, { ...place, marker });
+    }
   }
 
-  console.log(`✅ Отрисовано мест: ${places.length}, пропущено: ${skipped}`);
+  console.log(`✅ Добавлено ${places.length - skipped} маркеров, пропущено ${skipped}`);
 }
+
   let placesData = [];
 
-  async function loadPlaces() {
+async function loadPlaces() {
   console.log('📥 Загружаем places.json (с кешированием)...');
 
   const CACHE_KEY = 'places_cache_v3';
   const CACHE_TIME_KEY = 'places_cache_time_v3';
-  const CACHE_TTL = 1000 * 60 * 5; // 5 минут
+  const CACHE_TTL = 1000 * 60 * 60 * 2; 
 
   // --- 1. Пытаемся загрузить кеш ---
   const cachedText = localStorage.getItem(CACHE_KEY);
@@ -367,6 +375,7 @@
     console.log('⚡ Загружаем places.json из кеша');
     try {
       const data = JSON.parse(cachedText);
+       processPlacesForDisplay(data);
       return processPlaces(data);
     } catch (e) {
       console.warn('⚠️ Ошибка чтения кеша, загружаем заново', e);
@@ -406,6 +415,30 @@
     }
   }
 }
+  function processPlacesForDisplay(data) {
+    // Быстро создаем все маркеры с заглушками
+    const places = data.map(p => ({
+      id: p.id,
+      coords: p.coords,
+      photos: [{
+        thumbUrl: p.thumbUrl,
+        origUrl: p.origUrl,
+        date: p.exifDate || p.date
+      }]
+    }));
+    
+    // Сразу показываем все маркеры (быстро)
+    places.forEach(place => {
+      createAndAddMarker(place, false);
+    });
+    
+    console.log(`✅ ${places.length} маркеров показано мгновенно`);
+    
+    // Затем фоново загружаем фото
+    setTimeout(() => {
+      loadPlacesWithPriority(places, 'low');
+    }, 1000);
+  }
 
 // --- 4. Обработка и рендер ---
 function processPlaces(data) {
@@ -455,7 +488,7 @@ function processPlaces(data) {
 
   loadPlaces();
     
-function createPlaceMarker(place, isTemp = false) {
+        function createPlaceMarker(place, isTemp = false) {
           
       const [lat, lon] = place.coords;
       const size = isTemp ? 40 : 56;
@@ -478,39 +511,6 @@ function createPlaceMarker(place, isTemp = false) {
     const thumbs = document.getElementById('thumbs');
     const placeTitleEl = document.getElementById('placeTitle');
 
-function createPhotoMarker(place, photo, photoIndex) {
-  const [lat, lon] = place.coords;
-
-  const icon = L.divIcon({
-    className: '',
-    html: `
-      <img
-        src="${photo.thumbUrl}"
-        style="
-          width:48px;
-          height:48px;
-          border-radius:10px;
-          object-fit:cover;
-          box-shadow:0 6px 16px rgba(0,0,0,.25);
-        "
-      />
-    `,
-    iconSize: [48, 48]
-  });
-
-  const marker = L.marker([lat, lon], { icon });
-
-  marker.on('click', () => {
-    openGallery({
-      ...place,
-      startIndex: photoIndex
-    });
-  });
-
-  return marker;
-}
-
-
 function openGallery(place) {
   console.log('🔍 FULL PLACE DATA:', place);
   console.log('🔍 Place exifDate:', place.exifDate);
@@ -531,7 +531,7 @@ function openGallery(place) {
         caption: place.caption || '' // УБИРАЕМ place.placeTitle отсюда
       }];
 
-  const first = photoList[currentIndex];
+  const first = photoList[0];
   const src = first?.origUrl || first?.thumbUrl || '';
   if (!src) return;
   
@@ -566,7 +566,7 @@ function openGallery(place) {
   const photoContainer = galleryMain.parentElement;
   photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
 
-  let currentIndex = place.startIndex ||0;
+  let currentIndex = 0;
   
   // ИСПРАВЛЕНИЕ: используем только caption, не placeTitle
   const initialCaption = first.caption || 'Добавь подпись ✍️';

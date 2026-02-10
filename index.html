@@ -187,7 +187,16 @@
       playBtn.classList.remove('pulse');
     });
   </script>
-
+    <script>
+      // Регистрируем Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ Service Worker зарегистрирован'))
+            .catch(err => console.log('❌ Ошибка SW:', err));
+        });
+      }
+    </script>
   <script>
     // Секретный функционал - счётчик кликов и окно ввода
     let clickCount = 0;
