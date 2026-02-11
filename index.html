@@ -158,7 +158,7 @@
       </div>
       <div class="button-wrapper">
         <a href="memories.html" id="memoriesButton" class="main-button memory-hover map-icon pulse">🗺️ Карта воспоминаний</a>
-        <div class="tooltip pulse pulsing-text">Посмотрим, где было весело 😍</div>
+        <div class="tooltip pulse pulsing-text">Фото сквозь время...</div>
       </div>
     </div>
   </div>
@@ -244,7 +244,10 @@
           // Переходим на страницу gifts.html
           window.location.href = 'gifts.html';
         }
-        
+          // Проверяем секретную фразу для Дня Святого Валентина
+        if (inputValue === '14feb') {
+          window.location.href = 'saint_valentine.html';
+        }
         // Скрываем окно в любом случае
         secretOverlay.style.display = 'none';
         secretInput.value = '';
