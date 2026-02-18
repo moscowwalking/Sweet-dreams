@@ -12,7 +12,8 @@ import exifr from 'exifr';
 import compression from 'compression'; // npm install compression
 import sharp from 'sharp'; // npm install sharp
 
-// После app.use(express.static('public')) добавьте:
+const app = express(); //
+
 app.use(compression()); // Сжимаем ответы
 
 // Добавьте заголовки кеширования
@@ -137,7 +138,7 @@ app.get('/places/batch', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-const app = express();
+
 
 // --- Настройка CORS ---
 const allowedOrigins = [
