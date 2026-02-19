@@ -321,44 +321,103 @@
       img.src = url;
     });
   }
+// Кеш для битых ссылок (чтобы не проверять повторно)
+const brokenLinkCache = new Map();
+const BROKEN_CACHE_TIME = 1000 * 60 * 60; // 1 час
 
+// Функция быстрой проверки ссылки (с кешем)
+async function isLinkValid(url) {
+  // Сначала проверяем кеш
+  const cached = brokenLinkCache.get(url);
+  if (cached && Date.now() - cached.timestamp < BROKEN_CACHE_TIME) {
+    return cached.isValid;
+  }
+  
+  // Если нет в кеше - проверяем
+  const isValid = await new Promise(resolve => {
+    const img = new Image();
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve(false);
+    }, 3000);
+    
+    const cleanup = () => {
+      clearTimeout(timeout);
+      img.onload = null;
+      img.onerror = null;
+    };
+    
+    img.onload = () => {
+      cleanup();
+      resolve(true);
+    };
+    
+    img.onerror = () => {
+      cleanup();
+      resolve(false);
+    };
+    
+    img.src = url;
+  });
+  
+  // Сохраняем в кеш
+  brokenLinkCache.set(url, { isValid, timestamp: Date.now() });
+  return isValid;
+}
   async function renderPlaces(places) {
   markers.clearLayers();
-  let skipped = 0;
-
-  for (let place of places) {
-    const photo = place.photos[0];
-    // ✅ Проверка — если нет ни одной ссылки, пропускаем
-    if (!photo.thumbUrl && !photo.origUrl) {
-      skipped++;
-      console.warn('⚠️ Пропущено место без фото:', place.id);
-      continue;
-    }
-
-    const url = photo.thumbUrl || photo.origUrl;
-    
-    // ✅ Проверка на битую ссылку
-    try {
-      const ok = await waitImageLoad(url);
-      if (!ok) {
-        skipped++;
-        console.warn('⚠️ Пропущено (битая ссылка):', url);
-        continue;
-      }
-    } catch (error) {
-      skipped++;
-      console.warn('⚠️ Ошибка проверки ссылки:', url, error.message);
-      continue;
-    }
-
-    const marker = createPlaceMarker(place);
-    if (marker) {
-      markers.addLayer(marker);
-      placesStore.set(place.id, { ...place, marker });
-    }
+  
+  // Разбиваем на чанки по 10 мест для параллельной проверки
+  const chunkSize = 10;
+  const chunks = [];
+  for (let i = 0; i < places.length; i += chunkSize) {
+    chunks.push(places.slice(i, i + chunkSize));
   }
-
-  console.log(`✅ Добавлено ${places.length - skipped} маркеров, пропущено ${skipped}`);
+  
+  let totalSkipped = 0;
+  let totalAdded = 0;
+  
+  // Обрабатываем чанки последовательно (чтобы не перегружать)
+  for (const chunk of chunks) {
+    // Параллельно проверяем все ссылки в чанке
+    const results = await Promise.allSettled(
+      chunk.map(async (place) => {
+        const photo = place.photos[0];
+        if (!photo.thumbUrl && !photo.origUrl) {
+          return { place, valid: false, reason: 'no-url' };
+        }
+        
+        const url = photo.thumbUrl || photo.origUrl;
+        const ok = await waitImageLoad(url);
+        return { place, valid: ok, url };
+      })
+    );
+    
+    // Обрабатываем результаты
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.valid) {
+        // Валидное место - добавляем маркер
+        const place = result.value.place;
+        const marker = createPlaceMarker(place);
+        if (marker) {
+          markers.addLayer(marker);
+          placesStore.set(place.id, { ...place, marker });
+          totalAdded++;
+        }
+      } else {
+        // Пропускаем
+        totalSkipped++;
+        if (result.status === 'fulfilled') {
+          console.warn('⚠️ Пропущено:', result.value.reason || result.value.url);
+        }
+      }
+    }
+    
+    // Даем браузеру передохнуть между чанками
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  console.log(`✅ Добавлено ${totalAdded} маркеров, пропущено ${totalSkipped}`);
 }
 
 // Функция для создания маркера-заглушки
