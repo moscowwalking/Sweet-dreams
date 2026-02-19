@@ -324,19 +324,41 @@
 
   async function renderPlaces(places) {
   markers.clearLayers();
-  console.log(`📍 Создаем ${places.length} маркеров (мгновенно)`);
-  
-  // Сначала создаем ВСЕ маркеры с заглушками
-  places.forEach(place => {
-    const marker = createMarkerWithPlaceholder(place);
-    markers.addLayer(marker);
-    placesStore.set(place.id, { ...place, marker, thumbnailLoaded: false });
-  });
-  
-  // Потом фоном загружаем фото (не блокируя интерфейс)
-  setTimeout(() => {
-    preloadVisibleMarkers();
-  }, 500);
+  let skipped = 0;
+
+  for (let place of places) {
+    const photo = place.photos[0];
+    // ✅ Проверка — если нет ни одной ссылки, пропускаем
+    if (!photo.thumbUrl && !photo.origUrl) {
+      skipped++;
+      console.warn('⚠️ Пропущено место без фото:', place.id);
+      continue;
+    }
+
+    const url = photo.thumbUrl || photo.origUrl;
+    
+    // ✅ Проверка на битую ссылку
+    try {
+      const ok = await waitImageLoad(url);
+      if (!ok) {
+        skipped++;
+        console.warn('⚠️ Пропущено (битая ссылка):', url);
+        continue;
+      }
+    } catch (error) {
+      skipped++;
+      console.warn('⚠️ Ошибка проверки ссылки:', url, error.message);
+      continue;
+    }
+
+    const marker = createPlaceMarker(place);
+    if (marker) {
+      markers.addLayer(marker);
+      placesStore.set(place.id, { ...place, marker });
+    }
+  }
+
+  console.log(`✅ Добавлено ${places.length - skipped} маркеров, пропущено ${skipped}`);
 }
 
 // Функция для создания маркера-заглушки
