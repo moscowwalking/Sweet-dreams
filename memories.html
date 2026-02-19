@@ -324,35 +324,108 @@
 
   async function renderPlaces(places) {
   markers.clearLayers();
-  let skipped = 0;
-
-  for (let place of places) {
-    const photo = place.photos[0];
-    // ✅ Проверка — если нет ни одной ссылки, пропускаем
-    if (!photo.thumbUrl && !photo.origUrl) {
-      skipped++;
-      console.warn('⚠️ Пропущено место без фото:', place.id);
-      continue;
-    }
-
-    const url = photo.thumbUrl || photo.origUrl;
-    const ok = await waitImageLoad(url);
-    if (!ok) {
-      skipped++;
-      console.warn('⚠️ Пропущено (битая ссылка):', url);
-      continue;
-    }
-
-    const marker = createPlaceMarker(place);
-    if (marker) {
-      markers.addLayer(marker);
-      placesStore.set(place.id, { ...place, marker });
-    }
-  }
-
-  console.log(`✅ Добавлено ${places.length - skipped} маркеров, пропущено ${skipped}`);
+  console.log(`📍 Создаем ${places.length} маркеров (мгновенно)`);
+  
+  // Сначала создаем ВСЕ маркеры с заглушками
+  places.forEach(place => {
+    const marker = createMarkerWithPlaceholder(place);
+    markers.addLayer(marker);
+    placesStore.set(place.id, { ...place, marker, thumbnailLoaded: false });
+  });
+  
+  // Потом фоном загружаем фото (не блокируя интерфейс)
+  setTimeout(() => {
+    preloadVisibleMarkers();
+  }, 500);
 }
 
+// Функция для создания маркера-заглушки
+function createMarkerWithPlaceholder(place) {
+  const [lat, lon] = place.coords;
+  const photoCount = place.photos?.length || 1;
+  
+  // Красивая заглушка (цветная)
+  const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  
+  const iconHtml = `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        background: ${color};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+      ">
+        ${photoCount}
+      </div>
+      <div style="
+        background: rgba(255,255,255,0.9);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        color: #222;
+      ">${photoCount}</div>
+    </div>
+  `;
+  
+  const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
+  const marker = L.marker([lat, lon], { icon });
+  marker.on('click', () => openGallery(place));
+  
+  return marker;
+}
+
+// Предзагрузка видимых маркеров
+function preloadVisibleMarkers() {
+  placesStore.forEach((place, id) => {
+    if (!place.marker) return;
+    
+    const markerEl = place.marker.getElement();
+    if (markerEl && isElementInViewport(markerEl)) {
+      loadMarkerImage(place);
+    }
+  });
+}
+
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= -100 &&
+    rect.left >= -100 &&
+    rect.bottom <= (window.innerHeight + 100) &&
+    rect.right <= (window.innerWidth + 100)
+  );
+}
+
+function loadMarkerImage(place) {
+  if (place.thumbnailLoaded) return;
+  
+  const photo = place.photos[0];
+  const url = photo.thumbUrl || photo.origUrl;
+  if (!url) return;
+  
+  const img = new Image();
+  img.onload = () => {
+    // Обновляем иконку
+    const iconHtml = `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <img src="${url}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
+        <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
+      </div>
+    `;
+    const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
+    place.marker.setIcon(icon);
+    place.thumbnailLoaded = true;
+  };
+  img.src = url;
+}
   let placesData = [];
 
 async function loadPlaces() {
