@@ -4,14 +4,25 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Memories — Карта воспоминаний</title>
+  
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  
   <style>
+    /* ===== CSS Variables ===== */
     :root {
       --pink: #ff69b4;
       --hotpink: #ff1493;
+      --gradient-pink: linear-gradient(90deg, var(--pink), var(--hotpink));
+      --shadow-default: 0 6px 18px rgba(0, 0, 0, 0.12);
+      --shadow-large: 0 20px 60px rgba(0, 0, 0, 0.5);
+      --border-radius: 10px;
+      --transition-default: 0.3s ease;
     }
+
+    /* ===== Base Styles ===== */
     body {
       margin: 0;
       font-family: "Segoe UI", sans-serif;
@@ -21,9 +32,8 @@
       align-items: center;
       min-height: 100vh;
     }
-    .leaflet-control-attribution {
-      display: none !important;
-    }
+
+    /* ===== Typography ===== */
     .title {
       margin: 28px 0 6px;
       font-size: 2rem;
@@ -41,6 +51,8 @@
       transform: scale(1.2);
       color: var(--pink);
     }
+
+    /* ===== Map ===== */
     #map {
       width: 92vw;
       max-width: 1000px;
@@ -51,6 +63,8 @@
       overflow: hidden;
       position: relative;
     }
+
+    /* ===== Upload Panel ===== */
     .upload-panel {
       position: absolute;
       top: 12px;
@@ -58,14 +72,14 @@
       z-index: 600;
       background: rgba(255, 255, 255, 0.95);
       padding: 8px;
-      border-radius: 10px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-default);
       display: flex;
       gap: 8px;
       align-items: center;
     }
     .upload-btn {
-      background: linear-gradient(90deg, var(--pink), var(--hotpink));
+      background: var(--gradient-pink);
       color: white;
       border: none;
       padding: 8px 12px;
@@ -81,12 +95,113 @@
       text-align: center;
       font-size: 0.9rem;
       color: #444;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      transition: all 0.15s ease;
     }
     .drop-area.dragover {
       background: rgba(255, 240, 250, 0.8);
       border-color: var(--hotpink);
     }
+
+    /* ===== Navigation ===== */
+    .nav-wrapper {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 700;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .nav-button {
+      background: var(--gradient-pink);
+      color: white;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+    .nav-button:hover {
+      transform: scale(1.05);
+    }
+
+    /* ===== Love Counter ===== */
+    .love-counter {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: var(--shadow-default);
+      border: 2px solid rgba(255, 105, 180, 0.3);
+      z-index: 700;
+      animation: slideDown 0.5s ease-out;
+    }
+    .counter-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .counter-value {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      transition: transform 0.3s;
+    }
+    .counter-value.updated {
+      transform: scale(1.3);
+    }
+    .counter-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .counter-divider {
+      font-size: 20px;
+      color: #ff69b4;
+      animation: heartbeat 1.5s infinite;
+    }
+
+    /* ===== Random Memory Button ===== */
+    .random-memory-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      color: white;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      z-index: 1000;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 3px solid rgba(255,255,255,0.5);
+      animation: popIn 0.5s ease-out;
+    }
+    .random-memory-btn:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 6px 25px rgba(255, 105, 180, 0.4);
+    }
+    .random-memory-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* ===== Gallery Overlay ===== */
     .overlay {
       display: none;
       position: fixed;
@@ -97,21 +212,53 @@
       justify-content: center;
     }
     .gallery {
+      position: relative;
       max-width: 92vw;
       max-height: 86vh;
       background: white;
       border-radius: 12px;
-      padding: 10px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      gap: 12px;
+      box-shadow: var(--shadow-large);
     }
-    .gallery .row {
+    .close-button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 30px;
+      height: 30px;
+      background: var(--pink);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
       display: flex;
-      gap: 8px;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .close-button:hover {
+      background: var(--hotpink);
+      transform: scale(1.1);
+    }
+    .gallery-date {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #444;
+      margin: 0;
+    }
+    .photo-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
     }
     .gallery img {
       max-width: 100%;
@@ -126,31 +273,35 @@
       overflow: auto;
     }
     .thumbs img {
-      display: none !important;
       width: 84px;
       height: 84px;
       object-fit: cover;
       border-radius: 8px;
       cursor: pointer;
       border: 2px solid transparent;
+      transition: transform 0.2s;
+    }
+    .thumbs img:hover {
+      transform: scale(1.05);
     }
     .thumbs img.active {
       border-color: var(--pink);
       transform: scale(1.03);
     }
-    @media (max-width: 640px) {
-      .title {
-        font-size: 1.5rem;
-      }
-      .drop-area {
-        min-width: 150px;
-        font-size: 0.85rem;
-      }
-      .thumbs img {
-        width: 60px;
-        height: 60px;
-      }
+    #photoCaption {
+      text-align: center;
+      margin-top: 10px;
+      color: #333;
+      font-style: italic;
+      font-size: 15px;
+      cursor: pointer;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+      transition: opacity 0.5s ease;
     }
+
+    /* ===== Marker Styles ===== */
     .pulsing-marker {
       animation: pulse 1.2s infinite;
     }
@@ -159,208 +310,34 @@
       50% { transform: scale(1.15); opacity: 0.9; }
       100% { transform: scale(1); opacity: 0.6; }
     }
+    @keyframes slideDown {
+      0% { transform: translateY(-100px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      80% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
 
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .title { font-size: 1.5rem; }
+      .drop-area { min-width: 150px; font-size: 0.85rem; }
+      .thumbs img { width: 60px; height: 60px; }
+      .love-counter { padding: 5px 12px; }
+      .counter-value { font-size: 18px; }
+      .counter-label { font-size: 9px; }
+    }
 
-    .back-panel {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 700;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 6px 10px;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  font-size: 0.9rem;
-  color: #222;
-}
-
-.back-panel button {
-  background: linear-gradient(90deg, var(--pink), var(--hotpink));
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-}
-#photoCaption {
- text-align: center;
-  margin-top: 10px;
-  color: #333;
-  font-style: italic;
-  font-size: 15px;
-  cursor: pointer;
-  max-width: 90%;
-  margin-left: auto;
-  margin-right: auto;
-  transition: opacity 0.5s ease;
-}
-
-.close-button {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 20px;
-  height: 20px;
-  background: var(--pink);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: background 0.2s ease;
-}
-
-.close-button:hover {
-  background: var(--hotpink);
-  transform: scale(1.1);
-}
-
-.gallery {
-  position: relative; /* Для позиционирования кнопки закрытия */
-  max-width: 92vw;
-  max-height: 86vh;
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-.gallery-date {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: #444;
-  margin: 0;
-}
-
-.photo-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0; /* Важно для flex-контейнера */
-}
-.random-memory-btn {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-  color: white;
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  z-index: 1000;
-  transition: transform 0.3s, box-shadow 0.3s;
-  border: 3px solid rgba(255,255,255,0.5);
-}
-
-.random-memory-btn:hover {
-  transform: scale(1.1) rotate(180deg);
-  box-shadow: 0 6px 25px rgba(255, 105, 180, 0.4);
-}
-
-.random-memory-btn:active {
-  transform: scale(0.95);
-}
-
-/* Анимация для появления */
-@keyframes popIn {
-  0% { transform: scale(0); opacity: 0; }
-  80% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.random-memory-btn {
-  animation: popIn 0.5s ease-out;
-}
-.love-counter {
-  position: absolute;
-  top: 5px;
-  left: 970px; /* Сдвигаем вправо от кнопки Назад */
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 30px;
-  padding: 8px 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  border: 2px solid rgba(255, 105, 180, 0.3);
-  z-index: 700;
-  font-family: 'Segoe UI', sans-serif;
-  animation: slideDown 0.5s ease-out;
-}
-
-@keyframes slideDown {
-  0% { transform: translateY(-100px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-.counter-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.counter-value {
-  font-size: 24px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #ff69b4, #ff1493);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2;
-}
-
-.counter-label {
-  font-size: 12px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.counter-divider {
-  font-size: 20px;
-  color: #ff69b4;
-  animation: heartbeat 1.5s infinite;
-}
-
-@keyframes heartbeat {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-/* Для мобильных */
-@media (max-width: 768px) {
-  .love-counter {
-    left: 90px;
-    padding: 5px 12px;
-  }
-  .counter-value {
-    font-size: 18px;
-  }
-  .counter-label {
-    font-size: 9px;
-  }
-}
+    /* Utility */
+    .hidden { display: none !important; }
+    .leaflet-control-attribution { display: none !important; }
   </style>
 </head>
 <body>
@@ -369,6 +346,7 @@
     <span> </span>
     <span>в</span><span>о</span><span>с</span><span>п</span><span>о</span><span>м</span><span>и</span><span>н</span><span>а</span><span>н</span><span>и</span><span>й</span>
   </h1>
+
   <div id="map">
     <div class="upload-panel" id="uploadPanel">
       <label class="upload-btn" for="fileInput">Загрузить фото</label>
@@ -376,833 +354,710 @@
       <div id="dropArea" class="drop-area">Перетащи фото сюда или нажми «Загрузить»</div>
     </div>
   </div>
-<div class="button-wrapper" style="position:absolute;top:12px;left:12px;z-index:700;">
-  <a href="index.html" class="main-button" style="background: linear-gradient(90deg, var(--pink), var(--hotpink));color:white;text-decoration:none;padding:6px 12px;border-radius:8px;font-weight:700;display:inline-block;">← Назад</a>
-</div>
-<div class="love-counter" id="loveCounter">
-  <div class="counter-item">
-    <span class="counter-value" id="totalMemories">0</span>
-    <span class="counter-label">воспоминаний</span>
+
+  <!-- Navigation -->
+  <div class="nav-wrapper">
+    <a href="index.html" class="nav-button">← Назад</a>
   </div>
-  <div class="counter-divider">❤️</div>
-  <div class="counter-item">
-    <span class="counter-value" id="totalDays">0</span>
-    <span class="counter-label">дней вместе</span>
-  </div>
-</div>
- <div id="overlay" class="overlay" aria-hidden="true">
-  <div class="gallery" role="dialog" aria-modal="true">
-    <!-- Кнопка закрытия в правом верхнем углу -->
-    <button id="closeGallery" class="close-button">×</button>
-    
-    <!-- Дата по центру -->
-    <strong id="placeTitle" class="gallery-date">Место</strong>
-    
-    <!-- Фото -->
-    <div class="photo-container">
-      <img id="galleryMain" src="" alt="Фото">
+
+  <!-- Love Counter -->
+  <div class="love-counter" id="loveCounter">
+    <div class="counter-item">
+      <span class="counter-value" id="totalMemories">0</span>
+      <span class="counter-label">воспоминаний</span>
     </div>
-    
-    <!-- Миниатюры -->
-    <div class="thumbs" id="thumbs"></div>
-  </div>
-</div>
+    <div class="counter-divider">❤️</div>
+    <div class="counter-item">
+      <span class="counter-value" id="totalDays">0</span>
+      <span class="counter-label">дней вместе</span>
+    </div>
   </div>
 
-<div class="random-memory-btn" id="randomMemoryBtn" title="Случайное воспоминание">
-  🎲
-</div>  
+  <!-- Gallery Overlay -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="gallery" role="dialog" aria-modal="true">
+      <button id="closeGallery" class="close-button">×</button>
+      <strong id="placeTitle" class="gallery-date">Место</strong>
+      <div class="photo-container">
+        <img id="galleryMain" src="" alt="Фото">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+  </div>
 
+  <!-- Random Memory Button -->
+  <div class="random-memory-btn" id="randomMemoryBtn" title="Случайное воспоминание">🎲</div>
+
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+  
   <script>
-    const map = L.map('map', { zoomControl: false }).setView([55.75, 37.61], 5);
-    const SERVER_URL = 'https://sweet-dreams-f8nc.onrender.com';
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+    // =========================================================================
+    // CONFIGURATION
+    // =========================================================================
+    const CONFIG = {
+      SERVER_URL: 'https://sweet-dreams-f8nc.onrender.com',
+      MAP: {
+        center: [55.75, 37.61],
+        zoom: 5,
+        maxZoom: 19
+      },
+      CACHE: {
+        PLACES_KEY: 'places_cache_v3',
+        PLACES_TIME_KEY: 'places_cache_time_v3',
+        TTL: 1000 * 60 * 60 * 2, // 2 часа
+        BROKEN_LINK_TTL: 1000 * 60 * 60 // 1 час
+      },
+      RELATIONSHIP: {
+        startDate: new Date(2025, 7, 23) // 23 августа 2025
+      },
+      MARKER: {
+        size: 56,
+        tempSize: 40,
+        colors: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a']
+      },
+      UPLOAD: {
+        maxSize: 15 * 1024 * 1024 // 15MB
+      }
+    };
 
-  const markers = L.markerClusterGroup({
-  showCoverageOnHover: false,   //  отключает синюю линию
-  spiderfyOnMaxZoom: true,      
-  zoomToBoundsOnClick: true,
-  spiderfyDistanceMultiplier: 2.5    
-});
-  map.addLayer(markers);
-  const placesStore = new Map();
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    const map = L.map('map', { zoomControl: false }).setView(CONFIG.MAP.center, CONFIG.MAP.zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: CONFIG.MAP.maxZoom }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  function coordsKey(lat, lon, precision = 7) {
-    return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
-  }
+    const markers = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
+      spiderfyDistanceMultiplier: 2.5
+    });
+    map.addLayer(markers);
 
-  function waitImageLoad(url) {
-    return new Promise(res => {
+    const placesStore = new Map();
+    const brokenLinkCache = new Map();
+
+    // =========================================================================
+    // UTILITY FUNCTIONS
+    // =========================================================================
+    const Utils = {
+      coordsKey(lat, lon, precision = 7) {
+        return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
+      },
+
+      isElementInViewport(el, offset = 100) {
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        return (
+          rect.top >= -offset &&
+          rect.left >= -offset &&
+          rect.bottom <= (window.innerHeight + offset) &&
+          rect.right <= (window.innerWidth + offset)
+        );
+      },
+
+      async waitForMapClick(timeout = 30000) {
+        return new Promise(resolve => {
+          const onClick = e => {
+            map.off('click', onClick);
+            resolve([e.latlng.lat, e.latlng.lng]);
+          };
+          map.on('click', onClick);
+          setTimeout(() => {
+            map.off('click', onClick);
+            resolve(null);
+          }, timeout);
+        });
+      },
+
+      formatDate(date) {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear().toString().slice(-2);
+        return `${day}.${month}.${year}`;
+      },
+
+      getColorFromId(id) {
+        const colors = CONFIG.MARKER.colors;
+        const index = parseInt(id, 10) % colors.length || 0;
+        return colors[index];
+      }
+    };
+
+    // =========================================================================
+    // IMAGE HANDLING
+    // =========================================================================
+    const ImageManager = {
+  async waitForLoad(url, timeout = 5000) {
+    return new Promise(resolve => {
       const img = new Image();
-      img.onload = () => res(true);
-      img.onerror = () => res(false);
+      const timer = setTimeout(() => {
+        cleanup();
+        resolve(false);
+      }, timeout);
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.onload = () => {
+        cleanup();
+        resolve(true);
+      };
+      img.onerror = () => {
+        cleanup();
+        resolve(false);
+      };
       img.src = url;
     });
   }
-// Кеш для битых ссылок (чтобы не проверять повторно)
-const brokenLinkCache = new Map();
-const BROKEN_CACHE_TIME = 1000 * 60 * 60; // 1 час
-function showRandomMemory() {
-  // Получаем все места из placesStore
-  const places = Array.from(placesStore.values());
-  
-  if (places.length === 0) {
-    alert('😢 Пока нет воспоминаний...');
-    return;
-  }
-  
-  // Выбираем случайное
-  const randomPlace = places[Math.floor(Math.random() * places.length)];
-  const coords = randomPlace.coords;
-  const photo = randomPlace.photos?.[0] || randomPlace;
-  
-  // Плавно летим к месту
-  map.flyTo(coords, 16, {
-    duration: 2,
-    easeLinearity: 0.5
-  });
-  
- 
-  
-  // Открываем галерею через 1.5 секунды (когда долетим)
-  setTimeout(() => {
-    openGallery(randomPlace);
-  }, 1500);
-  
-  // Визуальная обратная связь на кнопке
-  const btn = document.getElementById('randomMemoryBtn');
-  btn.style.transform = 'scale(1.2)';
-  setTimeout(() => btn.style.transform = '', 300);
-}
-
-// Добавляем обработчик на кнопку
-document.getElementById('randomMemoryBtn').addEventListener('click', showRandomMemory);
-
-function updateLoveCounter() {
-  // Считаем количество мест 
-  const totalMemories = placesStore.size;
-  document.getElementById('totalMemories').textContent = totalMemories;
-  
-  //  дата  отношений — 23 августа 2025
-  const startDate = new Date(2025, 7, 23); 
-  const today = new Date();
-  
-  // Вычисляем разницу в днях
-  const diffTime = Math.abs(today - startDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  // Обновляем счетчик дней
-  document.getElementById('totalDays').textContent = diffDays;
-  
-  // 
-  const years = Math.floor(diffDays / 365);
-  const months = Math.floor((diffDays % 365) / 30);
-  const days = diffDays % 30;
-  
-  //  подсказку при наведении
-  const counterEl = document.getElementById('loveCounter');
-  counterEl.title = `Вместе уже ${years} лет, ${months} месяцев и ${days} дней ❤️`;
-}
-
-// Обновляем при загрузке и при изменении
-setTimeout(updateLoveCounter, 2000); // Ждем загрузку данных
-
-// Можно обновлять при добавлении новых фото
-const originalUpload = uploadFileToServer;
-uploadFileToServer = async function(...args) {
-  await originalUpload.apply(this, args);
-  updateLoveCounter(); // Обновляем счетчик после загрузки
 };
 
-// Функция быстрой проверки ссылки (с кешем)
-async function isLinkValid(url) {
-  // Сначала проверяем кеш
-  const cached = brokenLinkCache.get(url);
-  if (cached && Date.now() - cached.timestamp < BROKEN_CACHE_TIME) {
-    return cached.isValid;
-  }
-  
-  // Если нет в кеше - проверяем
-  const isValid = await new Promise(resolve => {
-    const img = new Image();
-    const timeout = setTimeout(() => {
-      cleanup();
-      resolve(false);
-    }, 3000);
-    
-    const cleanup = () => {
-      clearTimeout(timeout);
-      img.onload = null;
-      img.onerror = null;
-    };
-    
-    img.onload = () => {
-      cleanup();
-      resolve(true);
-    };
-    
-    img.onerror = () => {
-      cleanup();
-      resolve(false);
-    };
-    
-    img.src = url;
-  });
-  
-  // Сохраняем в кеш
-  brokenLinkCache.set(url, { isValid, timestamp: Date.now() });
-  return isValid;
-}
-  async function renderPlaces(places) {
-  markers.clearLayers();
-  
-  // Разбиваем на чанки по 10 мест для параллельной проверки
-  const chunkSize = 10;
-  const chunks = [];
-  for (let i = 0; i < places.length; i += chunkSize) {
-    chunks.push(places.slice(i, i + chunkSize));
-  }
-  
-  let totalSkipped = 0;
-  let totalAdded = 0;
-  
-  // Обрабатываем чанки последовательно (чтобы не перегружать)
-  for (const chunk of chunks) {
-    // Параллельно проверяем все ссылки в чанке
-    const results = await Promise.allSettled(
-      chunk.map(async (place) => {
-        const photo = place.photos[0];
-        if (!photo.thumbUrl && !photo.origUrl) {
-          return { place, valid: false, reason: 'no-url' };
-        }
-        
-        const url = photo.thumbUrl || photo.origUrl;
-        const ok = await waitImageLoad(url);
-        return { place, valid: ok, url };
-      })
-    );
-    
-    // Обрабатываем результаты
-    for (const result of results) {
-      if (result.status === 'fulfilled' && result.value.valid) {
-        // Валидное место - добавляем маркер
-        const place = result.value.place;
-        const marker = createPlaceMarker(place);
-        if (marker) {
-          markers.addLayer(marker);
-          placesStore.set(place.id, { ...place, marker });
-          totalAdded++;
-        }
-      } else {
-        // Пропускаем
-        totalSkipped++;
-        if (result.status === 'fulfilled') {
-          console.warn('⚠️ Пропущено:', result.value.reason || result.value.url);
-        }
-      }
-    }
-    
-    // Даем браузеру передохнуть между чанками
-    await new Promise(resolve => setTimeout(resolve, 50));
-  }
-  
-  console.log(`✅ Добавлено ${totalAdded} маркеров, пропущено ${totalSkipped}`);
-}
+    // =========================================================================
+    // MARKER HANDLING
+    // =========================================================================
+    const MarkerManager = {
+  create(place, isTemp = false) {
+    const [lat, lon] = place.coords;
+    const size = isTemp ? CONFIG.MARKER.tempSize : CONFIG.MARKER.size;
+    const opacity = isTemp ? 0.5 : 1;
+    const pulseClass = isTemp ? 'pulsing-marker' : '';
 
-// Функция для создания маркера-заглушки
-function createMarkerWithPlaceholder(place) {
-  const [lat, lon] = place.coords;
-  const photoCount = place.photos?.length || 1;
-  
-  // Красивая заглушка (цветная)
-  const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  
-  const iconHtml = `
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div style="
-        width: 56px;
-        height: 56px;
-        border-radius: 10px;
-        background: ${color};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 18px;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.18);
-      ">
-        ${photoCount}
-      </div>
-      <div style="
-        background: rgba(255,255,255,0.9);
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 700;
-        color: #222;
-      ">${photoCount}</div>
-    </div>
-  `;
-  
-  const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
-  const marker = L.marker([lat, lon], { icon });
-  marker.on('click', () => openGallery(place));
-  
-  return marker;
-}
-
-// Предзагрузка видимых маркеров
-function preloadVisibleMarkers() {
-  placesStore.forEach((place, id) => {
-    if (!place.marker) return;
-    
-    const markerEl = place.marker.getElement();
-    if (markerEl && isElementInViewport(markerEl)) {
-      loadMarkerImage(place);
-    }
-  });
-}
-
-function isElementInViewport(el) {
-  const rect = el.getBoundingClientRect();
-  return (
-    rect.top >= -100 &&
-    rect.left >= -100 &&
-    rect.bottom <= (window.innerHeight + 100) &&
-    rect.right <= (window.innerWidth + 100)
-  );
-}
-
-function loadMarkerImage(place) {
-  if (place.thumbnailLoaded) return;
-  
-  const photo = place.photos[0];
-  const url = photo.thumbUrl || photo.origUrl;
-  if (!url) return;
-  
-  const img = new Image();
-  img.onload = () => {
-    // Обновляем иконку
     const iconHtml = `
-      <div style="display:flex;align-items:center;gap:6px;">
-        <img src="${url}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
-        <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
+      <div class="${pulseClass}" style="display:flex;align-items:center;gap:6px;">
+        <img src="${place.photos[0].thumbUrl}" 
+             style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;opacity:${opacity}; box-shadow:0 6px 16px rgba(0,0,0,0.18)">
+        <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px; font-weight:700;color:#222;">${place.photos.length}</div>
       </div>
     `;
+
     const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
-    place.marker.setIcon(icon);
-    place.thumbnailLoaded = true;
-  };
-  img.src = url;
-}
-  let placesData = [];
+    const marker = L.marker([lat, lon], { icon });
+    marker.on('click', () => Gallery.open(place));
+    return marker;
+  },
 
-async function loadPlaces() {
-  console.log('📥 Загружаем places.json (с кешированием)...');
+  updateSizes() {
+    const zoom = map.getZoom();
+    const scale = Math.pow(2, zoom - 13);
+    const size = Math.max(20, Math.min(56, 40 * scale));
 
-  const CACHE_KEY = 'places_cache_v3';
-  const CACHE_TIME_KEY = 'places_cache_time_v3';
-  const CACHE_TTL = 1000 * 60 * 60 * 2; 
-
-  // --- 1. Пытаемся загрузить кеш ---
-  const cachedText = localStorage.getItem(CACHE_KEY);
-  const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY), 10);
-
-  const isCacheValid =
-    cachedText &&
-    cachedTime &&
-    Date.now() - cachedTime < CACHE_TTL;
-
-  if (isCacheValid) {
-    console.log('⚡ Загружаем places.json из кеша');
-    try {
-      const data = JSON.parse(cachedText);
-       processPlacesForDisplay(data);
-      return processPlaces(data);
-    } catch (e) {
-      console.warn('⚠️ Ошибка чтения кеша, загружаем заново', e);
-    }
-  }
-
-  // --- 2. Грузим с сервера ---
-  try {
-    const url = 'https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=' + Date.now();
-    const res = await fetch(url);
-
-    if (!res.ok) {
-      console.warn('⚠️ places.json не найден, пробуем кеш');
-      if (cachedText) processPlaces(JSON.parse(cachedText));
-      return;
-    }
-
-    const text = await res.text();
-    if (!text.trim()) {
-      console.log('⚠️ Пустой places.json, пробуем кеш');
-      if (cachedText) processPlaces(JSON.parse(cachedText));
-      return;
-    }
-
-    // --- 3. Сохраняем кеш ---
-    localStorage.setItem(CACHE_KEY, text);
-    localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
-
-    const data = JSON.parse(text);
-    processPlaces(data);
-
-  } catch (err) {
-    console.error('❌ Ошибка загрузки places.json:', err);
-    if (cachedText) {
-      console.log('📦 Загружаем из кеша из-за ошибки сервера');
-      processPlaces(JSON.parse(cachedText));
-    }
-  }
-}
-  function processPlacesForDisplay(data) {
-    // Быстро создаем все маркеры с заглушками
-    const places = data.map(p => ({
-      id: p.id,
-      coords: p.coords,
-      photos: [{
-        thumbUrl: p.thumbUrl,
-        origUrl: p.origUrl,
-        date: p.exifDate || p.date
-      }]
-    }));
-    
-    // Сразу показываем все маркеры (быстро)
-    places.forEach(place => {
-      createAndAddMarker(place, false);
+    placesStore.forEach(place => {
+      if (!place.marker) return;
+      const iconHtml = `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <img src="${place.photos[0].thumbUrl}" 
+               style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
+          <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
+        </div>
+      `;
+      const icon = L.divIcon({
+        html: iconHtml,
+        className: '',
+        iconSize: [size + 50, size],
+        iconAnchor: [size / 2, size / 2]
+      });
+      place.marker.setIcon(icon);
     });
-    
-    console.log(`✅ ${places.length} маркеров показано мгновенно`);
-    
-    // Затем фоново загружаем фото
-    setTimeout(() => {
-      loadPlacesWithPriority(places, 'low');
-    }, 1000);
   }
+};
 
-// --- 4. Обработка и рендер ---
-function processPlaces(data) {
-  if (!Array.isArray(data)) {
-    return console.warn('⚠️ places.json не является массивом');
-  }
+    // =========================================================================
+    // GALLERY
+    // =========================================================================
+    const Gallery = {
+      overlay: document.getElementById('overlay'),
+      main: document.getElementById('galleryMain'),
+      thumbs: document.getElementById('thumbs'),
+      placeTitle: document.getElementById('placeTitle'),
+      closeBtn: document.getElementById('closeGallery'),
+      
+      currentPlace: null,
+      currentIndex: 0,
 
-  const validData = data.filter(
-    p =>
-      (p.thumbUrl && p.thumbUrl.startsWith('http')) ||
-      (p.origUrl && p.origUrl.startsWith('http'))
-  );
+      init() {
+        this.closeBtn.onclick = () => this.close();
+      },
 
-  console.log(`✅ Валидных мест: ${validData.length} из ${data.length}`);
+      open(place) {
+        this.currentPlace = place;
+        this.currentIndex = 0;
+        this.thumbs.innerHTML = '';
 
-  const places = validData.map(p => {
-    let displayDate = '';
+        const photoList = Array.isArray(place.photos) && place.photos.length
+          ? place.photos
+          : [{
+            origUrl: place.origUrl,
+            thumbUrl: place.thumbUrl,
+            date: place.date || (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU') : ''),
+            caption: place.caption || ''
+          }];
 
-    if (p.exifDate) {
-      displayDate = p.exifDate;
-    } else if (p.timestamp) {
-      const date = new Date(p.timestamp);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear().toString().slice(-2);
-      displayDate = `${day}.${month}.${year}`;
+        const first = photoList[0];
+        const src = first?.origUrl || first?.thumbUrl || '';
+        if (!src) return;
+
+        this.main.src = src;
+        this.placeTitle.textContent = first?.date || 'Без даты';
+        
+        this.createCaptionElement(first.caption);
+        this.overlay.style.display = 'flex';
+      },
+
+      close() {
+        this.overlay.style.display = 'none';
+      },
+
+      createCaptionElement(initialCaption) {
+        let captionEl = document.getElementById('photoCaption');
+        if (captionEl) captionEl.remove();
+
+        captionEl = document.createElement('div');
+        captionEl.id = 'photoCaption';
+        captionEl.textContent = initialCaption || 'Добавь подпись ✍️';
+        captionEl.onclick = () => this.editCaption(captionEl);
+
+        const photoContainer = this.main.parentElement;
+        photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
+      },
+
+      async editCaption(captionEl) {
+        const oldText = captionEl.textContent === 'Добавь подпись ✍️' ? '' : captionEl.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldText;
+        Object.assign(input.style, {
+          display: 'block',
+          margin: '10px auto',
+          width: '80%',
+          textAlign: 'center',
+          fontSize: '15px',
+          padding: '6px',
+          borderRadius: '10px',
+          border: '1px solid #ccc'
+        });
+
+        captionEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const finish = async () => {
+          const newCaption = input.value.trim();
+          const photoList = Array.isArray(this.currentPlace.photos) 
+            ? this.currentPlace.photos 
+            : [this.currentPlace];
+          
+          photoList[this.currentIndex].caption = newCaption;
+
+          input.replaceWith(captionEl);
+          captionEl.textContent = newCaption || 'Добавь подпись ✍️';
+
+          try {
+            await fetch(`${CONFIG.SERVER_URL}/update-caption`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: this.currentPlace.id,
+                photoIndex: this.currentIndex,
+                caption: newCaption
+              })
+            });
+          } catch (err) {
+            console.error('Failed to save caption:', err);
+          }
+        };
+
+        input.addEventListener('blur', finish);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') finish();
+          if (e.key === 'Escape') {
+            input.replaceWith(captionEl);
+            captionEl.textContent = oldText || 'Добавь подпись ✍️';
+          }
+        });
+      }
+    };
+
+    // =========================================================================
+    // LOVE COUNTER
+    // =========================================================================
+    const LoveCounter = {
+      memoriesEl: document.getElementById('totalMemories'),
+      daysEl: document.getElementById('totalDays'),
+      counterEl: document.getElementById('loveCounter'),
+      watchInterval: null,
+      
+      init() {
+        this.update();
+        this.startWatching();
+      },
+
+      update() {
+        const totalMemories = placesStore.size;
+        const oldValue = parseInt(this.memoriesEl.textContent) || 0;
+        
+        // Анимация при изменении
+        if (totalMemories !== oldValue) {
+          this.memoriesEl.classList.add('updated');
+          setTimeout(() => this.memoriesEl.classList.remove('updated'), 300);
+        }
+        
+        this.memoriesEl.textContent = totalMemories;
+
+        const startDate = CONFIG.RELATIONSHIP.startDate;
+        const today = new Date();
+        const diffTime = Math.abs(today - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        this.daysEl.textContent = diffDays;
+
+        const years = Math.floor(diffDays / 365);
+        const months = Math.floor((diffDays % 365) / 30);
+        const days = diffDays % 30;
+        this.counterEl.title = `Вместе уже ${years} лет, ${months} месяцев и ${days} дней ❤️`;
+      },
+
+      startWatching() {
+        let lastCount = placesStore.size;
+        
+        this.watchInterval = setInterval(() => {
+          const currentCount = placesStore.size;
+          if (currentCount !== lastCount) {
+            lastCount = currentCount;
+            this.update();
+          }
+        }, 500);
+
+        // Остановить через 30 секунд
+        setTimeout(() => {
+          if (this.watchInterval) {
+            clearInterval(this.watchInterval);
+            this.watchInterval = null;
+          }
+        }, 30000);
+      }
+    };
+
+    // =========================================================================
+    // RANDOM MEMORY
+    // =========================================================================
+    const RandomMemory = {
+      btn: document.getElementById('randomMemoryBtn'),
+
+      init() {
+        this.btn.addEventListener('click', () => this.show());
+      },
+
+      show() {
+        const places = Array.from(placesStore.values());
+        
+        if (places.length === 0) {
+          alert('😢 Пока нет воспоминаний...');
+          return;
+        }
+
+        const randomPlace = places[Math.floor(Math.random() * places.length)];
+        
+        map.flyTo(randomPlace.coords, 16, {
+          duration: 2,
+          easeLinearity: 0.5
+        });
+
+        setTimeout(() => Gallery.open(randomPlace), 1500);
+
+        this.btn.style.transform = 'scale(1.2)';
+        setTimeout(() => this.btn.style.transform = '', 300);
+      }
+    };
+
+    // =========================================================================
+    // UPLOAD MANAGER
+    // =========================================================================
+    const UploadManager = {
+      dropArea: document.getElementById('dropArea'),
+      fileInput: document.getElementById('fileInput'),
+
+      init() {
+        ['dragenter', 'dragover'].forEach(ev => {
+          this.dropArea.addEventListener(ev, e => {
+            e.preventDefault();
+            this.dropArea.classList.add('dragover');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach(ev => {
+          this.dropArea.addEventListener(ev, e => {
+            e.preventDefault();
+            this.dropArea.classList.remove('dragover');
+          });
+        });
+
+        this.dropArea.addEventListener('drop', e => this.handleFiles(Array.from(e.dataTransfer.files)));
+        this.fileInput.addEventListener('change', e => {
+          this.handleFiles(Array.from(e.target.files));
+          this.fileInput.value = '';
+        });
+      },
+
+      async handleFiles(files) {
+        for (const file of files) {
+          await this.processFile(file);
+        }
+      },
+
+      async processFile(file) {
+        let gps = null;
+        let exifDate = null;
+
+        try {
+          const exifData = await exifr.parse(file);
+          if (exifData?.DateTimeOriginal) {
+            const date = new Date(exifData.DateTimeOriginal);
+            exifDate = Utils.formatDate(date);
+          }
+        } catch (exifErr) {
+          console.log('No EXIF date found');
+        }
+
+        try {
+          gps = await exifr.gps(file);
+        } catch {}
+
+        let processedFile = file;
+        if (/heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)) {
+          try {
+            const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+            processedFile = new File([converted], 'converted.jpg', { type: 'image/jpeg' });
+          } catch (err) {
+            console.error('HEIC convert failed', err);
+          }
+        }
+
+        const coords = gps?.latitude && gps?.longitude
+          ? [gps.latitude, gps.longitude]
+          : await Utils.waitForMapClick();
+
+        if (!coords) return;
+
+        const tempPlace = {
+          id: 'tmp-' + Date.now(),
+          coords,
+          photos: [{
+            thumbUrl: URL.createObjectURL(processedFile),
+            origUrl: URL.createObjectURL(processedFile),
+            date: exifDate || Utils.formatDate(new Date()),
+            caption: ''
+          }]
+        };
+
+        const tmpMarker = MarkerManager.create(tempPlace, true);
+        markers.addLayer(tmpMarker);
+        
+        await this.uploadToServer(processedFile, gps, tempPlace, tmpMarker, exifDate);
+      },
+
+      async uploadToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
+        try {
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('coords', JSON.stringify(tmpPlace.coords));
+          fd.append('placeTitle', 'Новое место');
+          if (exifDate) fd.append('exifDate', exifDate);
+
+          const r = await fetch(`${CONFIG.SERVER_URL}/upload`, { method: 'POST', body: fd });
+          const res = await r.json().catch(() => ({ success: false }));
+
+          if (!res.success) throw new Error('Upload failed');
+
+          markers.removeLayer(tmpMarker);
+          
+          const key = Utils.coordsKey(...tmpPlace.coords);
+          let place = placesStore.get(key);
+          
+          if (!place) {
+            place = {
+              id: key,
+              coords: [...tmpPlace.coords],
+              photos: [],
+              exifDate
+            };
+            placesStore.set(key, place);
+          }
+          
+          place.photos.push({
+            thumbUrl: res.fileUrl,
+            origUrl: res.fileUrl,
+            date: exifDate || Utils.formatDate(new Date())
+          });
+
+          if (place.marker) markers.removeLayer(place.marker);
+          place.marker = MarkerManager.create(place);
+          markers.addLayer(place.marker);
+
+          LoveCounter.update();
+        } catch (e) {
+          console.error('Upload error:', e);
+          markers.removeLayer(tmpMarker);
+          alert('Ошибка при загрузке: ' + e.message);
+        }
+      }
+    };
+
+    // =========================================================================
+    // DATA LOADING
+    // =========================================================================
+    const DataLoader = {
+  async load() {
+    console.log('📥 Loading places.json...');
+
+    const cachedText = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
+    const cachedTime = parseInt(localStorage.getItem(CONFIG.CACHE.PLACES_TIME_KEY), 10);
+    const isCacheValid = cachedText && cachedTime && Date.now() - cachedTime < CONFIG.CACHE.TTL;
+
+    if (isCacheValid) {
+      console.log('⚡ Using cache');
+      try {
+        const data = JSON.parse(cachedText);
+        await this.processData(data);
+        return;
+      } catch (e) {
+        console.warn('Cache error:', e);
+      }
     }
 
-    return {
+    try {
+      const url = `https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=${Date.now()}`;
+      const res = await fetch(url);
+      
+      if (!res.ok) throw new Error('Network error');
+      
+      const text = await res.text();
+      const data = JSON.parse(text);
+      
+      localStorage.setItem(CONFIG.CACHE.PLACES_KEY, text);
+      localStorage.setItem(CONFIG.CACHE.PLACES_TIME_KEY, Date.now().toString());
+      
+      await this.processData(data);
+    } catch (err) {
+      console.error('Load error:', err);
+      if (cachedText) {
+        console.log('📦 Using fallback cache');
+        await this.processData(JSON.parse(cachedText));
+      }
+    }
+  },
+
+  async processData(data) {
+    if (!Array.isArray(data)) {
+      console.warn('Invalid data format');
+      return;
+    }
+
+    // Фильтруем места без ссылок
+    const validData = data.filter(p =>
+      (p.thumbUrl?.startsWith('http')) || (p.origUrl?.startsWith('http'))
+    );
+
+    console.log(`✅ Found ${validData.length} places with URLs`);
+
+    const places = validData.map(p => ({
       id: p.id,
       coords: p.coords,
       exifDate: p.exifDate,
       timestamp: p.timestamp,
-      photos: [
-        {
-          thumbUrl: p.thumbUrl,
-          origUrl: p.origUrl,
-          date: displayDate,
-          caption: p.caption || ''
-        }
-      ]
-    };
-  });
+      photos: [{
+        thumbUrl: p.thumbUrl,
+        origUrl: p.origUrl,
+        date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''),
+        caption: p.caption || ''
+      }]
+    }));
 
-  renderPlaces(places);
-}
+    // Проверяем все ссылки и показываем только рабочие
+    await this.renderWithCheck(places);
+  },
 
-
-
-  loadPlaces();
+  async renderWithCheck(places) {
+    markers.clearLayers();
     
-        function createPlaceMarker(place, isTemp = false) {
+    let totalValid = 0;
+    let totalSkipped = 0;
+    
+    console.log(`🔍 Checking ${places.length} links...`);
+
+    // Разбиваем на небольшие группы для параллельной проверки
+    const batchSize = 20;
+    for (let i = 0; i < places.length; i += batchSize) {
+      const batch = places.slice(i, i + batchSize);
+      
+      // Проверяем группу параллельно
+      const results = await Promise.all(
+        batch.map(async (place) => {
+          const photo = place.photos[0];
+          const url = photo.thumbUrl || photo.origUrl;
           
-      const [lat, lon] = place.coords;
-      const size = isTemp ? 40 : 56;
-      const opacity = isTemp ? 0.5 : 1;
-      const pulseClass = isTemp ? 'pulsing-marker' : '';
-      const iconHtml = `
-        <div class="${pulseClass}" style="display:flex;align-items:center;gap:6px;">
-          <img src="${place.photos[0].thumbUrl}" style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;opacity:${opacity}; box-shadow:0 6px 16px rgba(0,0,0,0.18)">
-          <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px; font-weight:700;color:#222;">${place.photos.length}</div>
-        </div>
-      `;
-      const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [160, 60] });
-      const marker = L.marker([lat, lon], { icon });
-      marker.on('click', () => openGallery(place));
-      return marker;
-    }
+          if (!url) return { place, valid: false };
+          
+          const isValid = await ImageManager.waitForLoad(url, 2000);
+          return { place, valid: isValid };
+        })
+      );
 
-    const overlay = document.getElementById('overlay');
-    const galleryMain = document.getElementById('galleryMain');
-    const thumbs = document.getElementById('thumbs');
-    const placeTitleEl = document.getElementById('placeTitle');
-
-function openGallery(place) {
-  console.log('🔍 FULL PLACE DATA:', place);
-  console.log('🔍 Place exifDate:', place.exifDate);
-  console.log('🔍 First photo:', place.photos[0]);
-  const overlay = document.getElementById('overlay');
-  const galleryMain = document.getElementById('galleryMain');
-  const thumbs = document.getElementById('thumbs');
-  const placeTitleEl = document.getElementById('placeTitle');
-
-  thumbs.innerHTML = '';
-
-  const photoList = Array.isArray(place.photos) && place.photos.length
-    ? place.photos
-    : [{ 
-        origUrl: place.origUrl, 
-        thumbUrl: place.thumbUrl, 
-        date: place.date || (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU') : ''), 
-        caption: place.caption || '' // УБИРАЕМ place.placeTitle отсюда
-      }];
-
-  const first = photoList[0];
-  const src = first?.origUrl || first?.thumbUrl || '';
-  if (!src) return;
-  
-  galleryMain.src = src;
-
-   const dateText = first?.date || 'Без даты';
-  placeTitleEl.textContent = dateText;
-  
-  
-  
-  placeTitleEl.textContent = dateText;
-
-  // Удаляем старую подпись
-  let captionEl = document.getElementById('photoCaption');
-  if (captionEl) captionEl.remove();
-
-  // Создаем новую подпись
-  captionEl = document.createElement('div');
-  captionEl.id = 'photoCaption';
-  captionEl.style.textAlign = 'center';
-  captionEl.style.marginTop = '12px';
-  captionEl.style.color = '#333';
-  captionEl.style.fontStyle = 'italic';
-  captionEl.style.fontSize = '15px';
-  captionEl.style.cursor = 'pointer';
-  captionEl.style.maxWidth = '90%';
-  captionEl.style.marginLeft = 'auto';
-  captionEl.style.marginRight = 'auto';
-  captionEl.style.transition = 'opacity 0.3s ease';
-  
-  // Вставляем после контейнера с фото
-  const photoContainer = galleryMain.parentElement;
-  photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
-
-  let currentIndex = 0;
-  
-  // ИСПРАВЛЕНИЕ: используем только caption, не placeTitle
-  const initialCaption = first.caption || 'Добавь подпись ✍️';
-  captionEl.textContent = initialCaption;
-
-  captionEl.onclick = () => {
-  const oldText = captionEl.textContent === 'Добавь подпись ✍️' ? '' : captionEl.textContent;
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = oldText;
-  input.style.display = 'block';
-  input.style.margin = '10px auto';
-  input.style.width = '80%';
-  input.style.textAlign = 'center';
-  input.style.fontSize = '15px';
-  input.style.padding = '6px';
-  input.style.borderRadius = '10px';
-  input.style.border = '1px solid #ccc';
-
-  // Заменяем captionEl на input
-  if (captionEl.parentNode) {
-    captionEl.replaceWith(input);
-  } else {
-    const photoContainer = galleryMain.parentElement;
-    photoContainer.parentNode.insertBefore(input, photoContainer.nextSibling);
-  }
-  
-  input.focus();
-  input.select();
-
-
-   const finish = async () => {
-  const newCaption = input.value.trim();
-  photoList[currentIndex].caption = newCaption;
-  
-  // ПРОВЕРЯЕМ, что input все еще в DOM перед заменой
-  if (input.parentNode) {
-    input.replaceWith(captionEl);
-  } else {
-    // Если input уже удален, просто восстанавливаем captionEl
-    const photoContainer = galleryMain.parentElement;
-    photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
-  }
-  
-  captionEl.textContent = newCaption || 'Добавь подпись ✍️';
-  captionEl.style.opacity = '0.6';
-  setTimeout(() => (captionEl.style.opacity = '1'), 300);
-
-  try {
-    const payload = {
-      id: place.id,
-      photoIndex: currentIndex,
-      caption: newCaption
-    };
-    const resp = await fetch(`${SERVER_URL}/update-caption`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    // Обрабатываем случай, когда сервер возвращает HTML вместо JSON
-    const contentType = resp.headers.get('content-type');
-    let data;
-    if (contentType && contentType.includes('application/json')) {
-      data = await resp.json();
-    } else {
-      const text = await resp.text();
-      throw new Error(`Server returned ${resp.status}: ${text.substring(0, 100)}`);
-    }
-    
-    if (!resp.ok || !data.success) {
-      throw new Error(data.error || `server responded ${resp.status}`);
-    }
-    console.log('✅ Подпись успешно сохранена на сервере');
-    
-    // Обновляем локальное хранилище
-    try {
-      const st = placesStore.get(place.id);
-      if (st) {
-        if (Array.isArray(st.photos) && st.photos[currentIndex]) {
-          st.photos[currentIndex].caption = newCaption;
+      // Добавляем только валидные
+      for (const result of results) {
+        if (result.valid) {
+          const marker = MarkerManager.create(result.place);
+          markers.addLayer(marker);
+          placesStore.set(result.place.id, { ...result.place, marker });
+          totalValid++;
         } else {
-          st.caption = newCaption;
+          totalSkipped++;
+          console.log('🔗 Skipped broken link:', result.place.photos[0].thumbUrl || result.place.photos[0].origUrl);
         }
-        placesStore.set(place.id, st);
       }
-    } catch (e) { /* не критично */ }
-  } catch (err) {
-    console.error('❌ Не удалось сохранить подпись:', err);
-    alert('Не удалось сохранить подпись: ' + (err.message || err));
+
+      // Обновляем прогресс
+      console.log(`⏳ Progress: ${i + batch.length}/${places.length}`);
+      
+      // Маленькая задержка между группами
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    console.log(`✅ Done: ${totalValid} valid, ${totalSkipped} broken`);
+    LoveCounter.update();
   }
 };
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    function init() {
+      Gallery.init();
+      RandomMemory.init();
+      UploadManager.init();
+      LoveCounter.init();
 
-    input.addEventListener('blur', finish);
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') finish();
-      if (e.key === 'Escape') {
-        input.replaceWith(captionEl);
-        captionEl.textContent = oldText || 'Добавь подпись ✍️';
-      }
-    });
-  };
+      DataLoader.load();
 
-  overlay.style.display = 'flex';
-}
+      map.on('zoom', MarkerManager.updateSizes.bind(MarkerManager));
+      map.on('moveend', () => setTimeout(MarkerManager.preloadVisibleMarkers.bind(MarkerManager), 300));
 
-
-
-    document.getElementById('closeGallery').onclick = () => overlay.style.display = 'none';
-
-    const dropArea = document.getElementById('dropArea');
-    const fileInput = document.getElementById('fileInput');
-
-    ['dragenter', 'dragover'].forEach(ev => dropArea.addEventListener(ev, e => {
-      e.preventDefault();
-      dropArea.classList.add('dragover');
-    }));
-
-    ['dragleave', 'drop'].forEach(ev => dropArea.addEventListener(ev, e => {
-      e.preventDefault();
-      dropArea.classList.remove('dragover');
-    }));
-
-    dropArea.addEventListener('drop', e => handleFiles(Array.from(e.dataTransfer.files)));
-    fileInput.addEventListener('change', e => {
-      handleFiles(Array.from(e.target.files));
-      fileInput.value = '';
-    });
-
-    async function handleFiles(files) {
-  for (let file of files) {
-    let gps = null;
-    let exifDate = null;
-
-    // Извлекаем EXIF данные
-    try {
-      const exifData = await exifr.parse(file);
-      console.log('🔍 EXIF данные из оригинала:', exifData);
-      
-      if (exifData && exifData.DateTimeOriginal) {
-        const date = new Date(exifData.DateTimeOriginal);
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear().toString().slice(-2);
-        exifDate = `${day}.${month}.${year}`;
-        console.log('✅ EXIF дата найдена:', exifDate);
-      }
-    } catch (exifErr) {
-      console.log('⚠️ EXIF дата не найдена:', exifErr.message);
+      // Patch upload function for counter update
+      const originalUpload = UploadManager.uploadToServer.bind(UploadManager);
+      UploadManager.uploadToServer = async (...args) => {
+        await originalUpload(...args);
+        LoveCounter.update();
+      };
     }
 
-    try {
-      gps = await exifr.gps(file);
-    } catch {}
-
-    const isHEIC = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
-    if (isHEIC) {
-      try {
-        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-        file = new File([converted], 'converted.jpg', { type: 'image/jpeg' });
-        console.log('✅ HEIC converted to JPG');
-      } catch (err) {
-        console.error('HEIC convert failed', err);
-      }
-    }
-    const coords = gps && gps.latitude && gps.longitude
-      ? [gps.latitude, gps.longitude]
-      : await waitForMapClick();
-
-    if (!coords) continue;
-    const tempPlace = {
-      id: 'tmp-' + Date.now(),
-      coords,
-      photos: [{ 
-        thumbUrl: URL.createObjectURL(file), 
-        origUrl: URL.createObjectURL(file),
-        date: exifDate || new Date().toLocaleDateString('ru-RU'), 
-        caption: '' 
-      }]
-    };
-
-    const tmpMarker = createPlaceMarker(tempPlace, true);
-    markers.addLayer(tmpMarker);
-    
-    
-    await uploadFileToServer(file, gps, tempPlace, tmpMarker, exifDate);
-  }
-}
-    function waitForMapClick() {
-      return new Promise(res => {
-        const onClick = e => {
-          map.off('click', onClick);
-          res([e.latlng.lat, e.latlng.lng]);
-        };
-        map.on('click', onClick);
-        setTimeout(() => {
-          map.off('click', onClick);
-          res(null);
-        }, 30000);
-      });
-    }
-
-    async function uploadFileToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
-    console.log('📤 Отправка файла на сервер:', file.name, file.size + 'B');
-
-    const key = coordsKey(...tmpPlace.coords);
-
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('coords', JSON.stringify(tmpPlace.coords));
-      fd.append('placeTitle', 'Новое место');
-      
-  
-      if (exifDate) {
-        fd.append('exifDate', exifDate);
-      }
-
-      const r = await fetch('https://sweet-dreams-f8nc.onrender.com/upload', {
-        method: 'POST',
-        body: fd
-      });
-
-      console.log('Ответ сервера статус:', r.status);
-      const res = await r.json().catch(() => ({ success: false, error: 'Некорректный JSON от сервера' }));
-
-      if (!res.success) throw new Error(res.error || 'Ошибка при загрузке файла');
-
-      console.log('✅ Файл успешно загружен:', res.fileUrl);
-
-      markers.removeLayer(tmpMarker);
-      const key = coordsKey(...tmpPlace.coords);
-      let place = placesStore.get(key);
-      if (!place) {
-        place = { 
-          id: key, 
-          coords: [...tmpPlace.coords], 
-          photos: [],
-          exifDate: exifDate 
-        };
-        placesStore.set(key, place);
-      }
-      place.photos.push({ 
-        thumbUrl: res.fileUrl, 
-        origUrl: res.fileUrl,
-        date: exifDate || new Date().toLocaleDateString('ru-RU') 
-      });
-
-      if (place.marker) markers.removeLayer(place.marker);
-      place.marker = createPlaceMarker(place);
-      markers.addLayer(place.marker);
-
-      console.log('✅ Маркер обновлён на карте');
-    } catch (e) {
-      console.error('❌ Ошибка при загрузке файла на сервер:', e);
-      markers.removeLayer(tmpMarker);
-      alert('Ошибка при загрузке: ' + e.message);
-    }
-  }
-
-  function updateMarkerSizes() {
-      const zoom = map.getZoom();
-      const scale = Math.pow(2, zoom - 13);
-      const size = Math.max(20, Math.min(56, 40 * scale));
-      placesStore.forEach(place => {
-        if (!place.marker) return;
-        const iconHtml = `
-          <div style="display:flex;align-items:center;gap:6px;">
-            <img src="${place.photos[0].thumbUrl}" style="width:${size}px;height:${size}px;border-radius:10px;object-fit:cover;box-shadow:0 6px 16px rgba(0,0,0,0.18)">
-            <div style="background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:700;color:#222;">${place.photos.length}</div>
-          </div>
-        `;
-        const icon = L.divIcon({
-          html: iconHtml,
-          className: '',
-          iconSize: [size + 50, size],
-          iconAnchor: [size / 2, size / 2]
-        });
-        place.marker.setIcon(icon);
-      });
-}
-
-    map.on('zoom', updateMarkerSizes);
-
-
-    
+    // Start everything
+    init();
   </script>
 </body>
 </html>
