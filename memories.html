@@ -914,44 +914,54 @@
     // DATA LOADING
     // =========================================================================
     const DataLoader = {
+      isLoading: false,
+      placesData: null,
+  
   async load() {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    
     console.log('📥 Loading places.json...');
 
-    const cachedText = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
-    const cachedTime = parseInt(localStorage.getItem(CONFIG.CACHE.PLACES_TIME_KEY), 10);
-    const isCacheValid = cachedText && cachedTime && Date.now() - cachedTime < CONFIG.CACHE.TTL;
-
-    if (isCacheValid) {
-      console.log('⚡ Using cache');
-      try {
-        const data = JSON.parse(cachedText);
-        await this.processData(data);
-        return;
-      } catch (e) {
-        console.warn('Cache error:', e);
-      }
-    }
-
+    // ВСЕГДА грузим свежие данные СНАЧАЛА
     try {
       const url = `https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=${Date.now()}`;
       const res = await fetch(url);
       
-      if (!res.ok) throw new Error('Network error');
-      
-      const text = await res.text();
-      const data = JSON.parse(text);
-      
-      localStorage.setItem(CONFIG.CACHE.PLACES_KEY, text);
-      localStorage.setItem(CONFIG.CACHE.PLACES_TIME_KEY, Date.now().toString());
-      
-      await this.processData(data);
+      if (res.ok) {
+        const text = await res.text();
+        const data = JSON.parse(text);
+        
+        // Сохраняем в кеш для будущих заходов
+        localStorage.setItem(CONFIG.CACHE.PLACES_KEY, text);
+        localStorage.setItem(CONFIG.CACHE.PLACES_TIME_KEY, Date.now().toString());
+        
+        this.placesData = data;
+        console.log('✅ Fresh data loaded from server');
+      } else {
+        throw new Error('Network error');
+      }
     } catch (err) {
-      console.error('Load error:', err);
+      console.error('❌ Failed to load fresh data:', err);
+      
+      // ТОЛЬКО если сервер недоступен - берем кеш
+      const cachedText = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
       if (cachedText) {
-        console.log('📦 Using fallback cache');
-        await this.processData(JSON.parse(cachedText));
+        this.placesData = JSON.parse(cachedText);
+        console.log('📦 Using cache (server unavailable)');
+      } else {
+        console.error('❌ No data available');
+        this.isLoading = false;
+        return;
       }
     }
+
+    // Теперь, когда данные точно есть, начинаем проверку
+    if (this.placesData) {
+      await this.processData(this.placesData);
+    }
+    
+    this.isLoading = false;
   },
 
   async processData(data) {
@@ -972,6 +982,7 @@
       coords: p.coords,
       exifDate: p.exifDate,
       timestamp: p.timestamp,
+      filename: p.filename,
       photos: [{
         thumbUrl: p.thumbUrl,
         origUrl: p.origUrl,
@@ -992,12 +1003,10 @@
     
     console.log(`🔍 Checking ${places.length} links...`);
 
-    // Разбиваем на небольшие группы для параллельной проверки
-    const batchSize = 20;
+    const batchSize = 5;
     for (let i = 0; i < places.length; i += batchSize) {
       const batch = places.slice(i, i + batchSize);
       
-      // Проверяем группу параллельно
       const results = await Promise.all(
         batch.map(async (place) => {
           const photo = place.photos[0];
@@ -1005,12 +1014,11 @@
           
           if (!url) return { place, valid: false };
           
-          const isValid = await ImageManager.waitForLoad(url, 2000);
+          const isValid = await ImageManager.waitForLoad(url, 3000);
           return { place, valid: isValid };
         })
       );
 
-      // Добавляем только валидные
       for (const result of results) {
         if (result.valid) {
           const marker = MarkerManager.create(result.place);
@@ -1023,10 +1031,7 @@
         }
       }
 
-      // Обновляем прогресс
-      console.log(`⏳ Progress: ${i + batch.length}/${places.length}`);
-      
-      // Маленькая задержка между группами
+      console.log(`⏳ Progress: ${Math.min(i + batch.length, places.length)}/${places.length}`);
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
@@ -1034,6 +1039,9 @@
     LoveCounter.update();
   }
 };
+
+// Инициализация
+DataLoader.load();
     // =========================================================================
     // INITIALIZATION
     // =========================================================================
