@@ -1046,6 +1046,9 @@ DataLoader.load();
     // INITIALIZATION
     // =========================================================================
     function init() {
+
+      fetch(CONFIG.SERVER_URL, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+      fetch('https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json', { cache: 'no-store' }).catch(() => {});
       Gallery.init();
       RandomMemory.init();
       UploadManager.init();
