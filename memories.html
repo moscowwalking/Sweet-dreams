@@ -708,19 +708,59 @@
                   },
                 ];
 
-          const first = photoList[0];
-          const src = first?.origUrl || first?.thumbUrl || "";
-          if (!src) return;
+          this.photoList = photoList;
 
-          this.main.src = src;
-          this.placeTitle.textContent = first?.date || "Без даты";
+          if (photoList.length > 1) {
+            photoList.forEach((photo, idx) => {
+              const thumb = document.createElement("img");
+              thumb.src = photo.thumbUrl || photo.origUrl;
+              thumb.className = idx === 0 ? "active" : "";
+              thumb.onclick = () => this.showPhoto(idx);
+              this.thumbs.appendChild(thumb);
+            });
+          }
 
-          this.createCaptionElement(first.caption);
+          this.showPhoto(0);
           this.overlay.style.display = "flex";
+        },
+
+        showPhoto(index) {
+          this.currentIndex = index;
+          const photo = this.photoList[index];
+          if (!photo) return;
+
+          const thumbSrc = photo.thumbUrl || photo.origUrl || "";
+          const origSrc = photo.origUrl || photo.thumbUrl || "";
+
+          // Мгновенно отображаем миниатюру из кеша (0 мс задержки!)
+          this.main.src = thumbSrc;
+          this.placeTitle.textContent = photo.date || "Без даты";
+
+          // Фоном плавно подгружаем полноразмерный оригинал
+          if (origSrc && origSrc !== thumbSrc) {
+            const highRes = new Image();
+            highRes.onload = () => {
+              if (
+                this.currentIndex === index &&
+                this.overlay.style.display !== "none"
+              ) {
+                this.main.src = origSrc;
+              }
+            };
+            highRes.src = origSrc;
+          }
+
+          this.createCaptionElement(photo.caption);
+
+          const allThumbs = this.thumbs.querySelectorAll("img");
+          allThumbs.forEach((t, i) => {
+            t.className = i === index ? "active" : "";
+          });
         },
 
         close() {
           this.overlay.style.display = "none";
+          this.main.src = ""; // Очищаем старое фото, чтобы оно не всплывало при следующем клике!
         },
 
         createCaptionElement(initialCaption) {

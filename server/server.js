@@ -346,7 +346,7 @@ app.get("/cleanup-old-jpegs", async (req, res) => {
 
     // Находим все .jpeg и .jpg файлы
     const jpegKeys = Array.from(s3Keys).filter(
-      (key) => /\.(jpe?g)$/i.test(key) && !key.includes("places.json")
+      (key) => /\.(jpe?g)$/i.test(key) && !key.includes("places.json"),
     );
 
     console.log(`📦 Найдено старых JPEG файлов: ${jpegKeys.length}`);
