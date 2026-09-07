@@ -1,10 +1,8 @@
-﻿// sw.js - Service Worker для Sweet-dreams
-const STATIC_CACHE = 'sweet-dreams-static-v1';
-const PHOTO_CACHE = 'sweet-dreams-photos-v1';
-const MAP_CACHE = 'sweet-dreams-maps-v1';
+﻿// sw.js - Service Worker для Sweet-dreams (v2)
+const STATIC_CACHE = 'sweet-dreams-static-v2';
+const PHOTO_CACHE = 'sweet-dreams-photos-v2';
 
 const MAX_CACHED_PHOTOS = 200;
-const MAX_CACHED_TILES = 300;
 
 // Предварительное кэширование ключевых статических файлов
 const PRECACHE_ASSETS = [
@@ -31,8 +29,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== STATIC_CACHE && key !== PHOTO_CACHE && key !== MAP_CACHE) {
-            console.log('🧹 Удаление старого кэша:', key);
+          if (key !== STATIC_CACHE && key !== PHOTO_CACHE) {
+            console.log('🧹 Очистка старого кэша:', key);
             return caches.delete(key);
           }
         })
@@ -41,14 +39,16 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Хелпер ограничения размера кэша
+// Ограничение размера кэша
 async function limitCacheSize(cacheName, maxItems) {
-  const cache = await caches.open(cacheName);
-  const keys = await cache.keys();
-  if (keys.length > maxItems) {
-    await cache.delete(keys[0]);
-    limitCacheSize(cacheName, maxItems);
-  }
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+    if (keys.length > maxItems) {
+      await cache.delete(keys[0]);
+      limitCacheSize(cacheName, maxItems);
+    }
+  } catch (e) {}
 }
 
 self.addEventListener('fetch', (event) => {
@@ -71,46 +71,21 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         } catch (err) {
-          // Если сеть недоступна, возвращаем кэш по URL без query-параметров
           const fallback = await cache.match(event.request.url.split('?')[0]);
           if (fallback) return fallback;
-          throw err;
+          return new Response('', { status: 408, statusText: 'Request Timeout' });
         }
       })
     );
     return;
   }
 
-  // 2. Тайлы карты OpenStreetMap (Cache-First)
-  if (url.hostname.includes('tile.openstreetmap.org')) {
-    event.respondWith(
-      caches.open(MAP_CACHE).then(async (cache) => {
-        const cachedResponse = await cache.match(event.request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        try {
-          const networkResponse = await fetch(event.request);
-          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-            cache.put(event.request, networkResponse.clone());
-            limitCacheSize(MAP_CACHE, MAX_CACHED_TILES);
-          }
-          return networkResponse;
-        } catch (err) {
-          return cachedResponse;
-        }
-      })
-    );
+  // 2. Игнорируем запросы к бэкенду Render и тайлам карт (пусть браузер обрабатывает напрямую)
+  if (url.hostname.includes('onrender.com') || url.hostname.includes('tile.openstreetmap')) {
     return;
   }
 
-  // 3. API запросы к бэкенду (Render) - всегда из сети без кэширования Service Worker
-  if (url.hostname.includes('sweet-dreams-f8nc.onrender.com')) {
-    return;
-  }
-
-  // 4. Локальные статические файлы сайта (Network-First с fallback на Cache)
+  // 3. Локальные файлы сайта (Network-First с fallback на Cache)
   if (event.request.method === 'GET' && (event.request.mode === 'navigate' || url.origin === self.location.origin)) {
     event.respondWith(
       fetch(event.request)
@@ -129,8 +104,10 @@ self.addEventListener('fetch', (event) => {
             return cachedResponse;
           }
           if (event.request.mode === 'navigate') {
-            return caches.match('./index.html') || caches.match('./memories.html');
+            const fallbackNav = await caches.match('./index.html') || await caches.match('./memories.html');
+            if (fallbackNav) return fallbackNav;
           }
+          return new Response('Network error occurred', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
   }

@@ -586,10 +586,14 @@
         CONFIG.MAP.center,
         CONFIG.MAP.zoom,
       );
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: CONFIG.MAP.maxZoom,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      L.tileLayer(
+        "https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
+        {
+          subdomains: "abc",
+          maxZoom: CONFIG.MAP.maxZoom,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        },
+      ).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       const markers = L.markerClusterGroup({
@@ -1084,6 +1088,10 @@
               });
             } catch (err) {
               console.error("HEIC convert failed", err);
+              alert(
+                "⚠️ Не удалось конвертировать формат HEIC/HEIF в браузере (формат Live Photo или HDR от Apple не поддерживается браузерным декодером).\n\nПожалуйста, экспортируйте фото как обычный JPEG/PNG или сделайте скриншот перед загрузкой!"
+              );
+              return;
             }
           }
 
@@ -1165,7 +1173,18 @@
           } catch (e) {
             console.error("Upload error:", e);
             markers.removeLayer(tmpMarker);
-            alert("Ошибка при загрузке: " + e.message);
+            const isNetworkError =
+              !navigator.onLine ||
+              (e.message &&
+                (e.message.includes("Failed to fetch") ||
+                  e.message.includes("NetworkError")));
+            if (isNetworkError) {
+              alert(
+                "❌ Ошибка соединения с сервером.\n\nВ России сервер Render.com блокируется провайдерами без VPN.\nПожалуйста, включите VPN и попробуйте загрузить фото снова!"
+              );
+            } else {
+              alert("Ошибка при загрузке: " + e.message);
+            }
           }
         },
       };
