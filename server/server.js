@@ -474,8 +474,6 @@ app.post("/upload", (req, res) => {
     }
 
     try {
-      const fileName = `memory-${Date.now()}.jpeg`;
-      const filePath = `memories/${fileName}`;
       const id = Date.now().toString();
       let exifDate = null;
       try {
@@ -499,36 +497,6 @@ app.post("/upload", (req, res) => {
           console.log("⚠️ EXIF дата не найдена, используем текущую:", exifDate);
         }
       } catch (exifErr) {
-        // При ошибке тоже используем текущую дату
-        const date = new Date();
-        const day = date.getDate().toString().padStart(2, "0");
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const year = date.getFullYear().toString().slice(-2);
-        exifDate = `${day}.${month}.${year}`;
-        console.log("❌ Ошибка EXIF, используем текущую дату:", exifDate);
-      }
-      try {
-        const exifData = await exifr.parse(file.buffer);
-        console.log("🔍 EXIF данные:", exifData);
-
-        if (exifData && exifData.DateTimeOriginal) {
-          const date = new Date(exifData.DateTimeOriginal);
-          const day = date.getDate().toString().padStart(2, "0");
-          const month = (date.getMonth() + 1).toString().padStart(2, "0");
-          const year = date.getFullYear().toString().slice(-2);
-          exifDate = `${day}.${month}.${year}`;
-          console.log("✅ EXIF дата найдена:", exifDate);
-        } else {
-          // Если нет EXIF даты, используем текущую дату
-          const date = new Date();
-          const day = date.getDate().toString().padStart(2, "0");
-          const month = (date.getMonth() + 1).toString().padStart(2, "0");
-          const year = date.getFullYear().toString().slice(-2);
-          exifDate = `${day}.${month}.${year}`;
-          console.log("⚠️ EXIF дата не найдена, используем текущую:", exifDate);
-        }
-      } catch (exifErr) {
-        // При ошибке тоже используем текущую дату
         const date = new Date();
         const day = date.getDate().toString().padStart(2, "0");
         const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -537,24 +505,12 @@ app.post("/upload", (req, res) => {
         console.log("❌ Ошибка EXIF, используем текущую дату:", exifDate);
       }
 
-      await s3
-        .upload({
-          Bucket: BUCKET_NAME,
-          Key: filePath,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-          ACL: "public-read",
-        })
-        .promise();
-      // Оптимизация изображений через Sharp (WebP)
+      // Оптимизация изображений через Sharp (только WebP - никакого сохранения JPEG!)
       let origBuffer, thumbBuffer;
       let origFileName = `memory-${id}.webp`;
       let thumbFileName = `thumb-${id}.webp`;
       let origContentType = "image/webp";
       let thumbContentType = "image/webp";
-
-      const fileUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${filePath}`;
-      console.log("✅ Файл загружен в S3:", fileUrl);
       try {
         [origBuffer, thumbBuffer] = await Promise.all([
           sharp(file.buffer)
