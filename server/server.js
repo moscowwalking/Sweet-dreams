@@ -387,15 +387,6 @@ app.post('/upload', (req, res) => {
       }
 
       const newPlace = {
-          id: Date.now().toString(),
-          coords: req.body.coords ? JSON.parse(req.body.coords) : null,
-          thumbUrl: fileUrl,
-          origUrl: fileUrl,
-          placeTitle: req.body.placeTitle || 'Новое место',
-          timestamp: new Date().toISOString(),
-          filename: fileName,
-         exifDate: exifDateFromClient || exifDate, 
-        };
         id,
         coords: req.body.coords ? JSON.parse(req.body.coords) : null,
         thumbUrl,
@@ -420,7 +411,6 @@ app.post('/upload', (req, res) => {
       }).promise();
       console.log('✅ places.json сохранён в S3 backup');
 
-      res.json({ success: true, fileUrl });
       res.json({ success: true, fileUrl: origUrl, thumbUrl });
     } catch (uploadErr) {
       console.error('❌ Ошибка обработки загрузки:', uploadErr);
