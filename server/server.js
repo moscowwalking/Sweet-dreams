@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import exifr from "exifr";
 import sharp from "sharp";
+import heicConvert from "heic-convert";
 
 const app = express();
 
@@ -506,6 +507,24 @@ app.post("/upload", (req, res) => {
       }
 
       // Оптимизация изображений через Sharp (только WebP - никакого сохранения JPEG!)
+      let imageBuffer = file.buffer;
+      if (
+        /heic|heif/i.test(file.mimetype) ||
+        /\.(heic|heif)$/i.test(file.originalname)
+      ) {
+        try {
+          console.log("🔄 Конвертация HEIC на сервере через heic-convert...");
+          imageBuffer = await heicConvert({
+            buffer: file.buffer,
+            format: "JPEG",
+            quality: 1,
+          });
+          console.log("✅ HEIC успешно сконвертирован на сервере");
+        } catch (heicErr) {
+          console.warn("⚠️ heic-convert error:", heicErr.message);
+        }
+      }
+
       let origBuffer, thumbBuffer;
       let origFileName = `memory-${id}.webp`;
       let thumbFileName = `thumb-${id}.webp`;
@@ -513,12 +532,12 @@ app.post("/upload", (req, res) => {
       let thumbContentType = "image/webp";
       try {
         [origBuffer, thumbBuffer] = await Promise.all([
-          sharp(file.buffer)
+          sharp(imageBuffer)
             .rotate()
             .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
             .webp({ quality: 82 })
             .toBuffer(),
-          sharp(file.buffer)
+          sharp(imageBuffer)
             .rotate()
             .resize(320, 320, { fit: "cover" })
             .webp({ quality: 80 })

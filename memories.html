@@ -722,7 +722,10 @@
           if (!isTemp && thumbSrc) {
             const checkImg = new Image();
             checkImg.onerror = () => {
-              console.log("🗑️ Фото отсутствует в S3, скрываем маркер:", place.id);
+              console.log(
+                "🗑️ Фото отсутствует в S3, скрываем маркер:",
+                place.id,
+              );
               try {
                 markers.removeLayer(marker);
                 placesStore.delete(place.id);
