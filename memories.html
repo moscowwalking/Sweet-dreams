@@ -1074,52 +1074,14 @@
             }]
           }));
 
-          // Проверяем все ссылки и показываем только рабочие
-          await this.renderWithCheck(places);
           // Рендерим маркеры сразу без искусственных блокирующих задержек
           this.renderPlaces(places);
         },
 
-        async renderWithCheck(places) {
         renderPlaces(places) {
           markers.clearLayers();
           placesStore.clear();
 
-          let totalValid = 0;
-          let totalSkipped = 0;
-
-          console.log(`🔍 Checking ${places.length} links...`);
-
-          const batchSize = 5;
-          for (let i = 0; i < places.length; i += batchSize) {
-            const batch = places.slice(i, i + batchSize);
-
-            const results = await Promise.all(
-              batch.map(async (place) => {
-                const photo = place.photos[0];
-                const url = photo.thumbUrl || photo.origUrl;
-
-                if (!url) return { place, valid: false };
-
-                const isValid = await ImageManager.waitForLoad(url, 3000);
-                return { place, valid: isValid };
-              })
-            );
-
-            for (const result of results) {
-              if (result.valid) {
-                const marker = MarkerManager.create(result.place);
-                markers.addLayer(marker);
-                placesStore.set(result.place.id, { ...result.place, marker });
-                totalValid++;
-              } else {
-                totalSkipped++;
-                console.log('🔗 Skipped broken link:', result.place.photos[0].thumbUrl || result.place.photos[0].origUrl);
-              }
-            }
-
-            console.log(`⏳ Progress: ${Math.min(i + batch.length, places.length)}/${places.length}`);
-            await new Promise(resolve => setTimeout(resolve, 50));
           let renderedCount = 0;
           for (const place of places) {
             if (!place.coords || !Array.isArray(place.coords) || place.coords.length < 2) continue;
@@ -1129,43 +1091,39 @@
             renderedCount++;
           }
 
-          console.log(`✅ Done: ${totalValid} valid, ${totalSkipped} broken`);
           console.log(`✅ Мгновенно отображено ${renderedCount} мест на карте`);
           LoveCounter.update();
         }
       };
 
-      // Инициализация
-      DataLoader.load();
-          // =========================================================================
-          // INITIALIZATION
-          // =========================================================================
-          function init() {
+      // =========================================================================
+      // INITIALIZATION
+      // =========================================================================
+      function init() {
+        fetch(`${CONFIG.SERVER_URL}/update-caption`, {
+          method: 'HEAD',
+          cache: 'no-store'
+        }).catch(() => {});
+        Gallery.init();
+        RandomMemory.init();
+        UploadManager.init();
+        LoveCounter.init();
 
-              fetch(`${CONFIG.SERVER_URL}/update-caption`, {
-                method: 'HEAD',
-                cache: 'no-store'
-              }).catch(() => {});
-            Gallery.init();
-            RandomMemory.init();
-            UploadManager.init();
-            LoveCounter.init();
+        DataLoader.load();
 
-            DataLoader.load();
+        map.on('zoom', MarkerManager.updateSizes.bind(MarkerManager));
+        map.on('moveend', () => setTimeout(MarkerManager.preloadVisibleMarkers.bind(MarkerManager), 300));
 
-            map.on('zoom', MarkerManager.updateSizes.bind(MarkerManager));
-            map.on('moveend', () => setTimeout(MarkerManager.preloadVisibleMarkers.bind(MarkerManager), 300));
+        // Patch upload function for counter update
+        const originalUpload = UploadManager.uploadToServer.bind(UploadManager);
+        UploadManager.uploadToServer = async (...args) => {
+          await originalUpload(...args);
+          LoveCounter.update();
+        };
+      }
 
-            // Patch upload function for counter update
-            const originalUpload = UploadManager.uploadToServer.bind(UploadManager);
-            UploadManager.uploadToServer = async (...args) => {
-              await originalUpload(...args);
-              LoveCounter.update();
-            };
-          }
-
-          // Start everything
-          init();
+      // Start everything
+      init();
     </script>
   </body>
 </html>
