@@ -469,106 +469,111 @@
     <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 
     <script>
-          // =========================================================================
-          // CONFIGURATION
-          // =========================================================================
-          const CONFIG = {
-            SERVER_URL: 'https://sweet-dreams-f8nc.onrender.com',
-            MAP: {
-              center: [55.75, 37.61],
-              zoom: 5,
-              maxZoom: 19
-            },
-            CACHE: {
-              PLACES_KEY: 'places_cache_v3',
-              PLACES_TIME_KEY: 'places_cache_time_v3',
-              TTL: 1000 * 60 * 60 * 2, // 2 часа
-              BROKEN_LINK_TTL: 1000 * 60 * 60 // 1 час
-            },
-            RELATIONSHIP: {
-              startDate: new Date(2025, 7, 23) // 23 августа 2025
-            },
-            MARKER: {
-              size: 56,
-              tempSize: 40,
-              colors: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a']
-            },
-            UPLOAD: {
-              maxSize: 15 * 1024 * 1024 // 15MB
-            }
-          };
+      // =========================================================================
+      // CONFIGURATION
+      // =========================================================================
+      const CONFIG = {
+        SERVER_URL: "https://sweet-dreams-f8nc.onrender.com",
+        MAP: {
+          center: [55.75, 37.61],
+          zoom: 5,
+          maxZoom: 19,
+        },
+        CACHE: {
+          PLACES_KEY: "places_cache_v3",
+          PLACES_TIME_KEY: "places_cache_time_v3",
+          TTL: 1000 * 60 * 60 * 2, // 2 часа
+          BROKEN_LINK_TTL: 1000 * 60 * 60, // 1 час
+        },
+        RELATIONSHIP: {
+          startDate: new Date(2025, 7, 23), // 23 августа 2025
+        },
+        MARKER: {
+          size: 56,
+          tempSize: 40,
+          colors: ["#667eea", "#f093fb", "#4facfe", "#43e97b", "#fa709a"],
+        },
+        UPLOAD: {
+          maxSize: 15 * 1024 * 1024, // 15MB
+        },
+      };
 
-          // =========================================================================
-          // INITIALIZATION
-          // =========================================================================
-          const map = L.map('map', { zoomControl: false }).setView(CONFIG.MAP.center, CONFIG.MAP.zoom);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: CONFIG.MAP.maxZoom }).addTo(map);
-          L.control.zoom({ position: 'bottomright' }).addTo(map);
+      // =========================================================================
+      // INITIALIZATION
+      // =========================================================================
+      const map = L.map("map", { zoomControl: false }).setView(
+        CONFIG.MAP.center,
+        CONFIG.MAP.zoom,
+      );
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: CONFIG.MAP.maxZoom,
+      }).addTo(map);
+      L.control.zoom({ position: "bottomright" }).addTo(map);
 
-          const markers = L.markerClusterGroup({
-            showCoverageOnHover: false,
-            spiderfyOnMaxZoom: true,
-            zoomToBoundsOnClick: true,
-            spiderfyDistanceMultiplier: 2.5
+      const markers = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        zoomToBoundsOnClick: true,
+        spiderfyDistanceMultiplier: 2.5,
+      });
+      map.addLayer(markers);
+
+      const placesStore = new Map();
+      const brokenLinkCache = new Map();
+
+      // =========================================================================
+      // UTILITY FUNCTIONS
+      // =========================================================================
+      const Utils = {
+        coordsKey(lat, lon, precision = 7) {
+          return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
+        },
+
+        isElementInViewport(el, offset = 100) {
+          if (!el) return false;
+          const rect = el.getBoundingClientRect();
+          return (
+            rect.top >= -offset &&
+            rect.left >= -offset &&
+            rect.bottom <= window.innerHeight + offset &&
+            rect.right <= window.innerWidth + offset
+          );
+        },
+
+        async waitForMapClick(timeout = 30000) {
+          return new Promise((resolve) => {
+            const onClick = (e) => {
+              map.off("click", onClick);
+              resolve([e.latlng.lat, e.latlng.lng]);
+            };
+            map.on("click", onClick);
+            setTimeout(() => {
+              map.off("click", onClick);
+              resolve(null);
+            }, timeout);
           });
-          map.addLayer(markers);
+        },
 
-          const placesStore = new Map();
-          const brokenLinkCache = new Map();
+        formatDate(date) {
+          const day = date.getDate().toString().padStart(2, "0");
+          const month = (date.getMonth() + 1).toString().padStart(2, "0");
+          const year = date.getFullYear().toString().slice(-2);
+          return `${day}.${month}.${year}`;
+        },
 
-          // =========================================================================
-          // UTILITY FUNCTIONS
-          // =========================================================================
-          const Utils = {
-            coordsKey(lat, lon, precision = 7) {
-              return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
-            },
+        getColorFromId(id) {
+          const colors = CONFIG.MARKER.colors;
+          const index = parseInt(id, 10) % colors.length || 0;
+          return colors[index];
+        },
+      };
 
-            isElementInViewport(el, offset = 100) {
-              if (!el) return false;
-              const rect = el.getBoundingClientRect();
-              return (
-                rect.top >= -offset &&
-                rect.left >= -offset &&
-                rect.bottom <= (window.innerHeight + offset) &&
-                rect.right <= (window.innerWidth + offset)
-              );
-            },
-
-            async waitForMapClick(timeout = 30000) {
-              return new Promise(resolve => {
-                const onClick = e => {
-                  map.off('click', onClick);
-                  resolve([e.latlng.lat, e.latlng.lng]);
-                };
-                map.on('click', onClick);
-                setTimeout(() => {
-                  map.off('click', onClick);
-                  resolve(null);
-                }, timeout);
-              });
-            },
-
-            formatDate(date) {
-              const day = date.getDate().toString().padStart(2, '0');
-              const month = (date.getMonth() + 1).toString().padStart(2, '0');
-              const year = date.getFullYear().toString().slice(-2);
-              return `${day}.${month}.${year}`;
-            },
-
-            getColorFromId(id) {
-              const colors = CONFIG.MARKER.colors;
-              const index = parseInt(id, 10) % colors.length || 0;
-              return colors[index];
-            }
-          };
-
-          // =========================================================================
-          // IMAGE HANDLING
-          // =========================================================================
-          const ImageManager = {
+      // =========================================================================
+      // IMAGE HANDLING
+      // =========================================================================
+      const ImageManager = {
         async waitForLoad(url, timeout = 5000) {
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             const img = new Image();
             const timer = setTimeout(() => {
               cleanup();
@@ -591,19 +596,20 @@
             };
             img.src = url;
           });
-        }
+        },
       };
 
-          // =========================================================================
-          // MARKER HANDLING
-          // =========================================================================
-          const MarkerManager = {
+      // =========================================================================
+      // MARKER HANDLING
+      // =========================================================================
+      const MarkerManager = {
         create(place, isTemp = false) {
           const [lat, lon] = place.coords;
           const size = isTemp ? CONFIG.MARKER.tempSize : CONFIG.MARKER.size;
           const opacity = isTemp ? 0.5 : 1;
-          const pulseClass = isTemp ? 'pulsing-marker' : '';
-          const thumbSrc = place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || '';
+          const pulseClass = isTemp ? "pulsing-marker" : "";
+          const thumbSrc =
+            place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || "";
 
           const iconHtml = `
             <div class="${pulseClass}" style="display:flex;align-items:center;gap:6px;">
@@ -620,9 +626,13 @@
             </div>
           `;
 
-          const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [size + 40, size] });
+          const icon = L.divIcon({
+            html: iconHtml,
+            className: "",
+            iconSize: [size + 40, size],
+          });
           const marker = L.marker([lat, lon], { icon });
-          marker.on('click', () => Gallery.open(place));
+          marker.on("click", () => Gallery.open(place));
           return marker;
         },
 
@@ -631,9 +641,10 @@
           const scale = Math.pow(2, zoom - 13);
           const size = Math.max(20, Math.min(56, 40 * scale));
 
-          placesStore.forEach(place => {
+          placesStore.forEach((place) => {
             if (!place.marker) return;
-            const thumbSrc = place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || '';
+            const thumbSrc =
+              place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || "";
             const iconHtml = `
               <div style="display:flex;align-items:center;gap:6px;">
                 <div style="width:${size}px;height:${size}px;border-radius:10px;background:#ffd1dc;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;">
@@ -650,369 +661,405 @@
             `;
             const icon = L.divIcon({
               html: iconHtml,
-              className: '',
+              className: "",
               iconSize: [size + 40, size],
-              iconAnchor: [size / 2, size / 2]
+              iconAnchor: [size / 2, size / 2],
             });
             place.marker.setIcon(icon);
           });
-        }
+        },
       };
 
-          // =========================================================================
-          // GALLERY
-          // =========================================================================
-          const Gallery = {
-            overlay: document.getElementById('overlay'),
-            main: document.getElementById('galleryMain'),
-            thumbs: document.getElementById('thumbs'),
-            placeTitle: document.getElementById('placeTitle'),
-            closeBtn: document.getElementById('closeGallery'),
+      // =========================================================================
+      // GALLERY
+      // =========================================================================
+      const Gallery = {
+        overlay: document.getElementById("overlay"),
+        main: document.getElementById("galleryMain"),
+        thumbs: document.getElementById("thumbs"),
+        placeTitle: document.getElementById("placeTitle"),
+        closeBtn: document.getElementById("closeGallery"),
 
-            currentPlace: null,
-            currentIndex: 0,
+        currentPlace: null,
+        currentIndex: 0,
 
-            init() {
-              this.closeBtn.onclick = () => this.close();
-            },
+        init() {
+          this.closeBtn.onclick = () => this.close();
+        },
 
-            open(place) {
-              this.currentPlace = place;
-              this.currentIndex = 0;
-              this.thumbs.innerHTML = '';
+        open(place) {
+          this.currentPlace = place;
+          this.currentIndex = 0;
+          this.thumbs.innerHTML = "";
 
-              const photoList = Array.isArray(place.photos) && place.photos.length
-                ? place.photos
-                : [{
-                  origUrl: place.origUrl,
-                  thumbUrl: place.thumbUrl,
-                  date: place.date || (place.timestamp ? new Date(place.timestamp).toLocaleDateString('ru-RU') : ''),
-                  caption: place.caption || ''
-                }];
+          const photoList =
+            Array.isArray(place.photos) && place.photos.length
+              ? place.photos
+              : [
+                  {
+                    origUrl: place.origUrl,
+                    thumbUrl: place.thumbUrl,
+                    date:
+                      place.date ||
+                      (place.timestamp
+                        ? new Date(place.timestamp).toLocaleDateString("ru-RU")
+                        : ""),
+                    caption: place.caption || "",
+                  },
+                ];
 
-              const first = photoList[0];
-              const src = first?.origUrl || first?.thumbUrl || '';
-              if (!src) return;
+          const first = photoList[0];
+          const src = first?.origUrl || first?.thumbUrl || "";
+          if (!src) return;
 
-              this.main.src = src;
-              this.placeTitle.textContent = first?.date || 'Без даты';
+          this.main.src = src;
+          this.placeTitle.textContent = first?.date || "Без даты";
 
-              this.createCaptionElement(first.caption);
-              this.overlay.style.display = 'flex';
-            },
+          this.createCaptionElement(first.caption);
+          this.overlay.style.display = "flex";
+        },
 
-            close() {
-              this.overlay.style.display = 'none';
-            },
+        close() {
+          this.overlay.style.display = "none";
+        },
 
-            createCaptionElement(initialCaption) {
-              let captionEl = document.getElementById('photoCaption');
-              if (captionEl) captionEl.remove();
+        createCaptionElement(initialCaption) {
+          let captionEl = document.getElementById("photoCaption");
+          if (captionEl) captionEl.remove();
 
-              captionEl = document.createElement('div');
-              captionEl.id = 'photoCaption';
-              captionEl.textContent = initialCaption || 'Добавь подпись ✍️';
-              captionEl.onclick = () => this.editCaption(captionEl);
+          captionEl = document.createElement("div");
+          captionEl.id = "photoCaption";
+          captionEl.textContent = initialCaption || "Добавь подпись ✍️";
+          captionEl.onclick = () => this.editCaption(captionEl);
 
-              const photoContainer = this.main.parentElement;
-              photoContainer.parentNode.insertBefore(captionEl, photoContainer.nextSibling);
-            },
+          const photoContainer = this.main.parentElement;
+          photoContainer.parentNode.insertBefore(
+            captionEl,
+            photoContainer.nextSibling,
+          );
+        },
 
-            async editCaption(captionEl) {
-              const oldText = captionEl.textContent === 'Добавь подпись ✍️' ? '' : captionEl.textContent;
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.value = oldText;
-              Object.assign(input.style, {
-                display: 'block',
-                margin: '10px auto',
-                width: '80%',
-                textAlign: 'center',
-                fontSize: '15px',
-                padding: '6px',
-                borderRadius: '10px',
-                border: '1px solid #ccc'
+        async editCaption(captionEl) {
+          const oldText =
+            captionEl.textContent === "Добавь подпись ✍️"
+              ? ""
+              : captionEl.textContent;
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = oldText;
+          Object.assign(input.style, {
+            display: "block",
+            margin: "10px auto",
+            width: "80%",
+            textAlign: "center",
+            fontSize: "15px",
+            padding: "6px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          });
+
+          captionEl.replaceWith(input);
+          input.focus();
+          input.select();
+
+          const finish = async () => {
+            const newCaption = input.value.trim();
+            const photoList = Array.isArray(this.currentPlace.photos)
+              ? this.currentPlace.photos
+              : [this.currentPlace];
+
+            photoList[this.currentIndex].caption = newCaption;
+
+            input.replaceWith(captionEl);
+            captionEl.textContent = newCaption || "Добавь подпись ✍️";
+
+            try {
+              await fetch(`${CONFIG.SERVER_URL}/update-caption`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  id: this.currentPlace.id,
+                  photoIndex: this.currentIndex,
+                  caption: newCaption,
+                }),
               });
-
-              captionEl.replaceWith(input);
-              input.focus();
-              input.select();
-
-              const finish = async () => {
-                const newCaption = input.value.trim();
-                const photoList = Array.isArray(this.currentPlace.photos)
-                  ? this.currentPlace.photos
-                  : [this.currentPlace];
-
-                photoList[this.currentIndex].caption = newCaption;
-
-                input.replaceWith(captionEl);
-                captionEl.textContent = newCaption || 'Добавь подпись ✍️';
-
-                try {
-                  await fetch(`${CONFIG.SERVER_URL}/update-caption`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      id: this.currentPlace.id,
-                      photoIndex: this.currentIndex,
-                      caption: newCaption
-                    })
-                  });
-                } catch (err) {
-                  console.error('Failed to save caption:', err);
-                }
-              };
-
-              input.addEventListener('blur', finish);
-              input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') finish();
-                if (e.key === 'Escape') {
-                  input.replaceWith(captionEl);
-                  captionEl.textContent = oldText || 'Добавь подпись ✍️';
-                }
-              });
+            } catch (err) {
+              console.error("Failed to save caption:", err);
             }
           };
 
-          // =========================================================================
-          // LOVE COUNTER
-          // =========================================================================
-          const LoveCounter = {
-            memoriesEl: document.getElementById('totalMemories'),
-            daysEl: document.getElementById('totalDays'),
-            counterEl: document.getElementById('loveCounter'),
-            watchInterval: null,
+          input.addEventListener("blur", finish);
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") finish();
+            if (e.key === "Escape") {
+              input.replaceWith(captionEl);
+              captionEl.textContent = oldText || "Добавь подпись ✍️";
+            }
+          });
+        },
+      };
 
-            init() {
+      // =========================================================================
+      // LOVE COUNTER
+      // =========================================================================
+      const LoveCounter = {
+        memoriesEl: document.getElementById("totalMemories"),
+        daysEl: document.getElementById("totalDays"),
+        counterEl: document.getElementById("loveCounter"),
+        watchInterval: null,
+
+        init() {
+          this.update();
+          this.startWatching();
+        },
+
+        update() {
+          const totalMemories = placesStore.size;
+          const oldValue = parseInt(this.memoriesEl.textContent) || 0;
+
+          // Анимация при изменении
+          if (totalMemories !== oldValue) {
+            this.memoriesEl.classList.add("updated");
+            setTimeout(() => this.memoriesEl.classList.remove("updated"), 300);
+          }
+
+          this.memoriesEl.textContent = totalMemories;
+
+          const startDate = CONFIG.RELATIONSHIP.startDate;
+          const today = new Date();
+          const diffTime = Math.abs(today - startDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          this.daysEl.textContent = diffDays;
+
+          const years = Math.floor(diffDays / 365);
+          const months = Math.floor((diffDays % 365) / 30);
+          const days = diffDays % 30;
+          this.counterEl.title = `Вместе уже ${years} лет, ${months} месяцев и ${days} дней ❤️`;
+        },
+
+        startWatching() {
+          let lastCount = placesStore.size;
+
+          this.watchInterval = setInterval(() => {
+            const currentCount = placesStore.size;
+            if (currentCount !== lastCount) {
+              lastCount = currentCount;
               this.update();
-              this.startWatching();
-            },
-
-            update() {
-              const totalMemories = placesStore.size;
-              const oldValue = parseInt(this.memoriesEl.textContent) || 0;
-
-              // Анимация при изменении
-              if (totalMemories !== oldValue) {
-                this.memoriesEl.classList.add('updated');
-                setTimeout(() => this.memoriesEl.classList.remove('updated'), 300);
-              }
-
-              this.memoriesEl.textContent = totalMemories;
-
-              const startDate = CONFIG.RELATIONSHIP.startDate;
-              const today = new Date();
-              const diffTime = Math.abs(today - startDate);
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-              this.daysEl.textContent = diffDays;
-
-              const years = Math.floor(diffDays / 365);
-              const months = Math.floor((diffDays % 365) / 30);
-              const days = diffDays % 30;
-              this.counterEl.title = `Вместе уже ${years} лет, ${months} месяцев и ${days} дней ❤️`;
-            },
-
-            startWatching() {
-              let lastCount = placesStore.size;
-
-              this.watchInterval = setInterval(() => {
-                const currentCount = placesStore.size;
-                if (currentCount !== lastCount) {
-                  lastCount = currentCount;
-                  this.update();
-                }
-              }, 500);
-
-              // Остановить через 30 секунд
-              setTimeout(() => {
-                if (this.watchInterval) {
-                  clearInterval(this.watchInterval);
-                  this.watchInterval = null;
-                }
-              }, 30000);
             }
+          }, 500);
+
+          // Остановить через 30 секунд
+          setTimeout(() => {
+            if (this.watchInterval) {
+              clearInterval(this.watchInterval);
+              this.watchInterval = null;
+            }
+          }, 30000);
+        },
+      };
+
+      // =========================================================================
+      // RANDOM MEMORY
+      // =========================================================================
+      const RandomMemory = {
+        btn: document.getElementById("randomMemoryBtn"),
+
+        init() {
+          this.btn.addEventListener("click", () => this.show());
+        },
+
+        show() {
+          const places = Array.from(placesStore.values());
+
+          if (places.length === 0) {
+            alert("😢 Пока нет воспоминаний...");
+            return;
+          }
+
+          const randomPlace = places[Math.floor(Math.random() * places.length)];
+
+          map.flyTo(randomPlace.coords, 16, {
+            duration: 2,
+            easeLinearity: 0.5,
+          });
+
+          setTimeout(() => Gallery.open(randomPlace), 1500);
+
+          this.btn.style.transform = "scale(1.2)";
+          setTimeout(() => (this.btn.style.transform = ""), 300);
+        },
+      };
+
+      // =========================================================================
+      // UPLOAD MANAGER
+      // =========================================================================
+      const UploadManager = {
+        dropArea: document.getElementById("dropArea"),
+        fileInput: document.getElementById("fileInput"),
+
+        init() {
+          ["dragenter", "dragover"].forEach((ev) => {
+            this.dropArea.addEventListener(ev, (e) => {
+              e.preventDefault();
+              this.dropArea.classList.add("dragover");
+            });
+          });
+
+          ["dragleave", "drop"].forEach((ev) => {
+            this.dropArea.addEventListener(ev, (e) => {
+              e.preventDefault();
+              this.dropArea.classList.remove("dragover");
+            });
+          });
+
+          this.dropArea.addEventListener("drop", (e) =>
+            this.handleFiles(Array.from(e.dataTransfer.files)),
+          );
+          this.fileInput.addEventListener("change", (e) => {
+            this.handleFiles(Array.from(e.target.files));
+            this.fileInput.value = "";
+          });
+        },
+
+        async handleFiles(files) {
+          for (const file of files) {
+            await this.processFile(file);
+          }
+        },
+
+        async processFile(file) {
+          let gps = null;
+          let exifDate = null;
+
+          try {
+            const exifData = await exifr.parse(file);
+            if (exifData?.DateTimeOriginal) {
+              const date = new Date(exifData.DateTimeOriginal);
+              exifDate = Utils.formatDate(date);
+            }
+          } catch (exifErr) {
+            console.log("No EXIF date found");
+          }
+
+          try {
+            gps = await exifr.gps(file);
+          } catch {}
+
+          let processedFile = file;
+          if (
+            /heic|heif/i.test(file.type) ||
+            /\.(heic|heif)$/i.test(file.name)
+          ) {
+            try {
+              const converted = await heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: 0.9,
+              });
+              processedFile = new File([converted], "converted.jpg", {
+                type: "image/jpeg",
+              });
+            } catch (err) {
+              console.error("HEIC convert failed", err);
+            }
+          }
+
+          const coords =
+            gps?.latitude && gps?.longitude
+              ? [gps.latitude, gps.longitude]
+              : await Utils.waitForMapClick();
+
+          if (!coords) return;
+
+          const tempPlace = {
+            id: "tmp-" + Date.now(),
+            coords,
+            photos: [
+              {
+                thumbUrl: URL.createObjectURL(processedFile),
+                origUrl: URL.createObjectURL(processedFile),
+                date: exifDate || Utils.formatDate(new Date()),
+                caption: "",
+              },
+            ],
           };
 
-          // =========================================================================
-          // RANDOM MEMORY
-          // =========================================================================
-          const RandomMemory = {
-            btn: document.getElementById('randomMemoryBtn'),
+          const tmpMarker = MarkerManager.create(tempPlace, true);
+          markers.addLayer(tmpMarker);
 
-            init() {
-              this.btn.addEventListener('click', () => this.show());
-            },
+          await this.uploadToServer(
+            processedFile,
+            gps,
+            tempPlace,
+            tmpMarker,
+            exifDate,
+          );
+        },
 
-            show() {
-              const places = Array.from(placesStore.values());
+        async uploadToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
+          try {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("coords", JSON.stringify(tmpPlace.coords));
+            fd.append("placeTitle", "Новое место");
+            if (exifDate) fd.append("exifDate", exifDate);
 
-              if (places.length === 0) {
-                alert('😢 Пока нет воспоминаний...');
-                return;
-              }
+            const r = await fetch(`${CONFIG.SERVER_URL}/upload`, {
+              method: "POST",
+              body: fd,
+            });
+            const res = await r.json().catch(() => ({ success: false }));
 
-              const randomPlace = places[Math.floor(Math.random() * places.length)];
+            if (!res.success) throw new Error("Upload failed");
 
-              map.flyTo(randomPlace.coords, 16, {
-                duration: 2,
-                easeLinearity: 0.5
-              });
+            markers.removeLayer(tmpMarker);
 
-              setTimeout(() => Gallery.open(randomPlace), 1500);
+            const key = Utils.coordsKey(...tmpPlace.coords);
+            let place = placesStore.get(key);
 
-              this.btn.style.transform = 'scale(1.2)';
-              setTimeout(() => this.btn.style.transform = '', 300);
-            }
-          };
-
-          // =========================================================================
-          // UPLOAD MANAGER
-          // =========================================================================
-          const UploadManager = {
-            dropArea: document.getElementById('dropArea'),
-            fileInput: document.getElementById('fileInput'),
-
-            init() {
-              ['dragenter', 'dragover'].forEach(ev => {
-                this.dropArea.addEventListener(ev, e => {
-                  e.preventDefault();
-                  this.dropArea.classList.add('dragover');
-                });
-              });
-
-              ['dragleave', 'drop'].forEach(ev => {
-                this.dropArea.addEventListener(ev, e => {
-                  e.preventDefault();
-                  this.dropArea.classList.remove('dragover');
-                });
-              });
-
-              this.dropArea.addEventListener('drop', e => this.handleFiles(Array.from(e.dataTransfer.files)));
-              this.fileInput.addEventListener('change', e => {
-                this.handleFiles(Array.from(e.target.files));
-                this.fileInput.value = '';
-              });
-            },
-
-            async handleFiles(files) {
-              for (const file of files) {
-                await this.processFile(file);
-              }
-            },
-
-            async processFile(file) {
-              let gps = null;
-              let exifDate = null;
-
-              try {
-                const exifData = await exifr.parse(file);
-                if (exifData?.DateTimeOriginal) {
-                  const date = new Date(exifData.DateTimeOriginal);
-                  exifDate = Utils.formatDate(date);
-                }
-              } catch (exifErr) {
-                console.log('No EXIF date found');
-              }
-
-              try {
-                gps = await exifr.gps(file);
-              } catch {}
-
-              let processedFile = file;
-              if (/heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)) {
-                try {
-                  const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-                  processedFile = new File([converted], 'converted.jpg', { type: 'image/jpeg' });
-                } catch (err) {
-                  console.error('HEIC convert failed', err);
-                }
-              }
-
-              const coords = gps?.latitude && gps?.longitude
-                ? [gps.latitude, gps.longitude]
-                : await Utils.waitForMapClick();
-
-              if (!coords) return;
-
-              const tempPlace = {
-                id: 'tmp-' + Date.now(),
-                coords,
-                photos: [{
-                  thumbUrl: URL.createObjectURL(processedFile),
-                  origUrl: URL.createObjectURL(processedFile),
-                  date: exifDate || Utils.formatDate(new Date()),
-                  caption: ''
-                }]
+            if (!place) {
+              place = {
+                id: key,
+                coords: [...tmpPlace.coords],
+                photos: [],
+                exifDate,
               };
-
-              const tmpMarker = MarkerManager.create(tempPlace, true);
-              markers.addLayer(tmpMarker);
-
-              await this.uploadToServer(processedFile, gps, tempPlace, tmpMarker, exifDate);
-            },
-
-            async uploadToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
-              try {
-                const fd = new FormData();
-                fd.append('file', file);
-                fd.append('coords', JSON.stringify(tmpPlace.coords));
-                fd.append('placeTitle', 'Новое место');
-                if (exifDate) fd.append('exifDate', exifDate);
-
-                const r = await fetch(`${CONFIG.SERVER_URL}/upload`, { method: 'POST', body: fd });
-                const res = await r.json().catch(() => ({ success: false }));
-
-                if (!res.success) throw new Error('Upload failed');
-
-                markers.removeLayer(tmpMarker);
-
-                const key = Utils.coordsKey(...tmpPlace.coords);
-                let place = placesStore.get(key);
-
-                if (!place) {
-                  place = {
-                    id: key,
-                    coords: [...tmpPlace.coords],
-                    photos: [],
-                    exifDate
-                  };
-                  placesStore.set(key, place);
-                }
-
-                place.photos.push({
-                  thumbUrl: res.fileUrl,
-                  thumbUrl: res.thumbUrl || res.fileUrl,
-                  origUrl: res.fileUrl,
-                  date: exifDate || Utils.formatDate(new Date())
-                });
-
-                if (place.marker) markers.removeLayer(place.marker);
-                place.marker = MarkerManager.create(place);
-                markers.addLayer(place.marker);
-
-                LoveCounter.update();
-              } catch (e) {
-                console.error('Upload error:', e);
-                markers.removeLayer(tmpMarker);
-                alert('Ошибка при загрузке: ' + e.message);
-              }
+              placesStore.set(key, place);
             }
-          };
 
-          // =========================================================================
-          // DATA LOADING
-          // =========================================================================
-          const DataLoader = {
-            isLoading: false,
-            placesData: null,
+            place.photos.push({
+              thumbUrl: res.fileUrl,
+              thumbUrl: res.thumbUrl || res.fileUrl,
+              origUrl: res.fileUrl,
+              date: exifDate || Utils.formatDate(new Date()),
+            });
+
+            if (place.marker) markers.removeLayer(place.marker);
+            place.marker = MarkerManager.create(place);
+            markers.addLayer(place.marker);
+
+            LoveCounter.update();
+          } catch (e) {
+            console.error("Upload error:", e);
+            markers.removeLayer(tmpMarker);
+            alert("Ошибка при загрузке: " + e.message);
+          }
+        },
+      };
+
+      // =========================================================================
+      // DATA LOADING
+      // =========================================================================
+      const DataLoader = {
+        isLoading: false,
+        placesData: null,
 
         async load() {
           if (this.isLoading) return;
           this.isLoading = true;
 
-          console.log('📥 Loading places.json...');
+          console.log("📥 Loading places.json...");
 
           // ВСЕГДА грузим свежие данные СНАЧАЛА
           try {
@@ -1025,23 +1072,26 @@
 
               // Сохраняем в кеш для будущих заходов
               localStorage.setItem(CONFIG.CACHE.PLACES_KEY, text);
-              localStorage.setItem(CONFIG.CACHE.PLACES_TIME_KEY, Date.now().toString());
+              localStorage.setItem(
+                CONFIG.CACHE.PLACES_TIME_KEY,
+                Date.now().toString(),
+              );
 
               this.placesData = data;
-              console.log('✅ Fresh data loaded from server');
+              console.log("✅ Fresh data loaded from server");
             } else {
-              throw new Error('Network error');
+              throw new Error("Network error");
             }
           } catch (err) {
-            console.error('❌ Failed to load fresh data:', err);
+            console.error("❌ Failed to load fresh data:", err);
 
             // ТОЛЬКО если сервер недоступен - берем кеш
             const cachedText = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
             if (cachedText) {
               this.placesData = JSON.parse(cachedText);
-              console.log('📦 Using cache (server unavailable)');
+              console.log("📦 Using cache (server unavailable)");
             } else {
-              console.error('❌ No data available');
+              console.error("❌ No data available");
               this.isLoading = false;
               return;
             }
@@ -1057,29 +1107,36 @@
 
         async processData(data) {
           if (!Array.isArray(data)) {
-            console.warn('Invalid data format');
+            console.warn("Invalid data format");
             return;
           }
 
           // Фильтруем места без ссылок
-          const validData = data.filter(p =>
-            (p.thumbUrl?.startsWith('http')) || (p.origUrl?.startsWith('http'))
+          const validData = data.filter(
+            (p) =>
+              p.thumbUrl?.startsWith("http") || p.origUrl?.startsWith("http"),
           );
 
           console.log(`✅ Found ${validData.length} places with URLs`);
 
-          const places = validData.map(p => ({
+          const places = validData.map((p) => ({
             id: p.id,
             coords: p.coords,
             exifDate: p.exifDate,
             timestamp: p.timestamp,
             filename: p.filename,
-            photos: [{
-              thumbUrl: p.thumbUrl,
-              origUrl: p.origUrl,
-              date: p.exifDate || (p.timestamp ? new Date(p.timestamp).toLocaleDateString('ru-RU') : ''),
-              caption: p.caption || ''
-            }]
+            photos: [
+              {
+                thumbUrl: p.thumbUrl,
+                origUrl: p.origUrl,
+                date:
+                  p.exifDate ||
+                  (p.timestamp
+                    ? new Date(p.timestamp).toLocaleDateString("ru-RU")
+                    : ""),
+                caption: p.caption || "",
+              },
+            ],
           }));
 
           // Рендерим маркеры сразу без искусственных блокирующих задержек
@@ -1092,7 +1149,12 @@
 
           let renderedCount = 0;
           for (const place of places) {
-            if (!place.coords || !Array.isArray(place.coords) || place.coords.length < 2) continue;
+            if (
+              !place.coords ||
+              !Array.isArray(place.coords) ||
+              place.coords.length < 2
+            )
+              continue;
             const marker = MarkerManager.create(place);
             markers.addLayer(marker);
             placesStore.set(place.id, { ...place, marker });
@@ -1101,7 +1163,7 @@
 
           console.log(`✅ Мгновенно отображено ${renderedCount} мест на карте`);
           LoveCounter.update();
-        }
+        },
       };
 
       // =========================================================================
@@ -1109,8 +1171,8 @@
       // =========================================================================
       function init() {
         fetch(`${CONFIG.SERVER_URL}/update-caption`, {
-          method: 'HEAD',
-          cache: 'no-store'
+          method: "HEAD",
+          cache: "no-store",
         }).catch(() => {});
         Gallery.init();
         RandomMemory.init();
@@ -1119,7 +1181,7 @@
 
         DataLoader.load();
 
-        map.on('zoom', MarkerManager.updateSizes.bind(MarkerManager));
+        map.on("zoom", MarkerManager.updateSizes.bind(MarkerManager));
 
         // Patch upload function for counter update
         const originalUpload = UploadManager.uploadToServer.bind(UploadManager);

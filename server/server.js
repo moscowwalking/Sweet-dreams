@@ -199,7 +199,9 @@ app.get("/migrate-photos", async (req, res) => {
     console.log("🚀 Запуск миграции старых фото в WebP формат...");
     let places = [];
     try {
-      const data = await s3.getObject({ Bucket: BUCKET_NAME, Key: "backups/places.json" }).promise();
+      const data = await s3
+        .getObject({ Bucket: BUCKET_NAME, Key: "backups/places.json" })
+        .promise();
       if (data.Body) {
         places = JSON.parse(data.Body.toString());
       }
@@ -218,19 +220,31 @@ app.get("/migrate-photos", async (req, res) => {
       if (!origUrl) continue;
 
       // Если уже сконвертировано в WebP с миниатюрой — пропускаем
-      if (place.thumbUrl && place.thumbUrl.includes('/thumbs/') && place.thumbUrl.endsWith('.webp')) {
+      if (
+        place.thumbUrl &&
+        place.thumbUrl.includes("/thumbs/") &&
+        place.thumbUrl.endsWith(".webp")
+      ) {
         continue;
       }
 
-      console.log(`[${i + 1}/${places.length}] Конвертация места ${place.id}...`);
+      console.log(
+        `[${i + 1}/${places.length}] Конвертация места ${place.id}...`,
+      );
 
       try {
         const match = origUrl.match(/memories\/[^?#]+/);
-        const sourceKey = match ? match[0] : (place.filename?.startsWith('memories/') ? place.filename : `memories/${place.filename}`);
-        
+        const sourceKey = match
+          ? match[0]
+          : place.filename?.startsWith("memories/")
+            ? place.filename
+            : `memories/${place.filename}`;
+
         let fileBuffer;
         try {
-          const s3Obj = await s3.getObject({ Bucket: BUCKET_NAME, Key: sourceKey }).promise();
+          const s3Obj = await s3
+            .getObject({ Bucket: BUCKET_NAME, Key: sourceKey })
+            .promise();
           fileBuffer = s3Obj.Body;
         } catch (downloadErr) {
           const r = await fetch(origUrl);
@@ -247,31 +261,35 @@ app.get("/migrate-photos", async (req, res) => {
         const [origBuffer, thumbBuffer] = await Promise.all([
           sharp(fileBuffer)
             .rotate()
-            .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+            .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
             .webp({ quality: 82 })
             .toBuffer(),
           sharp(fileBuffer)
             .rotate()
-            .resize(320, 320, { fit: 'cover' })
+            .resize(320, 320, { fit: "cover" })
             .webp({ quality: 80 })
-            .toBuffer()
+            .toBuffer(),
         ]);
 
         await Promise.all([
-          s3.putObject({
-            Bucket: BUCKET_NAME,
-            Key: origPath,
-            Body: origBuffer,
-            ContentType: 'image/webp',
-            ACL: 'public-read'
-          }).promise(),
-          s3.putObject({
-            Bucket: BUCKET_NAME,
-            Key: thumbPath,
-            Body: thumbBuffer,
-            ContentType: 'image/webp',
-            ACL: 'public-read'
-          }).promise()
+          s3
+            .putObject({
+              Bucket: BUCKET_NAME,
+              Key: origPath,
+              Body: origBuffer,
+              ContentType: "image/webp",
+              ACL: "public-read",
+            })
+            .promise(),
+          s3
+            .putObject({
+              Bucket: BUCKET_NAME,
+              Key: thumbPath,
+              Body: thumbBuffer,
+              ContentType: "image/webp",
+              ACL: "public-read",
+            })
+            .promise(),
         ]);
 
         const newOrigUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${origPath}`;
@@ -283,21 +301,28 @@ app.get("/migrate-photos", async (req, res) => {
         processed++;
         console.log(`✅ Место ${place.id} успешно сконвертировано в WebP`);
       } catch (placeErr) {
-        console.error(`❌ Ошибка конвертации места ${place.id}:`, placeErr.message);
+        console.error(
+          `❌ Ошибка конвертации места ${place.id}:`,
+          placeErr.message,
+        );
         errors++;
       }
     }
 
     if (processed > 0) {
       fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
-      await s3.putObject({
-        Bucket: BUCKET_NAME,
-        Key: "backups/places.json",
-        Body: JSON.stringify(places, null, 2),
-        ContentType: "application/json",
-        ACL: "public-read"
-      }).promise();
-      console.log(`💾 backups/places.json обновлен после миграции (сконвертировано: ${processed})`);
+      await s3
+        .putObject({
+          Bucket: BUCKET_NAME,
+          Key: "backups/places.json",
+          Body: JSON.stringify(places, null, 2),
+          ContentType: "application/json",
+          ACL: "public-read",
+        })
+        .promise();
+      console.log(
+        `💾 backups/places.json обновлен после миграции (сконвертировано: ${processed})`,
+      );
     }
 
     res.json({
@@ -305,10 +330,58 @@ app.get("/migrate-photos", async (req, res) => {
       message: `Миграция завершена: обработано ${processed}, ошибок ${errors}, всего ${places.length}`,
       processed,
       errors,
-      total: places.length
+      total: places.length,
     });
   } catch (err) {
     console.error("❌ Ошибка пакетной миграции:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Эндпоинт очистки старых неиспользуемых JPEG файлов из S3 (т.к. все фото уже в WebP)
+app.get("/cleanup-old-jpegs", async (req, res) => {
+  try {
+    console.log("🧹 Поиск старых JPEG файлов в бакете S3...");
+    const s3Keys = await getAllBucketObjects("memories/");
+
+    // Находим все .jpeg и .jpg файлы
+    const jpegKeys = Array.from(s3Keys).filter(
+      (key) => /\.(jpe?g)$/i.test(key) && !key.includes("places.json")
+    );
+
+    console.log(`📦 Найдено старых JPEG файлов: ${jpegKeys.length}`);
+
+    if (jpegKeys.length === 0) {
+      return res.json({
+        success: true,
+        message: "Старых JPEG файлов не найдено, бакет уже чист!",
+        deletedCount: 0,
+      });
+    }
+
+    // Удаляем пачками по 1000 штук
+    let totalDeleted = 0;
+    for (let i = 0; i < jpegKeys.length; i += 1000) {
+      const batch = jpegKeys.slice(i, i + 1000).map((key) => ({ Key: key }));
+      await s3
+        .deleteObjects({
+          Bucket: BUCKET_NAME,
+          Delete: { Objects: batch, Quiet: true },
+        })
+        .promise();
+      totalDeleted += batch.length;
+    }
+
+    console.log(`✅ Успешно удалено ${totalDeleted} старых JPEG файлов из S3`);
+
+    res.json({
+      success: true,
+      message: `Успешно удалено ${totalDeleted} старых JPEG файлов из S3! В бакете остались только оптимизированные WebP.`,
+      deletedCount: totalDeleted,
+      deletedFiles: jpegKeys,
+    });
+  } catch (err) {
+    console.error("❌ Ошибка при удалении старых JPEG:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
