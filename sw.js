@@ -1,14 +1,11 @@
-﻿// sw.js - Service Worker для Sweet-dreams (v2)
-const STATIC_CACHE = 'sweet-dreams-static-v2';
-const PHOTO_CACHE = 'sweet-dreams-photos-v2';
+﻿// sw.js - Service Worker для Sweet-dreams (v3)
+const STATIC_CACHE = 'sweet-dreams-static-v3';
+const PHOTO_CACHE = 'sweet-dreams-photos-v3';
 
 const MAX_CACHED_PHOTOS = 200;
 
-// Предварительное кэширование ключевых статических файлов
+// Предварительное кэширование стилей и скриптов (HTML-страницы не кэшируем жестко, чтобы обновления применялись сразу)
 const PRECACHE_ASSETS = [
-  './',
-  './index.html',
-  './memories.html',
   './style.css',
   './script.js'
 ];
@@ -18,7 +15,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('⚠️ Ошибка предкэширования некоторых файлов:', err);
+        console.warn('⚠️ Ошибка предкэширования:', err);
       });
     })
   );
@@ -39,7 +36,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Ограничение размера кэша
 async function limitCacheSize(cacheName, maxItems) {
   try {
     const cache = await caches.open(cacheName);
@@ -80,17 +76,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Игнорируем запросы к бэкенду Render и тайлам карт (пусть браузер обрабатывает напрямую)
+  // 2. Игнорируем запросы к бэкенду и картам (прямо в сеть)
   if (url.hostname.includes('onrender.com') || url.hostname.includes('tile.openstreetmap')) {
     return;
   }
 
-  // 3. Локальные файлы сайта (Network-First с fallback на Cache)
+  // 3. HTML и локальные файлы сайта - ВСЕГДА свежие из сети (Network-First)
   if (event.request.method === 'GET' && (event.request.mode === 'navigate' || url.origin === self.location.origin)) {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          // Кэшируем только статические css/js, но не HTML
+          if (networkResponse && networkResponse.status === 200 && !url.pathname.endsWith('.html') && event.request.mode !== 'navigate') {
             const clone = networkResponse.clone();
             caches.open(STATIC_CACHE).then((cache) => {
               cache.put(event.request, clone);
@@ -103,11 +100,7 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          if (event.request.mode === 'navigate') {
-            const fallbackNav = await caches.match('./index.html') || await caches.match('./memories.html');
-            if (fallbackNav) return fallbackNav;
-          }
-          return new Response('Network error occurred', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
   }

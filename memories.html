@@ -1104,10 +1104,6 @@
               });
             } catch (err) {
               console.error("HEIC convert failed", err);
-              alert(
-                "⚠️ Не удалось конвертировать формат HEIC/HEIF в браузере (формат Live Photo или HDR от Apple не поддерживается браузерным декодером).\n\nПожалуйста, экспортируйте фото как обычный JPEG/PNG или сделайте скриншот перед загрузкой!",
-              );
-              return;
             }
           }
 
@@ -1356,7 +1352,10 @@
         window.addEventListener("load", () => {
           navigator.serviceWorker
             .register("./sw.js")
-            .then(() => console.log("✅ Service Worker зарегистрирован"))
+            .then((reg) => {
+              reg.update();
+              console.log("✅ Service Worker зарегистрирован");
+            })
             .catch((err) => console.log("❌ Ошибка SW:", err));
         });
       }
