@@ -367,25 +367,106 @@
 
       /* ===== Responsive ===== */
       @media (max-width: 768px) {
+        body {
+          overflow-x: hidden;
+        }
+
         .title {
-          font-size: 1.5rem;
+          font-size: 1.4rem;
+          margin: 14px 0 6px;
         }
-        .drop-area {
-          min-width: 150px;
-          font-size: 0.85rem;
+
+        #map {
+          width: 96vw !important;
+          height: calc(100dvh - 90px) !important;
+          max-height: none !important;
+          border-radius: 12px;
         }
-        .thumbs img {
-          width: 60px;
-          height: 60px;
+
+        /* Навигация и кнопка Назад */
+        .nav-wrapper {
+          top: 10px;
+          left: 10px;
         }
+        .nav-button {
+          padding: 6px 12px;
+          font-size: 12px;
+          border-radius: 20px;
+        }
+
+        /* Счётчик любви */
         .love-counter {
-          padding: 5px 12px;
+          top: 10px;
+          right: 10px;
+          padding: 4px 12px;
+          gap: 8px;
+          border-radius: 20px;
         }
         .counter-value {
-          font-size: 18px;
+          font-size: 16px;
         }
         .counter-label {
-          font-size: 9px;
+          font-size: 8px;
+        }
+        .counter-divider {
+          font-size: 12px;
+        }
+
+        /* Панель загрузки на мобильных */
+        .upload-panel {
+          top: auto !important;
+          bottom: 16px !important;
+          left: 12px !important;
+          padding: 6px !important;
+          border-radius: 25px !important;
+          background: rgba(255, 255, 255, 0.95) !important;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+        }
+        .upload-btn {
+          padding: 8px 14px !important;
+          font-size: 13px !important;
+          border-radius: 20px !important;
+        }
+        .drop-area {
+          display: none !important; /* На телефоне drag & drop не нужен */
+        }
+
+        /* Кнопка случайного воспоминания и контролы зума */
+        .random-memory-btn {
+          bottom: 16px !important;
+          right: 12px !important;
+          width: 48px !important;
+          height: 48px !important;
+          font-size: 22px !important;
+        }
+        .leaflet-bottom.leaflet-right {
+          bottom: 75px !important; /* Чтобы зум не перекрывал кнопку кубика */
+          right: 8px !important;
+        }
+
+        /* Галерея на мобильном */
+        .gallery {
+          max-width: 95vw !important;
+          max-height: 90dvh !important;
+          padding: 14px 10px !important;
+          border-radius: 16px !important;
+        }
+        .gallery img {
+          max-height: 52dvh !important;
+          object-fit: contain !important;
+        }
+        .gallery-date {
+          font-size: 15px !important;
+        }
+        .thumbs {
+          max-width: 100% !important;
+          overflow-x: auto !important;
+          padding-bottom: 4px !important;
+        }
+        .thumbs img {
+          width: 50px !important;
+          height: 50px !important;
+          border-radius: 8px !important;
         }
       }
 
@@ -505,9 +586,14 @@
         CONFIG.MAP.center,
         CONFIG.MAP.zoom,
       );
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: CONFIG.MAP.maxZoom,
-      }).addTo(map);
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+          subdomains: "abcd",
+          maxZoom: CONFIG.MAP.maxZoom,
+          attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
+        }
+      ).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       const markers = L.markerClusterGroup({
