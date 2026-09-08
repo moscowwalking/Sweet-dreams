@@ -718,23 +718,6 @@
           const marker = L.marker([lat, lon], { icon });
           marker.on("click", () => Gallery.open(place));
 
-          // Автоматически скрываем маркер, если фото было удалено из бакета S3
-          if (!isTemp && thumbSrc) {
-            const checkImg = new Image();
-            checkImg.onerror = () => {
-              console.log(
-                "🗑️ Фото отсутствует в S3, скрываем маркер:",
-                place.id,
-              );
-              try {
-                markers.removeLayer(marker);
-                placesStore.delete(place.id);
-                LoveCounter.update();
-              } catch (err) {}
-            };
-            checkImg.src = thumbSrc;
-          }
-
           return marker;
         },
 
@@ -1093,17 +1076,38 @@
             /heic|heif/i.test(file.type) ||
             /\.(heic|heif)$/i.test(file.name)
           ) {
+            let convertedBlob = null;
+            // 1. Пробуем нативный декодер браузера (на iPhone/Mac/Edge/Chrome)
             try {
-              const converted = await heic2any({
-                blob: file,
-                toType: "image/jpeg",
-                quality: 0.9,
-              });
-              processedFile = new File([converted], "converted.jpg", {
+              const bitmap = await createImageBitmap(file);
+              const canvas = document.createElement("canvas");
+              canvas.width = bitmap.width;
+              canvas.height = bitmap.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(bitmap, 0, 0);
+              convertedBlob = await new Promise((res) =>
+                canvas.toBlob(res, "image/jpeg", 0.92),
+              );
+            } catch (nativeErr) {}
+
+            // 2. Если нативный не сработал, пробуем heic2any
+            if (!convertedBlob) {
+              try {
+                const res = await heic2any({
+                  blob: file,
+                  toType: "image/jpeg",
+                  quality: 0.9,
+                });
+                convertedBlob = Array.isArray(res) ? res[0] : res;
+              } catch (err) {
+                console.warn("HEIC software convert warning:", err);
+              }
+            }
+
+            if (convertedBlob) {
+              processedFile = new File([convertedBlob], "converted.jpg", {
                 type: "image/jpeg",
               });
-            } catch (err) {
-              console.error("HEIC convert failed", err);
             }
           }
 
