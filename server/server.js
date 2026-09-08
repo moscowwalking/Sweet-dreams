@@ -10,7 +10,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import exifr from "exifr";
 import sharp from "sharp";
-import heicConvert from "heic-convert";
+
+// Ограничение памяти для работы в пределах 512MB RAM на Render
+sharp.concurrency(1);
+sharp.cache(false);
 
 const app = express();
 
@@ -507,42 +510,27 @@ app.post("/upload", (req, res) => {
       }
 
       // Оптимизация изображений через Sharp (только WebP - никакого сохранения JPEG!)
-      let imageBuffer = file.buffer;
-      if (
-        /heic|heif/i.test(file.mimetype) ||
-        /\.(heic|heif)$/i.test(file.originalname)
-      ) {
-        try {
-          console.log("🔄 Конвертация HEIC на сервере через heic-convert...");
-          imageBuffer = await heicConvert({
-            buffer: file.buffer,
-            format: "JPEG",
-            quality: 1,
-          });
-          console.log("✅ HEIC успешно сконвертирован на сервере");
-        } catch (heicErr) {
-          console.warn("⚠️ heic-convert error:", heicErr.message);
-        }
-      }
-
       let origBuffer, thumbBuffer;
       let origFileName = `memory-${id}.webp`;
       let thumbFileName = `thumb-${id}.webp`;
       let origContentType = "image/webp";
       let thumbContentType = "image/webp";
       try {
-        [origBuffer, thumbBuffer] = await Promise.all([
-          sharp(imageBuffer)
-            .rotate()
-            .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-            .webp({ quality: 82 })
-            .toBuffer(),
-          sharp(imageBuffer)
-            .rotate()
-            .resize(320, 320, { fit: "cover" })
-            .webp({ quality: 80 })
-            .toBuffer(),
-        ]);
+        origBuffer = await sharp(file.buffer, {
+          failOn: "none",
+          limitInputPixels: 100000000,
+        })
+          .rotate()
+          .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toBuffer();
+
+        // Миниатюру делаем из уже уменьшенного origBuffer (1920px), экономя 90% RAM на Render 512MB
+        thumbBuffer = await sharp(origBuffer)
+          .resize(320, 320, { fit: "cover" })
+          .webp({ quality: 80 })
+          .toBuffer();
+
         console.log(
           `🖼️ Sharp сжатие: ${(file.buffer.length / 1024).toFixed(1)}KB -> WebP ${(origBuffer.length / 1024).toFixed(1)}KB, Thumb ${(thumbBuffer.length / 1024).toFixed(1)}KB`,
         );
