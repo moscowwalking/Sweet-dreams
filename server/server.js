@@ -167,8 +167,11 @@ async function syncPlacesWithS3() {
       if (place.thumbUrl && place.thumbUrl.includes("/thumbs/")) {
         const thumbMatch = place.thumbUrl.match(/memories\/thumbs\/[^?#]+/);
         if (!thumbMatch || !s3Keys.has(thumbMatch[0])) {
-          console.log(`🔧 Исправляем несуществующий thumbUrl для id=${place.id}`);
-          place.thumbUrl = place.origUrl || place.thumbUrl.replace("/thumbs/", "/");
+          console.log(
+            `🔧 Исправляем несуществующий thumbUrl для id=${place.id}`,
+          );
+          place.thumbUrl =
+            place.origUrl || place.thumbUrl.replace("/thumbs/", "/");
         }
       }
     }
@@ -205,7 +208,9 @@ async function syncPlacesWithS3() {
                 ACL: "public-read",
               })
               .promise();
-            console.log(`✅ ${s3Key} успешно переконвертирован в реальный JPEG!`);
+            console.log(
+              `✅ ${s3Key} успешно переконвертирован в реальный JPEG!`,
+            );
           }
         } catch (e) {
           console.warn(`⚠️ Ошибка проверки/конвертации ${s3Key}:`, e.message);
@@ -287,18 +292,23 @@ app.all("/delete-place", async (req, res) => {
     }
     if (deletedPlace.thumbUrl) {
       const match = deletedPlace.thumbUrl.match(/memories\/[^?#]+/);
-      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+      if (match && !keysToDelete.includes(match[0]))
+        keysToDelete.push(match[0]);
     }
     if (deletedPlace.origUrl) {
       const match = deletedPlace.origUrl.match(/memories\/[^?#]+/);
-      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+      if (match && !keysToDelete.includes(match[0]))
+        keysToDelete.push(match[0]);
     }
 
     if (keysToDelete.length > 0) {
       await s3
         .deleteObjects({
           Bucket: BUCKET_NAME,
-          Delete: { Objects: keysToDelete.map((Key) => ({ Key })), Quiet: true },
+          Delete: {
+            Objects: keysToDelete.map((Key) => ({ Key })),
+            Quiet: true,
+          },
         })
         .promise();
       console.log(`🗑️ Удалены файлы из S3 для места id=${id}:`, keysToDelete);
