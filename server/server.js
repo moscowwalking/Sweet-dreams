@@ -162,17 +162,22 @@ async function syncPlacesWithS3() {
       return true;
     });
 
-    // Исправляем ссылки: если thumbUrl указывает на /thumbs/, а файла там нет — сбрасываем на origUrl
+    // Отказываемся от thumbs: нормализуем все ссылки на единый URL
     for (const place of cleaned) {
       if (place.thumbUrl && place.thumbUrl.includes("/thumbs/")) {
-        const thumbMatch = place.thumbUrl.match(/memories\/thumbs\/[^?#]+/);
-        if (!thumbMatch || !s3Keys.has(thumbMatch[0])) {
-          console.log(
-            `🔧 Исправляем несуществующий thumbUrl для id=${place.id}`,
-          );
-          place.thumbUrl =
-            place.origUrl || place.thumbUrl.replace("/thumbs/", "/");
-        }
+        place.thumbUrl = place.thumbUrl
+          .replace("/thumbs/", "/")
+          .replace("thumb-", "memory-");
+      }
+      if (place.origUrl && place.origUrl.includes("/thumbs/")) {
+        place.origUrl = place.origUrl
+          .replace("/thumbs/", "/")
+          .replace("thumb-", "memory-");
+      }
+      if (place.filename && place.filename.includes("thumbs/")) {
+        place.filename = place.filename
+          .replace("thumbs/", "")
+          .replace("thumb-", "memory-");
       }
     }
 
@@ -364,11 +369,10 @@ app.get("/migrate-photos", async (req, res) => {
       const origUrl = place.origUrl || place.thumbUrl;
       if (!origUrl) continue;
 
-      // Если уже сконвертировано в WebP с миниатюрой — пропускаем
+      // Если уже сконвертировано в WebP — пропускаем
       if (
-        place.thumbUrl &&
-        place.thumbUrl.includes("/thumbs/") &&
-        place.thumbUrl.endsWith(".webp")
+        (place.origUrl && place.origUrl.endsWith(".webp")) ||
+        (place.filename && place.filename.endsWith(".webp"))
       ) {
         continue;
       }
@@ -399,49 +403,28 @@ app.get("/migrate-photos", async (req, res) => {
 
         const id = place.id || Date.now().toString();
         const origFileName = `memory-${id}.webp`;
-        const thumbFileName = `thumb-${id}.webp`;
         const origPath = `memories/${origFileName}`;
-        const thumbPath = `memories/thumbs/${thumbFileName}`;
 
-        const [origBuffer, thumbBuffer] = await Promise.all([
-          sharp(fileBuffer)
-            .rotate()
-            .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-            .webp({ quality: 82 })
-            .toBuffer(),
-          sharp(fileBuffer)
-            .rotate()
-            .resize(320, 320, { fit: "cover" })
-            .webp({ quality: 80 })
-            .toBuffer(),
-        ]);
+        const origBuffer = await sharp(fileBuffer)
+          .rotate()
+          .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toBuffer();
 
-        await Promise.all([
-          s3
-            .putObject({
-              Bucket: BUCKET_NAME,
-              Key: origPath,
-              Body: origBuffer,
-              ContentType: "image/webp",
-              ACL: "public-read",
-            })
-            .promise(),
-          s3
-            .putObject({
-              Bucket: BUCKET_NAME,
-              Key: thumbPath,
-              Body: thumbBuffer,
-              ContentType: "image/webp",
-              ACL: "public-read",
-            })
-            .promise(),
-        ]);
+        await s3
+          .putObject({
+            Bucket: BUCKET_NAME,
+            Key: origPath,
+            Body: origBuffer,
+            ContentType: "image/webp",
+            ACL: "public-read",
+          })
+          .promise();
 
         const newOrigUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${origPath}`;
-        const newThumbUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${thumbPath}`;
 
         place.origUrl = newOrigUrl;
-        place.thumbUrl = newThumbUrl;
+        place.thumbUrl = newOrigUrl;
         place.filename = origFileName;
         processed++;
         console.log(`✅ Место ${place.id} успешно сконвертировано в WebP`);
@@ -527,6 +510,100 @@ app.get("/cleanup-old-jpegs", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Ошибка при удалении старых JPEG:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Эндпоинт очистки всех файлов из папки memories/thumbs/ в S3 и обновления places.json
+app.get("/cleanup-thumbs", async (req, res) => {
+  try {
+    console.log("🧹 Поиск файлов в memories/thumbs/ для удаления...");
+    const s3Keys = await getAllBucketObjects("memories/thumbs/");
+    const thumbKeys = Array.from(s3Keys).filter((k) =>
+      k.startsWith("memories/thumbs/"),
+    );
+
+    console.log(`📦 Найдено файлов в папке thumbs: ${thumbKeys.length}`);
+
+    let totalDeleted = 0;
+    if (thumbKeys.length > 0) {
+      for (let i = 0; i < thumbKeys.length; i += 1000) {
+        const batch = thumbKeys.slice(i, i + 1000).map((key) => ({ Key: key }));
+        await s3
+          .deleteObjects({
+            Bucket: BUCKET_NAME,
+            Delete: { Objects: batch, Quiet: true },
+          })
+          .promise();
+        totalDeleted += batch.length;
+      }
+      console.log(
+        `✅ Успешно удалено ${totalDeleted} файлов из memories/thumbs/ в S3`,
+      );
+    }
+
+    // Очищаем places.json от любых упоминаний /thumbs/
+    let places = [];
+    try {
+      const data = await s3
+        .getObject({ Bucket: BUCKET_NAME, Key: "backups/places.json" })
+        .promise();
+      if (data.Body) places = JSON.parse(data.Body.toString());
+    } catch (e) {
+      if (fs.existsSync(PLACES_FILE)) {
+        places = JSON.parse(fs.readFileSync(PLACES_FILE, "utf8"));
+      }
+    }
+
+    let modifiedCount = 0;
+    for (const place of places) {
+      let changed = false;
+      if (place.thumbUrl && place.thumbUrl.includes("/thumbs/")) {
+        place.thumbUrl = place.thumbUrl
+          .replace("/thumbs/", "/")
+          .replace("thumb-", "memory-");
+        changed = true;
+      }
+      if (place.origUrl && place.origUrl.includes("/thumbs/")) {
+        place.origUrl = place.origUrl
+          .replace("/thumbs/", "/")
+          .replace("thumb-", "memory-");
+        changed = true;
+      }
+      if (place.filename && place.filename.includes("thumbs/")) {
+        place.filename = place.filename
+          .replace("thumbs/", "")
+          .replace("thumb-", "memory-");
+        changed = true;
+      }
+      if (changed) modifiedCount++;
+    }
+
+    if (modifiedCount > 0) {
+      fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
+      await s3
+        .putObject({
+          Bucket: BUCKET_NAME,
+          Key: "backups/places.json",
+          Body: JSON.stringify(places, null, 2),
+          ContentType: "application/json",
+          ACL: "public-read",
+        })
+        .promise();
+      console.log(
+        `💾 places.json обновлен: очищено ${modifiedCount} записей от /thumbs/`,
+      );
+    }
+
+    res.json({
+      success: true,
+      message: `Папка thumbs полностью удалена. Удалено файлов из S3: ${totalDeleted}, обновлено записей в places.json: ${modifiedCount}`,
+      deletedFilesCount: totalDeleted,
+      updatedPlacesCount: modifiedCount,
+      deletedFiles: thumbKeys,
+    });
+  } catch (err) {
+    console.error("❌ Ошибка очистки thumbs:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
