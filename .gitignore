@@ -1,0 +1,10 @@
+# S3 Management sensitive links
+S3_MANAGEMENT.md
+s3_management.md
+s3_managment.md
+S3_MANAGMENT.md
+
+# Node & Environment
+node_modules/
+.env
+.env.*

@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import exifr from "exifr";
 import sharp from "sharp";
+import convert from "heic-convert";
 
 // Ограничение памяти для работы в пределах 512MB RAM на Render
 sharp.concurrency(1);
@@ -161,6 +162,57 @@ async function syncPlacesWithS3() {
       return true;
     });
 
+    // Исправляем ссылки: если thumbUrl указывает на /thumbs/, а файла там нет — сбрасываем на origUrl
+    for (const place of cleaned) {
+      if (place.thumbUrl && place.thumbUrl.includes("/thumbs/")) {
+        const thumbMatch = place.thumbUrl.match(/memories\/thumbs\/[^?#]+/);
+        if (!thumbMatch || !s3Keys.has(thumbMatch[0])) {
+          console.log(`🔧 Исправляем несуществующий thumbUrl для id=${place.id}`);
+          place.thumbUrl = place.origUrl || place.thumbUrl.replace("/thumbs/", "/");
+        }
+      }
+    }
+
+    // Проверяем наличие сырых HEIC файлов, сохраненных как .jpeg (например с iPhone), и конвертируем их в реальный JPEG
+    for (const place of cleaned) {
+      if (place.filename && place.filename.endsWith(".jpeg")) {
+        const s3Key = place.filename.startsWith("memories/")
+          ? place.filename
+          : `memories/${place.filename}`;
+        try {
+          const s3Obj = await s3
+            .getObject({ Bucket: BUCKET_NAME, Key: s3Key })
+            .promise();
+          if (
+            s3Obj.Body &&
+            s3Obj.Body.length > 12 &&
+            s3Obj.Body.slice(4, 12).toString("ascii").includes("ftyp")
+          ) {
+            console.log(
+              `🔄 Обнаружен сырой HEIC в ${s3Key}, конвертируем в JPEG через heic-convert...`,
+            );
+            const convertedJpeg = await convert({
+              buffer: s3Obj.Body,
+              format: "JPEG",
+              quality: 0.88,
+            });
+            await s3
+              .putObject({
+                Bucket: BUCKET_NAME,
+                Key: s3Key,
+                Body: convertedJpeg,
+                ContentType: "image/jpeg",
+                ACL: "public-read",
+              })
+              .promise();
+            console.log(`✅ ${s3Key} успешно переконвертирован в реальный JPEG!`);
+          }
+        } catch (e) {
+          console.warn(`⚠️ Ошибка проверки/конвертации ${s3Key}:`, e.message);
+        }
+      }
+    }
+
     const removedCount = beforeCount - cleaned.length;
     console.log(
       `✅ Синхронизация завершена: было ${beforeCount}, осталось ${cleaned.length} (удалено ${removedCount})`,
@@ -195,6 +247,85 @@ async function syncPlacesWithS3() {
 app.get("/sync-places", async (req, res) => {
   const result = await syncPlacesWithS3();
   res.json(result);
+});
+
+// Эндпоинт удаления места/фото по ID (GET или POST)
+app.all("/delete-place", async (req, res) => {
+  const id = req.query.id || req.body?.id;
+  if (!id) {
+    return res
+      .status(400)
+      .json({ error: "Не указан ID места (параметр ?id=...)" });
+  }
+
+  try {
+    let places = [];
+    try {
+      const data = await s3
+        .getObject({ Bucket: BUCKET_NAME, Key: "backups/places.json" })
+        .promise();
+      if (data.Body) places = JSON.parse(data.Body.toString());
+    } catch (e) {
+      if (fs.existsSync(PLACES_FILE)) {
+        places = JSON.parse(fs.readFileSync(PLACES_FILE, "utf8"));
+      }
+    }
+
+    const placeIndex = places.findIndex((p) => String(p.id) === String(id));
+    if (placeIndex === -1) {
+      return res.status(404).json({ error: `Место с id=${id} не найдено` });
+    }
+
+    const [deletedPlace] = places.splice(placeIndex, 1);
+
+    const keysToDelete = [];
+    if (deletedPlace.filename) {
+      const fnKey = deletedPlace.filename.startsWith("memories/")
+        ? deletedPlace.filename
+        : `memories/${deletedPlace.filename}`;
+      keysToDelete.push(fnKey);
+    }
+    if (deletedPlace.thumbUrl) {
+      const match = deletedPlace.thumbUrl.match(/memories\/[^?#]+/);
+      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+    }
+    if (deletedPlace.origUrl) {
+      const match = deletedPlace.origUrl.match(/memories\/[^?#]+/);
+      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+    }
+
+    if (keysToDelete.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket: BUCKET_NAME,
+          Delete: { Objects: keysToDelete.map((Key) => ({ Key })), Quiet: true },
+        })
+        .promise();
+      console.log(`🗑️ Удалены файлы из S3 для места id=${id}:`, keysToDelete);
+    }
+
+    fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
+    await s3
+      .putObject({
+        Bucket: BUCKET_NAME,
+        Key: "backups/places.json",
+        Body: JSON.stringify(places, null, 2),
+        ContentType: "application/json",
+        ACL: "public-read",
+      })
+      .promise();
+
+    res.json({
+      success: true,
+      message: `Место с id=${id} успешно удалено`,
+      deletedPlace,
+      deletedFiles: keysToDelete,
+      remainingCount: places.length,
+    });
+  } catch (err) {
+    console.error("❌ Ошибка удаления места:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Эндпоинт пакетной конвертации существующих фото в WebP (миниатюры + сжатые оригиналы)
@@ -478,8 +609,10 @@ app.post("/upload", (req, res) => {
     }
 
     try {
-      const id = Date.now().toString();
+      const fileName = `memory-${Date.now()}.jpeg`;
+      const filePath = `memories/${fileName}`;
       let exifDate = null;
+
       try {
         const exifData = await exifr.parse(file.buffer);
         console.log("🔍 EXIF данные:", exifData);
@@ -509,81 +642,45 @@ app.post("/upload", (req, res) => {
         console.log("❌ Ошибка EXIF, используем текущую дату:", exifDate);
       }
 
-      // Оптимизация изображений через Sharp (только WebP - никакого сохранения JPEG!)
-      let origBuffer, thumbBuffer;
-      let origFileName = `memory-${id}.webp`;
-      let thumbFileName = `thumb-${id}.webp`;
-      let origContentType = "image/webp";
-      let thumbContentType = "image/webp";
-      try {
-        origBuffer = await sharp(file.buffer, {
-          failOn: "none",
-          limitInputPixels: 100000000,
+      // Конвертация HEIC в JPEG если нужно (для поддержки фото с iPhone на всех браузерах)
+      let uploadBuffer = file.buffer;
+      let contentType = file.mimetype || "image/jpeg";
+      const isHeic =
+        /heic|heif/i.test(file.mimetype || "") ||
+        /\.(heic|heif)$/i.test(file.originalname || "") ||
+        (file.buffer &&
+          file.buffer.length > 12 &&
+          file.buffer.slice(4, 12).toString("ascii").includes("ftyp"));
+
+      if (isHeic) {
+        try {
+          console.log("🔄 Конвертация HEIC на сервере через heic-convert...");
+          uploadBuffer = await convert({
+            buffer: file.buffer,
+            format: "JPEG",
+            quality: 0.88,
+          });
+          contentType = "image/jpeg";
+          console.log(
+            `✅ Успешно сконвертировано в JPEG (${(uploadBuffer.length / 1024).toFixed(1)} KB)`,
+          );
+        } catch (convErr) {
+          console.warn("⚠️ heic-convert warning:", convErr.message);
+        }
+      }
+
+      await s3
+        .upload({
+          Bucket: BUCKET_NAME,
+          Key: filePath,
+          Body: uploadBuffer,
+          ContentType: contentType,
+          ACL: "public-read",
         })
-          .rotate()
-          .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-          .webp({ quality: 82 })
-          .toBuffer();
+        .promise();
 
-        // Миниатюру делаем из уже уменьшенного origBuffer (1920px), экономя 90% RAM на Render 512MB
-        thumbBuffer = await sharp(origBuffer)
-          .resize(320, 320, { fit: "cover" })
-          .webp({ quality: 80 })
-          .toBuffer();
-
-        console.log(
-          `🖼️ Sharp сжатие: ${(file.buffer.length / 1024).toFixed(1)}KB -> WebP ${(origBuffer.length / 1024).toFixed(1)}KB, Thumb ${(thumbBuffer.length / 1024).toFixed(1)}KB`,
-        );
-      } catch (sharpErr) {
-        console.warn(
-          "⚠️ Ошибка Sharp, используем исходный файл:",
-          sharpErr.message,
-        );
-        origBuffer = file.buffer;
-        thumbBuffer = file.buffer;
-        origFileName = `memory-${id}.jpeg`;
-        thumbFileName = origFileName;
-        origContentType = file.mimetype || "image/jpeg";
-        thumbContentType = origContentType;
-      }
-
-      const origPath = `memories/${origFileName}`;
-      const thumbPath = `memories/thumbs/${thumbFileName}`;
-
-      const uploadTasks = [
-        s3
-          .upload({
-            Bucket: BUCKET_NAME,
-            Key: origPath,
-            Body: origBuffer,
-            ContentType: origContentType,
-            ACL: "public-read",
-          })
-          .promise(),
-      ];
-
-      if (thumbPath !== origPath) {
-        uploadTasks.push(
-          s3
-            .upload({
-              Bucket: BUCKET_NAME,
-              Key: thumbPath,
-              Body: thumbBuffer,
-              ContentType: thumbContentType,
-              ACL: "public-read",
-            })
-            .promise(),
-        );
-      }
-
-      await Promise.all(uploadTasks);
-
-      const origUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${origPath}`;
-      const thumbUrl =
-        thumbPath === origPath
-          ? origUrl
-          : `https://${BUCKET_NAME}.storage.yandexcloud.net/${thumbPath}`;
-      console.log("✅ Файлы загружены в S3:", { origUrl, thumbUrl });
+      const fileUrl = `https://${BUCKET_NAME}.storage.yandexcloud.net/${filePath}`;
+      console.log("✅ Файл загружен в S3:", fileUrl);
 
       // сохраняем в places.json
       let places = [];
@@ -598,13 +695,13 @@ app.post("/upload", (req, res) => {
       }
 
       const newPlace = {
-        id,
+        id: Date.now().toString(),
         coords: req.body.coords ? JSON.parse(req.body.coords) : null,
-        thumbUrl,
-        origUrl,
+        thumbUrl: fileUrl,
+        origUrl: fileUrl,
         placeTitle: req.body.placeTitle || "Новое место",
         timestamp: new Date().toISOString(),
-        filename: origFileName,
+        filename: fileName,
         exifDate: exifDateFromClient || exifDate,
       };
 
@@ -624,7 +721,7 @@ app.post("/upload", (req, res) => {
         .promise();
       console.log("✅ places.json сохранён в S3 backup");
 
-      res.json({ success: true, fileUrl: origUrl, thumbUrl });
+      res.json({ success: true, fileUrl, thumbUrl: fileUrl });
     } catch (uploadErr) {
       console.error("❌ Ошибка обработки загрузки:", uploadErr);
       res
