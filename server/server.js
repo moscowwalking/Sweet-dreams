@@ -549,8 +549,22 @@ app.post("/update-caption", async (req, res) => {
 
     const places = JSON.parse(fileData.Body.toString());
 
-    // Находим по ID (уникальный и точный)
-    const foundIndex = places.findIndex((p) => p.id === id);
+    // Находим по ID или по координатам (если id был передан в виде "lat,lon")
+    let foundIndex = places.findIndex((p) => String(p.id) === String(id));
+
+    if (foundIndex === -1 && typeof id === "string" && id.includes(",")) {
+      const [lat, lon] = id.split(",").map(Number);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        foundIndex = places.findIndex((p) => {
+          if (!p.coords || !Array.isArray(p.coords) || p.coords.length < 2)
+            return false;
+          return (
+            Math.abs(p.coords[0] - lat) < 0.0001 &&
+            Math.abs(p.coords[1] - lon) < 0.0001
+          );
+        });
+      }
+    }
 
     if (foundIndex === -1) {
       console.warn("⚠️ Место не найдено для id:", id);
@@ -572,6 +586,9 @@ app.post("/update-caption", async (req, res) => {
       found.caption = caption;
     }
 
+    // Синхронизируем локальный файл и бэкап в S3
+    fs.writeFileSync(PLACES_FILE, JSON.stringify(places, null, 2));
+
     await s3
       .putObject({
         Bucket: BUCKET_NAME,
@@ -581,8 +598,8 @@ app.post("/update-caption", async (req, res) => {
       })
       .promise();
 
-    console.log(`✅ Подпись сохранена у места id=${id}`);
-    res.json({ success: true });
+    console.log(`✅ Подпись сохранена у места id=${found.id}`);
+    res.json({ success: true, id: found.id });
   } catch (err) {
     console.error("❌ Ошибка при обновлении подписи:", err);
     res.status(500).json({ success: false, error: err.message });
@@ -619,7 +636,8 @@ app.post("/upload", (req, res) => {
     }
 
     try {
-      const fileName = `memory-${Date.now()}.jpeg`;
+      const id = Date.now().toString();
+      const fileName = `memory-${id}.webp`;
       const filePath = `memories/${fileName}`;
       let exifDate = null;
 
@@ -652,9 +670,8 @@ app.post("/upload", (req, res) => {
         console.log("❌ Ошибка EXIF, используем текущую дату:", exifDate);
       }
 
-      // Конвертация HEIC в JPEG если нужно (для поддержки фото с iPhone на всех браузерах)
-      let uploadBuffer = file.buffer;
-      let contentType = file.mimetype || "image/jpeg";
+      // Подготовка буфера: если HEIC, распаковываем для Sharp
+      let sourceBuffer = file.buffer;
       const isHeic =
         /heic|heif/i.test(file.mimetype || "") ||
         /\.(heic|heif)$/i.test(file.originalname || "") ||
@@ -664,19 +681,38 @@ app.post("/upload", (req, res) => {
 
       if (isHeic) {
         try {
-          console.log("🔄 Конвертация HEIC на сервере через heic-convert...");
-          uploadBuffer = await convert({
+          console.log("🔄 Распаковка HEIC на сервере через heic-convert...");
+          sourceBuffer = await convert({
             buffer: file.buffer,
             format: "JPEG",
-            quality: 0.88,
+            quality: 0.9,
           });
-          contentType = "image/jpeg";
           console.log(
-            `✅ Успешно сконвертировано в JPEG (${(uploadBuffer.length / 1024).toFixed(1)} KB)`,
+            `✅ HEIC успешно распакован (${(sourceBuffer.length / 1024).toFixed(1)} KB)`,
           );
         } catch (convErr) {
           console.warn("⚠️ heic-convert warning:", convErr.message);
         }
+      }
+
+      // Сжатие и конвертация напрямую в WebP (1920px, качество 82%)
+      console.log("🖼️ Оптимизация фото в WebP (1920px max, quality 82)...");
+      let uploadBuffer;
+      try {
+        uploadBuffer = await sharp(sourceBuffer)
+          .rotate()
+          .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toBuffer();
+        console.log(
+          `✅ Успешно сконвертировано в WebP (${(uploadBuffer.length / 1024).toFixed(1)} KB)`,
+        );
+      } catch (sharpErr) {
+        console.warn(
+          "⚠️ Ошибка сжатия в Sharp, fallback на исходный буфер:",
+          sharpErr.message,
+        );
+        uploadBuffer = sourceBuffer;
       }
 
       await s3
@@ -684,7 +720,7 @@ app.post("/upload", (req, res) => {
           Bucket: BUCKET_NAME,
           Key: filePath,
           Body: uploadBuffer,
-          ContentType: contentType,
+          ContentType: "image/webp",
           ACL: "public-read",
         })
         .promise();
@@ -705,7 +741,7 @@ app.post("/upload", (req, res) => {
       }
 
       const newPlace = {
-        id: Date.now().toString(),
+        id,
         coords: req.body.coords ? JSON.parse(req.body.coords) : null,
         thumbUrl: fileUrl,
         origUrl: fileUrl,
@@ -731,7 +767,13 @@ app.post("/upload", (req, res) => {
         .promise();
       console.log("✅ places.json сохранён в S3 backup");
 
-      res.json({ success: true, fileUrl, thumbUrl: fileUrl });
+      res.json({
+        success: true,
+        id,
+        fileUrl,
+        thumbUrl: fileUrl,
+        origUrl: fileUrl,
+      });
     } catch (uploadErr) {
       console.error("❌ Ошибка обработки загрузки:", uploadErr);
       res

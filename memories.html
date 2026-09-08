@@ -587,12 +587,15 @@
         CONFIG.MAP.center,
         CONFIG.MAP.zoom,
       );
-      L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
-        subdomains: "abc",
-        maxZoom: CONFIG.MAP.maxZoom,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+          subdomains: "abcd",
+          maxZoom: CONFIG.MAP.maxZoom,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        },
+      ).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       const markers = L.markerClusterGroup({
@@ -1175,17 +1178,30 @@
 
             markers.removeLayer(tmpMarker);
 
-            const key = Utils.coordsKey(...tmpPlace.coords);
-            let place = placesStore.get(key);
+            const placeId = res.id
+              ? String(res.id)
+              : Utils.coordsKey(...tmpPlace.coords);
+
+            let place = Array.from(placesStore.values()).find((p) => {
+              if (res.id && String(p.id) === String(res.id)) return true;
+              if (!p.coords || !Array.isArray(p.coords) || p.coords.length < 2)
+                return false;
+              return (
+                Math.abs(p.coords[0] - tmpPlace.coords[0]) < 0.0001 &&
+                Math.abs(p.coords[1] - tmpPlace.coords[1]) < 0.0001
+              );
+            });
 
             if (!place) {
               place = {
-                id: key,
+                id: placeId,
                 coords: [...tmpPlace.coords],
                 photos: [],
                 exifDate,
               };
-              placesStore.set(key, place);
+              placesStore.set(place.id, place);
+            } else if (res.id) {
+              place.id = String(res.id);
             }
 
             place.photos.push({
