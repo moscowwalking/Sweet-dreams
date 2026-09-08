@@ -1008,14 +1008,15 @@
         },
 
         show() {
-          const places = Array.from(placesStore.values());
+          const allPlaces = Array.from(placesStore.values());
 
-          if (places.length === 0) {
+          if (allPlaces.length === 0) {
             alert("😢 Пока нет воспоминаний...");
             return;
           }
 
-          const randomPlace = places[Math.floor(Math.random() * places.length)];
+          const randomPlace =
+            allPlaces[Math.floor(Math.random() * allPlaces.length)];
 
           map.flyTo(randomPlace.coords, 16, {
             duration: 2,
@@ -1288,7 +1289,7 @@
 
           console.log(`✅ Found ${validData.length} places with URLs`);
 
-          const places = validData.map((p) => {
+          const placesList = validData.map((p) => {
             let thumb = p.thumbUrl || p.origUrl || "";
             let orig = p.origUrl || p.thumbUrl || "";
             if (thumb.includes("/thumbs/memory-")) {
@@ -1316,15 +1317,15 @@
           });
 
           // Рендерим маркеры сразу без искусственных блокирующих задержек
-          this.renderPlaces(places);
+          this.renderPlaces(placesList);
         },
 
-        renderPlaces(places) {
+        renderPlaces(placesList) {
           markers.clearLayers();
           placesStore.clear();
 
           let renderedCount = 0;
-          for (const place of places) {
+          for (const place of placesList) {
             if (
               !place.coords ||
               !Array.isArray(place.coords) ||
