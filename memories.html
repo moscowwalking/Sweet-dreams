@@ -2,8 +2,23 @@
 <html lang="ru">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>Memories — Карта воспоминаний</title>
+
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
 
     <!-- Leaflet CSS -->
     <link
@@ -40,6 +55,19 @@
         flex-direction: column;
         align-items: center;
         min-height: 100vh;
+        min-height: 100dvh;
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button,
+      .fab-btn,
+      .upload-btn,
+      .nav-button,
+      .nostalgia-btn,
+      .nostalgia-close {
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
       /* ===== Typography ===== */
@@ -182,35 +210,205 @@
         animation: heartbeat 1.5s infinite;
       }
 
-      /* ===== Random Memory Button ===== */
-      .random-memory-btn {
+      /* ===== Floating Action Controls ===== */
+      .floating-controls {
         position: fixed;
         bottom: 30px;
         right: 30px;
-        width: 60px;
-        height: 60px;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 12px;
+        z-index: 1000;
+        align-items: center;
+      }
+      .fab-btn {
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         background: linear-gradient(135deg, #ff9a9e, #fad0c4);
         color: white;
-        font-size: 28px;
+        font-size: 26px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        transition:
-          transform 0.3s,
-          box-shadow 0.3s;
-        border: 3px solid rgba(255, 255, 255, 0.5);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 3px solid rgba(255, 255, 255, 0.6);
+        position: relative;
+        user-select: none;
         animation: popIn 0.5s ease-out;
       }
-      .random-memory-btn:hover {
-        transform: scale(1.1) rotate(180deg);
-        box-shadow: 0 6px 25px rgba(255, 105, 180, 0.4);
+      .fab-btn:hover {
+        transform: scale(1.12);
+        box-shadow: 0 6px 25px rgba(255, 105, 180, 0.45);
       }
-      .random-memory-btn:active {
+      .fab-btn:active {
         transform: scale(0.95);
+      }
+      .fab-btn.active {
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        border-color: #ffffff;
+        box-shadow: 0 0 20px rgba(255, 65, 108, 0.7);
+        transform: scale(1.08);
+      }
+      .fab-badge {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        background: #ff1493;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        animation: heartbeat 1.5s infinite;
+      }
+      .random-memory-btn {
+        /* backward compatibility alias */
+      }
+
+      /* ===== Nostalgia Card ("В этот день...") ===== */
+      .nostalgia-card {
+        display: none;
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        width: min(320px, calc(100vw - 48px));
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 105, 180, 0.4);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        z-index: 1100;
+        animation: popIn 0.4s ease-out;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .nostalgia-card.visible {
+        display: flex;
+      }
+      .nostalgia-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nostalgia-badge {
+        background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 12px;
+        letter-spacing: 0.4px;
+      }
+      .nostalgia-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #888;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+      }
+      .nostalgia-close:hover {
+        color: #ff1493;
+      }
+      .nostalgia-image-container {
+        width: 100%;
+        height: 160px;
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+        background: #ffd1dc;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+      }
+      .nostalgia-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      .nostalgia-image-container:hover img {
+        transform: scale(1.05);
+      }
+      .nostalgia-body {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .nostalgia-date {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+      }
+      .nostalgia-caption {
+        font-size: 13px;
+        color: #666;
+        font-style: italic;
+        max-height: 38px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nostalgia-btn {
+        background: linear-gradient(135deg, #ff69b4, #ff1493);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 9px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        transition: all 0.2s ease;
+      }
+      .nostalgia-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 20, 147, 0.4);
+      }
+      .nostalgia-nav {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+        margin-top: -2px;
+      }
+      .nostalgia-nav-btn {
+        background: rgba(255, 105, 180, 0.15);
+        border: 1px solid rgba(255, 105, 180, 0.3);
+        color: #ff1493;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 18px;
+        line-height: 1;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .nostalgia-nav-btn:hover {
+        background: rgba(255, 105, 180, 0.3);
+        transform: scale(1.08);
+      }
+      .nostalgia-counter {
+        font-size: 12px;
+        font-weight: 700;
+        color: #888;
+        letter-spacing: 0.3px;
       }
 
       /* ===== Gallery Overlay ===== */
@@ -386,8 +584,8 @@
 
         /* Навигация и кнопка Назад */
         .nav-wrapper {
-          top: 10px;
-          left: 10px;
+          top: max(10px, env(safe-area-inset-top, 10px));
+          left: max(10px, env(safe-area-inset-left, 10px));
         }
         .nav-button {
           padding: 6px 12px;
@@ -397,8 +595,8 @@
 
         /* Счётчик любви */
         .love-counter {
-          top: 10px;
-          right: 10px;
+          top: max(10px, env(safe-area-inset-top, 10px));
+          right: max(10px, env(safe-area-inset-right, 10px));
           padding: 4px 12px;
           gap: 8px;
           border-radius: 20px;
@@ -416,8 +614,8 @@
         /* Панель загрузки на мобильных */
         .upload-panel {
           top: auto !important;
-          bottom: 16px !important;
-          left: 12px !important;
+          bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+          left: max(12px, env(safe-area-inset-left, 12px)) !important;
           padding: 6px !important;
           border-radius: 25px !important;
           background: rgba(255, 255, 255, 0.95) !important;
@@ -432,16 +630,26 @@
           display: none !important; /* На телефоне drag & drop не нужен */
         }
 
-        /* Кнопка случайного воспоминания и контролы зума */
-        .random-memory-btn {
-          bottom: 16px !important;
-          right: 12px !important;
+        /* Плавающие кнопки и карточка */
+        .floating-controls {
+          bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+          right: max(12px, env(safe-area-inset-right, 12px)) !important;
+          gap: 8px !important;
+        }
+        .fab-btn {
           width: 48px !important;
           height: 48px !important;
           font-size: 22px !important;
         }
+        .nostalgia-card {
+          top: max(14px, env(safe-area-inset-top, 14px)) !important;
+          right: 14px !important;
+          width: calc(100vw - 28px) !important;
+        }
         .leaflet-bottom.leaflet-right {
-          bottom: 75px !important; /* Чтобы зум не перекрывал кнопку кубика */
+          bottom: calc(
+            max(16px, env(safe-area-inset-bottom, 16px)) + 64px
+          ) !important; /* Чтобы зум не перекрывал кнопки */
           right: 8px !important;
         }
 
@@ -535,20 +743,81 @@
       </div>
     </div>
 
-    <!-- Random Memory Button -->
-    <div
-      class="random-memory-btn"
-      id="randomMemoryBtn"
-      title="Случайное воспоминание"
-    >
-      🎲
+    <!-- Floating Action Controls -->
+    <div class="floating-controls">
+      <!-- Random Memory Button -->
+      <div
+        class="fab-btn random-memory-btn"
+        id="randomMemoryBtn"
+        title="Случайное воспоминание"
+      >
+        🎲
+      </div>
+
+      <!-- On This Day Button (видна только если сегодня есть воспоминания) -->
+      <div
+        class="fab-btn"
+        id="nostalgiaBtn"
+        title="В этот день"
+        style="display: none"
+      >
+        💌
+        <span class="fab-badge" id="nostalgiaBadge" style="display: none"
+          >1</span
+        >
+      </div>
+    </div>
+
+    <!-- Nostalgia Card ("В этот день") -->
+    <div class="nostalgia-card" id="nostalgiaCard">
+      <div class="nostalgia-header">
+        <span class="nostalgia-badge" id="nostalgiaTag">В этот день</span>
+        <button class="nostalgia-close" id="nostalgiaCloseBtn" title="Закрыть">
+          ✕
+        </button>
+      </div>
+      <div
+        class="nostalgia-image-container"
+        id="nostalgiaImgContainer"
+        title="Нажмите, чтобы открыть фото"
+      >
+        <img id="nostalgiaImg" src="" alt="Фото воспоминания" />
+      </div>
+      <div class="nostalgia-nav" id="nostalgiaNav">
+        <button
+          class="nostalgia-nav-btn"
+          id="nostalgiaPrevBtn"
+          title="Предыдущее фото"
+        >
+          ‹
+        </button>
+        <span class="nostalgia-counter" id="nostalgiaCounter">1 из 1</span>
+        <button
+          class="nostalgia-nav-btn"
+          id="nostalgiaNextBtn"
+          title="Следующее фото"
+        >
+          ›
+        </button>
+      </div>
+      <div class="nostalgia-body">
+        <div class="nostalgia-date" id="nostalgiaDate">...</div>
+        <div class="nostalgia-caption" id="nostalgiaCaption">...</div>
+      </div>
+      <div
+        id="nostalgiaActions"
+        style="display: flex; flex-direction: column; gap: 6px"
+      >
+        <button class="nostalgia-btn" id="nostalgiaActionBtn">
+          Полететь к месту 🚀
+        </button>
+      </div>
     </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 
     <script>
       // =========================================================================
@@ -563,9 +832,6 @@
         },
         CACHE: {
           PLACES_KEY: "places_cache_v3",
-          PLACES_TIME_KEY: "places_cache_time_v3",
-          TTL: 1000 * 60 * 60 * 2, // 2 часа
-          BROKEN_LINK_TTL: 1000 * 60 * 60, // 1 час
         },
         RELATIONSHIP: {
           startDate: new Date(2025, 7, 23), // 23 августа 2025
@@ -573,7 +839,6 @@
         MARKER: {
           size: 56,
           tempSize: 40,
-          colors: ["#667eea", "#f093fb", "#4facfe", "#43e97b", "#fa709a"],
         },
         UPLOAD: {
           maxSize: 15 * 1024 * 1024, // 15MB
@@ -603,7 +868,6 @@
       map.addLayer(markers);
 
       const placesStore = new Map();
-      const brokenLinkCache = new Map();
 
       // =========================================================================
       // UTILITY FUNCTIONS
@@ -611,17 +875,6 @@
       const Utils = {
         coordsKey(lat, lon, precision = 7) {
           return `${lat.toFixed(precision)},${lon.toFixed(precision)}`;
-        },
-
-        isElementInViewport(el, offset = 100) {
-          if (!el) return false;
-          const rect = el.getBoundingClientRect();
-          return (
-            rect.top >= -offset &&
-            rect.left >= -offset &&
-            rect.bottom <= window.innerHeight + offset &&
-            rect.right <= window.innerWidth + offset
-          );
         },
 
         async waitForMapClick(timeout = 30000) {
@@ -645,41 +898,72 @@
           return `${day}.${month}.${year}`;
         },
 
-        getColorFromId(id) {
-          const colors = CONFIG.MARKER.colors;
-          const index = parseInt(id, 10) % colors.length || 0;
-          return colors[index];
+        getPlaceDate(place) {
+          if (!place) return new Date();
+          // 1. Проверяем exifDate
+          if (place.exifDate) {
+            const parts = place.exifDate.split(".");
+            if (parts.length === 3) {
+              let day = parseInt(parts[0], 10);
+              let month = parseInt(parts[1], 10) - 1;
+              let year = parseInt(parts[2], 10);
+              if (year < 100) year += 2000;
+              const d = new Date(year, month, day);
+              if (!isNaN(d.getTime())) return d;
+            }
+            const d = new Date(place.exifDate);
+            if (!isNaN(d.getTime())) return d;
+          }
+          // 2. Проверяем дату первого фото
+          if (place.photos && place.photos[0]?.date) {
+            const pDate = place.photos[0].date;
+            const parts = pDate.split(".");
+            if (parts.length === 3) {
+              let day = parseInt(parts[0], 10);
+              let month = parseInt(parts[1], 10) - 1;
+              let year = parseInt(parts[2], 10);
+              if (year < 100) year += 2000;
+              const d = new Date(year, month, day);
+              if (!isNaN(d.getTime())) return d;
+            }
+          }
+          // 3. Проверяем timestamp
+          if (place.timestamp) {
+            const d = new Date(place.timestamp);
+            if (!isNaN(d.getTime())) return d;
+          }
+          // 4. Проверяем ID как таймстемп
+          const num = Number(place.id);
+          if (!isNaN(num) && num > 1600000000000) {
+            return new Date(num);
+          }
+          return new Date();
         },
-      };
 
-      // =========================================================================
-      // IMAGE HANDLING
-      // =========================================================================
-      const ImageManager = {
-        async waitForLoad(url, timeout = 5000) {
-          return new Promise((resolve) => {
-            const img = new Image();
-            const timer = setTimeout(() => {
-              cleanup();
-              resolve(false);
-            }, timeout);
+        getPlaceTime(place) {
+          return this.getPlaceDate(place).getTime();
+        },
 
-            const cleanup = () => {
-              clearTimeout(timer);
-              img.onload = null;
-              img.onerror = null;
-            };
-
-            img.onload = () => {
-              cleanup();
-              resolve(true);
-            };
-            img.onerror = () => {
-              cleanup();
-              resolve(false);
-            };
-            img.src = url;
-          });
+        formatRussianDate(date) {
+          if (!date || isNaN(date.getTime())) return "Без даты";
+          const months = [
+            "янв",
+            "фев",
+            "мар",
+            "апр",
+            "мая",
+            "июн",
+            "июл",
+            "авг",
+            "сен",
+            "окт",
+            "ноя",
+            "дек",
+          ];
+          const d = date.getDate();
+          const m = months[date.getMonth()];
+          const y = date.getFullYear();
+          return `${d} ${m} ${y}`;
         },
       };
 
@@ -770,11 +1054,66 @@
 
         init() {
           this.closeBtn.onclick = () => this.close();
+
+          // Поддержка свайпов фото на мобильных устройствах
+          let touchStartX = 0;
+          let touchStartY = 0;
+          const photoContainer = this.main.parentElement;
+
+          if (photoContainer) {
+            photoContainer.addEventListener(
+              "touchstart",
+              (e) => {
+                if (e.touches.length === 1) {
+                  touchStartX = e.touches[0].clientX;
+                  touchStartY = e.touches[0].clientY;
+                }
+              },
+              { passive: true },
+            );
+
+            photoContainer.addEventListener(
+              "touchend",
+              (e) => {
+                if (!touchStartX) return;
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = touchEndX - touchStartX;
+                const diffY = touchEndY - touchStartY;
+
+                // Если горизонтальный свайп заметно больше вертикального и больше 35px
+                if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+                  if (diffX < 0) {
+                    this.nextPhoto();
+                  } else {
+                    this.prevPhoto();
+                  }
+                }
+                touchStartX = 0;
+                touchStartY = 0;
+              },
+              { passive: true },
+            );
+          }
         },
 
-        open(place) {
+        nextPhoto() {
+          if (!this.photoList || this.photoList.length <= 1) return;
+          const nextIdx = (this.currentIndex + 1) % this.photoList.length;
+          this.showPhoto(nextIdx);
+        },
+
+        prevPhoto() {
+          if (!this.photoList || this.photoList.length <= 1) return;
+          const prevIdx =
+            (this.currentIndex - 1 + this.photoList.length) %
+            this.photoList.length;
+          this.showPhoto(prevIdx);
+        },
+
+        open(place, initialIndex = 0) {
           this.currentPlace = place;
-          this.currentIndex = 0;
+          this.currentIndex = initialIndex;
           this.thumbs.innerHTML = "";
 
           const photoList =
@@ -802,13 +1141,13 @@
               thumb.onerror = function () {
                 this.style.display = "none";
               };
-              thumb.className = idx === 0 ? "active" : "";
+              thumb.className = idx === initialIndex ? "active" : "";
               thumb.onclick = () => this.showPhoto(idx);
               this.thumbs.appendChild(thumb);
             });
           }
 
-          this.showPhoto(0);
+          this.showPhoto(initialIndex);
           this.overlay.style.display = "flex";
         },
 
@@ -920,18 +1259,16 @@
         memoriesEl: document.getElementById("totalMemories"),
         daysEl: document.getElementById("totalDays"),
         counterEl: document.getElementById("loveCounter"),
-        watchInterval: null,
 
         init() {
           this.update();
-          this.startWatching();
         },
 
-        update() {
-          const totalMemories = placesStore.size;
+        update(customTotal = null) {
+          const totalMemories =
+            customTotal !== null ? customTotal : placesStore.size;
           const oldValue = parseInt(this.memoriesEl.textContent) || 0;
 
-          // Анимация при изменении
           if (totalMemories !== oldValue) {
             this.memoriesEl.classList.add("updated");
             setTimeout(() => this.memoriesEl.classList.remove("updated"), 300);
@@ -950,26 +1287,6 @@
           const months = Math.floor((diffDays % 365) / 30);
           const days = diffDays % 30;
           this.counterEl.title = `Вместе уже ${years} лет, ${months} месяцев и ${days} дней ❤️`;
-        },
-
-        startWatching() {
-          let lastCount = placesStore.size;
-
-          this.watchInterval = setInterval(() => {
-            const currentCount = placesStore.size;
-            if (currentCount !== lastCount) {
-              lastCount = currentCount;
-              this.update();
-            }
-          }, 500);
-
-          // Остановить через 30 секунд
-          setTimeout(() => {
-            if (this.watchInterval) {
-              clearInterval(this.watchInterval);
-              this.watchInterval = null;
-            }
-          }, 30000);
         },
       };
 
@@ -1061,46 +1378,6 @@
             gps = await exifr.gps(file);
           } catch {}
 
-          let processedFile = file;
-          if (
-            /heic|heif/i.test(file.type) ||
-            /\.(heic|heif)$/i.test(file.name)
-          ) {
-            let convertedBlob = null;
-            // 1. Пробуем нативный декодер браузера (на iPhone/Mac/Edge/Chrome)
-            try {
-              const bitmap = await createImageBitmap(file);
-              const canvas = document.createElement("canvas");
-              canvas.width = bitmap.width;
-              canvas.height = bitmap.height;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(bitmap, 0, 0);
-              convertedBlob = await new Promise((res) =>
-                canvas.toBlob(res, "image/jpeg", 0.92),
-              );
-            } catch (nativeErr) {}
-
-            // 2. Если нативный не сработал, пробуем heic2any
-            if (!convertedBlob) {
-              try {
-                const res = await heic2any({
-                  blob: file,
-                  toType: "image/jpeg",
-                  quality: 0.9,
-                });
-                convertedBlob = Array.isArray(res) ? res[0] : res;
-              } catch (err) {
-                console.warn("HEIC software convert warning:", err);
-              }
-            }
-
-            if (convertedBlob) {
-              processedFile = new File([convertedBlob], "converted.jpg", {
-                type: "image/jpeg",
-              });
-            }
-          }
-
           const coords =
             gps?.latitude && gps?.longitude
               ? [gps.latitude, gps.longitude]
@@ -1108,13 +1385,18 @@
 
           if (!coords) return;
 
+          let previewUrl = "";
+          try {
+            previewUrl = URL.createObjectURL(file);
+          } catch {}
+
           const tempPlace = {
             id: "tmp-" + Date.now(),
             coords,
             photos: [
               {
-                thumbUrl: URL.createObjectURL(processedFile),
-                origUrl: URL.createObjectURL(processedFile),
+                thumbUrl: previewUrl,
+                origUrl: previewUrl,
                 date: exifDate || Utils.formatDate(new Date()),
                 caption: "",
               },
@@ -1124,13 +1406,7 @@
           const tmpMarker = MarkerManager.create(tempPlace, true);
           markers.addLayer(tmpMarker);
 
-          await this.uploadToServer(
-            processedFile,
-            gps,
-            tempPlace,
-            tmpMarker,
-            exifDate,
-          );
+          await this.uploadToServer(file, gps, tempPlace, tmpMarker, exifDate);
         },
 
         async uploadToServer(file, gps, tmpPlace, tmpMarker, exifDate) {
@@ -1208,83 +1484,284 @@
       };
 
       // =========================================================================
+      // NOSTALGIA MANAGER (В этот день)
+      // =========================================================================
+      const NostalgiaManager = {
+        card: document.getElementById("nostalgiaCard"),
+        btn: document.getElementById("nostalgiaBtn"),
+        badge: document.getElementById("nostalgiaBadge"),
+        closeBtn: document.getElementById("nostalgiaCloseBtn"),
+        actionBtn: document.getElementById("nostalgiaActionBtn"),
+        imgContainer: document.getElementById("nostalgiaImgContainer"),
+        imgEl: document.getElementById("nostalgiaImg"),
+        dateEl: document.getElementById("nostalgiaDate"),
+        captionEl: document.getElementById("nostalgiaCaption"),
+        tagEl: document.getElementById("nostalgiaTag"),
+        navEl: document.getElementById("nostalgiaNav"),
+        counterEl: document.getElementById("nostalgiaCounter"),
+        prevBtn: document.getElementById("nostalgiaPrevBtn"),
+        nextBtn: document.getElementById("nostalgiaNextBtn"),
+        places: [],
+        items: [],
+        currentIndex: 0,
+        initialized: false,
+
+        init(places) {
+          this.places = places || [];
+          if (this.places.length === 0) return;
+
+          // Поддержка URL-параметра ?testDate=ДД.ММ для быстрой проверки в Live Server
+          const urlParams = new URLSearchParams(window.location.search);
+          const testDateStr =
+            urlParams.get("testDate") || urlParams.get("onthisday");
+          let dateToCheck = new Date();
+          if (testDateStr) {
+            const parts = testDateStr.split(".");
+            if (parts.length >= 2) {
+              dateToCheck = new Date(
+                dateToCheck.getFullYear(),
+                parseInt(parts[1], 10) - 1,
+                parseInt(parts[0], 10),
+              );
+            }
+          }
+
+          this.checkMemories(dateToCheck);
+
+          if (!this.initialized) {
+            this.initialized = true;
+
+            this.btn.addEventListener("click", () => {
+              this.showCard();
+            });
+
+            this.closeBtn.addEventListener("click", () => {
+              this.hideCard();
+            });
+
+            if (this.prevBtn) {
+              this.prevBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.prev();
+              });
+            }
+
+            if (this.nextBtn) {
+              this.nextBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.next();
+              });
+            }
+
+            this.actionBtn.addEventListener("click", () => {
+              this.flyCurrent();
+            });
+
+            if (this.imgContainer) {
+              this.imgContainer.addEventListener("click", () => {
+                this.flyCurrent();
+              });
+            }
+
+            // Удобная функция тестирования в консоли: testOnThisDay('22.10') или testOnThisDay('13.09')
+            window.testOnThisDay = (dayMonthStr) => {
+              const p = dayMonthStr.split(".");
+              const d = new Date(
+                new Date().getFullYear(),
+                parseInt(p[1], 10) - 1,
+                parseInt(p[0], 10),
+              );
+              this.checkMemories(d);
+              if (this.items.length > 0) {
+                this.btn.style.display = "flex";
+                if (this.items.length > 1) {
+                  this.badge.style.display = "flex";
+                  this.badge.textContent = String(this.items.length);
+                } else {
+                  this.badge.style.display = "none";
+                }
+                this.showCard();
+                console.log(
+                  `✅ Найдено ${this.items.length} фото для даты ${dayMonthStr}`,
+                );
+              } else {
+                console.log(`ℹ️ Нет воспоминаний для даты ${dayMonthStr}`);
+                this.btn.style.display = "none";
+                this.hideCard();
+              }
+            };
+          }
+
+          // Если сегодня РЕАЛЬНО есть совпадение даты — показываем кнопку и плавно открываем карточку
+          if (this.items.length > 0) {
+            this.btn.style.display = "flex";
+            if (this.items.length > 1) {
+              this.badge.style.display = "flex";
+              this.badge.textContent = String(this.items.length);
+            } else {
+              this.badge.style.display = "none";
+            }
+            setTimeout(() => this.showCard(), 1500);
+          } else {
+            // Если сегодня совпадений нет — НЕ высвечиваем ничего
+            this.btn.style.display = "none";
+            this.badge.style.display = "none";
+            this.hideCard();
+          }
+        },
+
+        checkMemories(targetDate) {
+          const curDay = targetDate.getDate();
+          const curMonth = targetDate.getMonth();
+          const curYear = targetDate.getFullYear();
+
+          this.items = [];
+
+          for (const place of this.places) {
+            const pDate = Utils.getPlaceDate(place);
+            if (!pDate || isNaN(pDate.getTime())) continue;
+
+            const pDay = pDate.getDate();
+            const pMonth = pDate.getMonth();
+            const pYear = pDate.getFullYear();
+
+            // Строгое совпадение дня и месяца из прошлых лет
+            if (pDay === curDay && pMonth === curMonth && pYear < curYear) {
+              const yearsAgo = curYear - pYear;
+              let yearWord = "лет";
+              if (yearsAgo === 1) yearWord = "год";
+              else if (yearsAgo >= 2 && yearsAgo <= 4) yearWord = "года";
+
+              const photos =
+                place.photos && place.photos.length > 0
+                  ? place.photos
+                  : [
+                      {
+                        url: place.origUrl || place.thumbUrl || "",
+                        origUrl: place.origUrl || place.thumbUrl || "",
+                        caption: place.caption || place.placeTitle || "",
+                      },
+                    ];
+
+              photos.forEach((photo, pIdx) => {
+                this.items.push({
+                  place,
+                  photoIndex: pIdx,
+                  photoUrl: photo.origUrl || photo.thumbUrl || photo.url || "",
+                  date: pDate,
+                  caption:
+                    photo.caption || place.placeTitle || "Особенное место",
+                  tag: `${yearsAgo} ${yearWord} назад`,
+                });
+              });
+            }
+          }
+
+          this.currentIndex = 0;
+        },
+
+        renderCurrent() {
+          if (this.items.length === 0) return;
+          const item = this.items[this.currentIndex];
+
+          this.imgEl.src = item.photoUrl;
+          this.tagEl.textContent = `В этот день • ${item.tag}`;
+          this.dateEl.textContent = Utils.formatRussianDate(item.date);
+          this.captionEl.textContent = item.caption
+            ? `«${item.caption}»`
+            : item.place.placeTitle || "";
+
+          if (this.items.length > 1) {
+            this.navEl.style.display = "flex";
+            this.counterEl.textContent = `${this.currentIndex + 1} из ${this.items.length}`;
+          } else {
+            this.navEl.style.display = "none";
+          }
+        },
+
+        next() {
+          if (this.items.length <= 1) return;
+          this.currentIndex = (this.currentIndex + 1) % this.items.length;
+          this.renderCurrent();
+        },
+
+        prev() {
+          if (this.items.length <= 1) return;
+          this.currentIndex =
+            (this.currentIndex - 1 + this.items.length) % this.items.length;
+          this.renderCurrent();
+        },
+
+        showCard() {
+          if (this.items.length === 0) return;
+          this.renderCurrent();
+          this.card.classList.add("visible");
+        },
+
+        hideCard() {
+          this.card.classList.remove("visible");
+        },
+
+        flyCurrent() {
+          if (this.items.length === 0) return;
+          const item = this.items[this.currentIndex];
+          if (!item.place || !item.place.coords) return;
+
+          this.hideCard();
+          map.flyTo(item.place.coords, 16, {
+            duration: 1.8,
+            easeLinearity: 0.4,
+          });
+
+          setTimeout(() => {
+            Gallery.open(item.place, item.photoIndex);
+          }, 1400);
+        },
+      };
+
+      // =========================================================================
       // DATA LOADING
       // =========================================================================
       const DataLoader = {
         isLoading: false,
-        placesData: null,
+        allPlaces: [],
 
         async load() {
           if (this.isLoading) return;
           this.isLoading = true;
 
           console.log("📥 Loading places.json...");
-
-          // ВСЕГДА грузим свежие данные СНАЧАЛА
           try {
             const url = `https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=${Date.now()}`;
             const res = await fetch(url);
-
-            if (res.ok) {
-              const text = await res.text();
-              const data = JSON.parse(text);
-
-              // Сохраняем в кеш для будущих заходов
-              localStorage.setItem(CONFIG.CACHE.PLACES_KEY, text);
-              localStorage.setItem(
-                CONFIG.CACHE.PLACES_TIME_KEY,
-                Date.now().toString(),
-              );
-
-              this.placesData = data;
-              console.log("✅ Fresh data loaded from server");
-            } else {
-              throw new Error("Network error");
-            }
+            if (!res.ok) throw new Error("Network error");
+            const data = await res.json();
+            localStorage.setItem(CONFIG.CACHE.PLACES_KEY, JSON.stringify(data));
+            this.processData(data);
+            console.log("✅ Fresh data loaded from server");
           } catch (err) {
-            console.error("❌ Failed to load fresh data:", err);
-
-            // ТОЛЬКО если сервер недоступен - берем кеш
-            const cachedText = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
-            if (cachedText) {
-              this.placesData = JSON.parse(cachedText);
-              console.log("📦 Using cache (server unavailable)");
+            console.warn("⚠️ Failed to load fresh data, using cache:", err);
+            const cached = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
+            if (cached) {
+              this.processData(JSON.parse(cached));
             } else {
               console.error("❌ No data available");
-              this.isLoading = false;
-              return;
             }
+          } finally {
+            this.isLoading = false;
           }
-
-          // Теперь, когда данные точно есть, начинаем проверку
-          if (this.placesData) {
-            await this.processData(this.placesData);
-          }
-
-          this.isLoading = false;
         },
 
-        async processData(data) {
-          if (!Array.isArray(data)) {
-            console.warn("Invalid data format");
-            return;
-          }
+        processData(data) {
+          if (!Array.isArray(data)) return;
 
-          // Фильтруем места без ссылок
           const validData = data.filter(
             (p) =>
-              p.thumbUrl?.startsWith("http") || p.origUrl?.startsWith("http"),
+              p.origUrl?.startsWith("http") || p.thumbUrl?.startsWith("http"),
           );
 
-          console.log(`✅ Found ${validData.length} places with URLs`);
-
           const placesList = validData.map((p) => {
-            let photoUrl = p.origUrl || p.thumbUrl || "";
-            if (photoUrl.includes("/thumbs/")) {
-              photoUrl = photoUrl
-                .replace("/thumbs/", "/")
-                .replace("thumb-", "memory-");
-            }
+            const photoUrl = p.origUrl || p.thumbUrl || "";
             return {
               id: p.id,
               coords: p.coords,
@@ -1307,16 +1784,20 @@
             };
           });
 
-          // Рендерим маркеры сразу без искусственных блокирующих задержек
           this.renderPlaces(placesList);
         },
 
         renderPlaces(placesList) {
+          // Сортируем воспоминания строго в хронологическом порядке
+          this.allPlaces = [...placesList].sort(
+            (a, b) => Utils.getPlaceTime(a) - Utils.getPlaceTime(b),
+          );
+
           markers.clearLayers();
           placesStore.clear();
 
-          let renderedCount = 0;
-          for (const place of placesList) {
+          const markerList = [];
+          for (const place of this.allPlaces) {
             if (
               !place.coords ||
               !Array.isArray(place.coords) ||
@@ -1324,13 +1805,21 @@
             )
               continue;
             const marker = MarkerManager.create(place);
-            markers.addLayer(marker);
+            markerList.push(marker);
             placesStore.set(place.id, { ...place, marker });
-            renderedCount++;
           }
 
-          console.log(`✅ Мгновенно отображено ${renderedCount} мест на карте`);
+          if (markerList.length > 0) {
+            markers.addLayers(markerList);
+          }
+
+          console.log(
+            `✅ Мгновенно отображено ${markerList.length} мест на карте`,
+          );
           LoveCounter.update();
+
+          // Инициализация "В этот день..."
+          NostalgiaManager.init(this.allPlaces);
         },
       };
 

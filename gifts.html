@@ -2,7 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ff69b4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sweet Dreams">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="image/apple-touch-icon.png">
   <title>🎁 Новогодний подарок</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -16,11 +22,12 @@
       font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
       background: linear-gradient(135deg, #0c2461 0%, #1e3799 25%, #4a69bd 50%, #6a89cc 75%, #b8e994 100%);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
       position: relative;
       overflow-x: hidden;
       color: white;

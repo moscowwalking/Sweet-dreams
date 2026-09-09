@@ -1,105 +1,132 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Цифровой букетик</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Цифровой букетик</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background: linear-gradient(to top, #ff69b4, #1e1e2f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Segoe UI", sans-serif;
+        color: white;
+        text-align: center;
+        overflow: hidden;
+        padding: max(20px, env(safe-area-inset-top))
+          max(20px, env(safe-area-inset-right))
+          max(20px, env(safe-area-inset-bottom))
+          max(20px, env(safe-area-inset-left));
+        box-sizing: border-box;
+      }
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        background: black;
+      }
 
-    body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(to top, #ff69b4, #1e1e2f);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      text-align: center;
-      overflow: hidden;
-    }
-    .video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      background: black;
-    }
-  
-    .content {
-      font-size: 2em;
-      animation: pulse 1.5s ease infinite alternate;
-    }
+      .content {
+        font-size: 2em;
+        animation: pulse 1.5s ease infinite alternate;
+        position: relative;
+        z-index: 1;
+        padding: 0 15px;
+      }
 
-    @keyframes pulse {
-      to { transform: scale(1.05); }
-    }
+      @keyframes pulse {
+        to {
+          transform: scale(1.05);
+        }
+      }
 
       .back-button {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      padding: 10px 20px;
-      background: rgba(255, 105, 180, 0.9);
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      z-index: 1000;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    .back-button:hover {
-      background: #ff85c1;
-      transform: scale(1.1);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
-    }
-  </style>
-</head>
-<body data-emojis="flowers">
+        position: fixed;
+        top: max(16px, env(safe-area-inset-top));
+        left: max(16px, env(safe-area-inset-left));
+        padding: 8px 18px;
+        background: rgba(255, 105, 180, 0.9);
+        color: white;
+        font-size: 15px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .back-button:hover {
+        background: #ff85c1;
+        transform: scale(1.05);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+      }
 
-    <button class="back-button" onclick="location.href='index.html'">← Назад</button>
-     <div class="content">
-    💐🌸🌹 ! Ты самый красивый цветочек 💕🌷🌻
-  </div>
-<div class="hearts-container" id="hearts-container"></div> 
+      @media (max-width: 650px) {
+        .content {
+          font-size: 1.45em;
+          line-height: 1.4;
+        }
+      }
+    </style>
+  </head>
+  <body data-emojis="flowers">
+    <button class="back-button" onclick="location.href = 'index.html'">
+      ← Назад
+    </button>
+    <div class="content">💐🌸🌹 ! Ты самый красивый цветочек 💕🌷🌻</div>
+    <div class="hearts-container" id="hearts-container"></div>
     <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
-    <source src="audio/flowers.mp4" type="video/mp4">
-  </video>
- 
+      <source src="audio/flowers.mp4" type="video/mp4" />
+    </video>
 
-<audio autoplay loop style="display: none">
-    <source src="audio/flowers_song.mp3" type="audio/mpeg">
+    <audio autoplay loop style="display: none">
+      <source src="audio/flowers_song.mp3" type="audio/mpeg" />
     </audio>
 
     <script>
-  window.addEventListener('load', () => {
-    const audio = document.getElementById('audio-player');
-    audio.muted = false;
-    audio.play().catch(() => {
-      
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить музыку";
-      btn.className = "gift-button";
-      btn.style.marginTop = "20px";
-      btn.onclick = () => audio.play();
-      document.body.appendChild(btn);
-    });
-  });
-</script> 
-  <script>
-    const video = document.getElementById('bg-video');
-    video.muted = false;
+      window.addEventListener("load", () => {
+        const audio = document.getElementById("audio-player");
+        audio.muted = false;
+        audio.play().catch(() => {
+          const btn = document.createElement("button");
+          btn.innerText = "▶ Включить музыку";
+          btn.className = "gift-button";
+          btn.style.marginTop = "20px";
+          btn.onclick = () => audio.play();
+          document.body.appendChild(btn);
+        });
+      });
+    </script>
+    <script>
+      const video = document.getElementById("bg-video");
+      video.muted = false;
 
-    video.play().catch(() => {
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить видео";
-      btn.className = "gift-button";
-      btn.style.cssText = `
+      video.play().catch(() => {
+        const btn = document.createElement("button");
+        btn.innerText = "▶ Включить видео";
+        btn.className = "gift-button";
+        btn.style.cssText = `
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -114,13 +141,13 @@
         z-index: 100;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       `;
-      btn.onclick = () => {
-        video.play();
-        btn.remove();
-      };
-      document.body.appendChild(btn);
-    });
-  </script>
-  <script src="script.js"></script>
-</body>
+        btn.onclick = () => {
+          video.play();
+          btn.remove();
+        };
+        document.body.appendChild(btn);
+      });
+    </script>
+    <script src="script.js"></script>
+  </body>
 </html>

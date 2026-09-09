@@ -1,247 +1,301 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>УРААААА!!!!</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-size: cover;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      color: white;
-      text-align: center;
-      overflow: hidden;
-    }
-
-    
-    .video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      background: black;
-    }
-    
-    h2 {
-      font-size: 2em;
-      margin-top: 380px;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 20px 30px;
-      border-radius: 15px;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
-    }
-
-    .title {
-      font-size: 2.5em;
-      margin-top: 40px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4px;
-      color: #ffffff;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
-      z-index: 2
-    }
-
-    .title span {
-      display: inline-block;
-      transition: transform 0.3s ease, color 0.3s ease;
-      cursor: default;
-    }
-
-    .title span:hover {
-      transform: scale(1.5);
-      color: #ff69b4;
-    }
-
-    form {
-      margin-top: 40px;
-    }
-
-    input[type="hidden"] {
-      display: none;
-    }
-
-    button {
-      padding: 12px 25px;
-      font-size: 1rem;
-      background: #ff69b4;
-      border: none;
-      border-radius: 25px;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      margin-top: 20px;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: #ff1493;
-    }
-
-    .back-button {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 10px 18px;
-      font-size: 1rem;
-      background-color: #ff69b4;
-      color: white;
-      border-radius: 20px;
-      text-decoration: none;
-      z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease, background-color 0.3s ease;
-    }
-
-    .back-button:hover {
-      background-color: #ff1493;
-      transform: scale(1.1);
-    }
-
-    
-    .gift-button {
-      padding: 14px 28px;
-      font-size: 1.1em;
-      background: linear-gradient(135deg, #ff69b4, #ff1493);
-      border: none;
-      border-radius: 30px;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 6px 15px rgba(255, 105, 180, 0.5), 
-                  0 0 20px rgba(255, 180, 220, 0.4) inset;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      margin-top: 20px;
-      transition: all 0.3s ease;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      text-decoration: none; 
-      z-index: 1;
-    }
-
-    .gift-button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 8px 20px rgba(255, 105, 180, 0.7),
-                  0 0 30px rgba(255, 180, 220, 0.6) inset;
-      background: linear-gradient(135deg, #ff1493, #c71585);
-    }
-
-    .gift-button:active {
-      transform: scale(1.03);
-    }
-  </style>
-</head>
-<body data-emojis="confirm">
-
-  <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
-    <source src="audio/uscore23.mp4" type="video/mp4">
-  </video>
-
-  <h2 id="message">Скоро увидимся! Не забудь: …</h2>
-
- <h1 class="title">
-  <span>s</span><span>e</span><span>e</span>
-  <span>&nbsp;</span>
-  <span>u</span>
-  <span>&nbsp;</span>
-  <span>s</span><span>o</span><span>o</span><span>n</span><span>!</span>
-</h1>
-  
-  <a href="flowers.html" class="gift-button">
-    💐 Цифровой букетик 💐
-  </a>
-
-  <form id="auto-form" action="https://formspree.io/f/mjkowjnz" method="POST" style="display: none;">
-    <input type="hidden" name="message" id="hidden-message">
-  </form>
-
-  <div class="hearts-container" id="hearts-container"></div>
-
-  <a href="index.html" class="back-button">← Назад на главную</a>
-
-  <audio autoplay loop style="display: none">
-    <source src="audio/Mac_Miller.mp3" type="audio/mpeg">
-  </audio>
-
-  <script>
-  // Берем данные из localStorage
-  const city = localStorage.getItem('selectedCity') || 'неизвестный город';
-  const place = localStorage.getItem('selectedPlace') || 'неизвестно где';
-  const date = localStorage.getItem('selectedDate') || 'неизвестно когда';
-  const timeStart = localStorage.getItem('selectedStartTime') || 'неизвестно во сколько';
-  const timeEnd = localStorage.getItem('selectedEndTime') || 'неизвестно до когда';
-
-  const inviteData = { city, place, date, timeStart, timeEnd };
-
-  const messageEl = document.getElementById('message');
-  
-  // Сначала показываем пользователю приглашение
-  messageEl.textContent = `Скоро увидимся! Не забудь: ${place}, ${date} в ${timeStart}.`;
-
-  // Отправляем данные на сервер
-  fetch('https://sweet-dreams-f8nc.onrender.com/send-invite', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(inviteData)
-  })
-  .then(response => response.json())
-  .then(data => {
-   // через 1 секунду очищаем старое сообщение
-    setTimeout(() => {
-      messageEl.textContent = '';
-      if (data.success) {
-        messageEl.textContent = "🎉 Приглашение успешно отправлено!";
-      } else {
-        messageEl.textContent = "⚠️ Ошибка при отправке приглашения.";
+  <head>
+    <meta charset="UTF-8" />
+    <title>УРААААА!!!!</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Segoe+UI:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-size: cover;
+        font-family: "Segoe UI", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: white;
+        text-align: center;
+        overflow: hidden;
       }
-    }, 1000);
-  })
-  .catch(err => {
-    setTimeout(() => {
-      messageEl.textContent = "❌ Ошибка сети. Попробуй еще раз.";
-    }, 1000);
-    console.error("Ошибка сети:", err);
-  });
-</script>
 
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        background: black;
+      }
 
-  <script>
-    window.addEventListener('load', () => {
-      const audio = document.querySelector('audio');
-      audio.muted = false;
-      audio.play().catch(() => {
-        const btn = document.createElement('button');
-        btn.innerText = "▶ Включить музыку";
-        btn.className = "gift-button";
-        btn.style.marginTop = "20px";
-        btn.onclick = () => audio.play();
-        document.body.appendChild(btn);
+      h2 {
+        font-size: 2em;
+        margin-top: 380px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 20px 30px;
+        border-radius: 15px;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+      }
+
+      .title {
+        font-size: 2.5em;
+        margin-top: 40px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+        color: #ffffff;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+        z-index: 2;
+      }
+
+      .title span {
+        display: inline-block;
+        transition:
+          transform 0.3s ease,
+          color 0.3s ease;
+        cursor: default;
+      }
+
+      .title span:hover {
+        transform: scale(1.5);
+        color: #ff69b4;
+      }
+
+      form {
+        margin-top: 40px;
+      }
+
+      input[type="hidden"] {
+        display: none;
+      }
+
+      button {
+        padding: 12px 25px;
+        font-size: 1rem;
+        background: #ff69b4;
+        border: none;
+        border-radius: 25px;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        margin-top: 20px;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background: #ff1493;
+      }
+
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px 18px;
+        font-size: 1rem;
+        background-color: #ff69b4;
+        color: white;
+        border-radius: 20px;
+        text-decoration: none;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition:
+          transform 0.2s ease,
+          background-color 0.3s ease;
+      }
+
+      .back-button:hover {
+        background-color: #ff1493;
+        transform: scale(1.1);
+      }
+
+      .gift-button {
+        padding: 14px 28px;
+        font-size: 1.1em;
+        background: linear-gradient(135deg, #ff69b4, #ff1493);
+        border: none;
+        border-radius: 30px;
+        color: white;
+        cursor: pointer;
+        box-shadow:
+          0 6px 15px rgba(255, 105, 180, 0.5),
+          0 0 20px rgba(255, 180, 220, 0.4) inset;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        z-index: 1;
+      }
+
+      .gift-button:hover {
+        transform: scale(1.08);
+        box-shadow:
+          0 8px 20px rgba(255, 105, 180, 0.7),
+          0 0 30px rgba(255, 180, 220, 0.6) inset;
+        background: linear-gradient(135deg, #ff1493, #c71585);
+      }
+
+      .gift-button:active {
+        transform: scale(1.03);
+      }
+
+      @media (max-width: 650px) {
+        body {
+          justify-content: flex-start;
+          padding-top: max(70px, calc(env(safe-area-inset-top) + 50px));
+          padding-bottom: max(25px, env(safe-area-inset-bottom));
+          min-height: 100dvh;
+          overflow-y: auto;
+        }
+        h2 {
+          margin-top: 15px;
+          font-size: 1.25em;
+          max-width: 90vw;
+          padding: 15px 20px;
+          word-break: break-word;
+        }
+        .title {
+          font-size: 1.7em;
+          margin-top: 15px;
+        }
+        .back-button {
+          top: max(16px, env(safe-area-inset-top));
+          left: max(16px, env(safe-area-inset-left));
+          padding: 8px 16px;
+          font-size: 0.9rem;
+        }
+        .gift-button {
+          padding: 12px 22px;
+          font-size: 1rem;
+          max-width: 90vw;
+        }
+      }
+    </style>
+  </head>
+  <body data-emojis="confirm">
+    <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+      <source src="audio/uscore23.mp4" type="video/mp4" />
+    </video>
+
+    <h2 id="message">Скоро увидимся! Не забудь: …</h2>
+
+    <h1 class="title">
+      <span>s</span><span>e</span><span>e</span>
+      <span>&nbsp;</span>
+      <span>u</span>
+      <span>&nbsp;</span>
+      <span>s</span><span>o</span><span>o</span><span>n</span><span>!</span>
+    </h1>
+
+    <a href="flowers.html" class="gift-button"> 💐 Цифровой букетик 💐 </a>
+
+    <form
+      id="auto-form"
+      action="https://formspree.io/f/mjkowjnz"
+      method="POST"
+      style="display: none"
+    >
+      <input type="hidden" name="message" id="hidden-message" />
+    </form>
+
+    <div class="hearts-container" id="hearts-container"></div>
+
+    <a href="index.html" class="back-button">← Назад на главную</a>
+
+    <audio autoplay loop style="display: none">
+      <source src="audio/Mac_Miller.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script>
+      // Берем данные из localStorage
+      const city = localStorage.getItem("selectedCity") || "неизвестный город";
+      const place = localStorage.getItem("selectedPlace") || "неизвестно где";
+      const date = localStorage.getItem("selectedDate") || "неизвестно когда";
+      const timeStart =
+        localStorage.getItem("selectedStartTime") || "неизвестно во сколько";
+      const timeEnd =
+        localStorage.getItem("selectedEndTime") || "неизвестно до когда";
+
+      const inviteData = { city, place, date, timeStart, timeEnd };
+
+      const messageEl = document.getElementById("message");
+
+      // Сначала показываем пользователю приглашение
+      messageEl.textContent = `Скоро увидимся! Не забудь: ${place}, ${date} в ${timeStart}.`;
+
+      // Отправляем данные на сервер
+      fetch("https://sweet-dreams-f8nc.onrender.com/send-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inviteData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          // через 1 секунду очищаем старое сообщение
+          setTimeout(() => {
+            messageEl.textContent = "";
+            if (data.success) {
+              messageEl.textContent = "🎉 Приглашение успешно отправлено!";
+            } else {
+              messageEl.textContent = "⚠️ Ошибка при отправке приглашения.";
+            }
+          }, 1000);
+        })
+        .catch((err) => {
+          setTimeout(() => {
+            messageEl.textContent = "❌ Ошибка сети. Попробуй еще раз.";
+          }, 1000);
+          console.error("Ошибка сети:", err);
+        });
+    </script>
+
+    <script>
+      window.addEventListener("load", () => {
+        const audio = document.querySelector("audio");
+        audio.muted = false;
+        audio.play().catch(() => {
+          const btn = document.createElement("button");
+          btn.innerText = "▶ Включить музыку";
+          btn.className = "gift-button";
+          btn.style.marginTop = "20px";
+          btn.onclick = () => audio.play();
+          document.body.appendChild(btn);
+        });
       });
-    });
-  </script>
+    </script>
 
-  <script>
-    const video = document.getElementById('bg-video');
-    video.muted = false;
+    <script>
+      const video = document.getElementById("bg-video");
+      video.muted = false;
 
-    video.play().catch(() => {
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить видео";
-      btn.className = "gift-button";
-      btn.style.cssText = `
+      video.play().catch(() => {
+        const btn = document.createElement("button");
+        btn.innerText = "▶ Включить видео";
+        btn.className = "gift-button";
+        btn.style.cssText = `
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -256,12 +310,13 @@
         z-index: 100;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       `;
-      btn.onclick = () => {
-        video.play();
-        btn.remove();
-      };
-      document.body.appendChild(btn);
-    });
-  </script>
-</body>
+        btn.onclick = () => {
+          video.play();
+          btn.remove();
+        };
+        document.body.appendChild(btn);
+      });
+    </script>
+    <script src="script.js"></script>
+  </body>
 </html>

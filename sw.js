@@ -1,11 +1,17 @@
-// sw.js - Service Worker для Sweet-dreams (v4)
-const STATIC_CACHE = "sweet-dreams-static-v4";
-const PHOTO_CACHE = "sweet-dreams-photos-v4";
+// sw.js - Service Worker для Sweet-dreams (v5)
+const STATIC_CACHE = "sweet-dreams-static-v5";
+const PHOTO_CACHE = "sweet-dreams-photos-v5";
 
 const MAX_CACHED_PHOTOS = 200;
 
-// Предварительное кэширование стилей и скриптов (HTML-страницы не кэшируем жестко, чтобы обновления применялись сразу)
-const PRECACHE_ASSETS = ["./style.css", "./script.js"];
+// Предварительное кэширование стилей, манифеста и иконок PWA
+const PRECACHE_ASSETS = [
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "./image/icon-192.png",
+  "./image/apple-touch-icon.png",
+];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

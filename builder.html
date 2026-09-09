@@ -1,105 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <title>день строителя...</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body.builder-page {
-      margin: 0;
-      padding: 0;
-      color: white;
-      overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
-      position: relative;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>день строителя...</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body.builder-page {
+        margin: 0;
+        padding: 0;
+        color: white;
+        overflow: hidden;
+        font-family: "Segoe UI", sans-serif;
+        position: relative;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
 
-    /* Фоновое видео */
-    .video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      background: black;
-    }
+      /* Фоновое видео */
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        background: black;
+      }
 
-    /* Кнопка Назад */
-    .back-button {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: linear-gradient(135deg, #ff69b4, #ff1493);
-      color: white;
-      padding: 10px 25px;
-      font-size: 18px;
-      font-weight: bold;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      text-decoration: none;
-      z-index: 10;
-      animation: pulseGlow 2s infinite;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+      /* Кнопка Назад */
+      .back-button {
+        position: absolute;
+        top: max(16px, env(safe-area-inset-top));
+        left: max(16px, env(safe-area-inset-left));
+        background: linear-gradient(135deg, #ff69b4, #ff1493);
+        color: white;
+        padding: 8px 18px;
+        font-size: 15px;
+        font-weight: bold;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        text-decoration: none;
+        z-index: 10;
+        animation: pulseGlow 2s infinite;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
 
-    /* Текст в центре */
-    .center-text {
-      position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 3em;
-  font-weight: bold;
-  color: #fa2c6d;
-  white-space: nowrap;
-  overflow: hidden;
-  border-right: 3px solid #ff69b4; /* курсор */
-  width: 0;
-  animation: typing 3s steps(25) forwards, blink 0.7s infinite step-end alternate;
-      
-    }
+      /* Текст в центре */
+      .center-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3em;
+        font-weight: bold;
+        color: #fa2c6d;
+        white-space: nowrap;
+        overflow: hidden;
+        border-right: 3px solid #ff69b4; /* курсор */
+        width: 0;
+        animation:
+          typing 3s steps(25) forwards,
+          blink 0.7s infinite step-end alternate;
+      }
 
-   @keyframes typing {
-  from { width: 0; }
-  to { width: 23ch; } /* длина текста в символах */
-}
+      @keyframes typing {
+        from {
+          width: 0;
+        }
+        to {
+          width: 23ch;
+        } /* длина текста в символах */
+      }
 
-@keyframes blink {
-  from { border-color: transparent; }
-  to { border-color: #ff69b4; }
-}
-  </style>
-</head>
-<body class="builder-page" data-emojis="builder">
+      @keyframes blink {
+        from {
+          border-color: transparent;
+        }
+        to {
+          border-color: #ff69b4;
+        }
+      }
 
-  
-  <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
-    <source src="audio/builder.mp4" type="video/mp4">
-  </video>
+      @media (max-width: 650px) {
+        .center-text {
+          font-size: 1.55em;
+        }
+      }
+    </style>
+  </head>
+  <body class="builder-page" data-emojis="builder">
+    <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+      <source src="audio/builder.mp4" type="video/mp4" />
+    </video>
 
- 
-  <a href="index.html" class="back-button heart-icon">← Пора возвращаться</a>
+    <a href="index.html" class="back-button heart-icon">← Пора возвращаться</a>
 
- 
-  <div class="center-text">
-    ожидала что-то другое?
-  </div>
+    <div class="center-text">ожидала что-то другое?</div>
 
-  
-  <div class="hearts-container" id="hearts-container"></div>
+    <div class="hearts-container" id="hearts-container"></div>
 
-  <script>
-    const video = document.getElementById('bg-video');
-    video.muted = false;
+    <script>
+      const video = document.getElementById("bg-video");
+      video.muted = false;
 
-    video.play().catch(() => {
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить видео";
-      btn.className = "gift-button";
-      btn.style.cssText = `
+      video.play().catch(() => {
+        const btn = document.createElement("button");
+        btn.innerText = "▶ Включить видео";
+        btn.className = "gift-button";
+        btn.style.cssText = `
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -114,14 +137,14 @@
         z-index: 100;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       `;
-      btn.onclick = () => {
-        video.play();
-        btn.remove();
-      };
-      document.body.appendChild(btn);
-    });
-  </script>
+        btn.onclick = () => {
+          video.play();
+          btn.remove();
+        };
+        document.body.appendChild(btn);
+      });
+    </script>
 
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

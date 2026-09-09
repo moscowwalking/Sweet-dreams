@@ -1,384 +1,488 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
     <title>💝 Валентинка</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
+      body {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+        font-family: "Arial", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      .valentine-container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        max-width: 600px;
+        width: 90%;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 1s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      h1 {
+        font-size: 2.5em;
+        color: #d63c5e;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .question {
+        font-size: 1.8em;
+        color: #6b3b4b;
+        margin: 30px 0;
+        font-weight: bold;
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        margin: 30px 0;
+        position: relative;
+        min-height: 100px;
+      }
+
+      .btn {
+        padding: 15px 40px;
+        font-size: 1.5em;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-yes {
+        background: #ff6b8b;
+        color: white;
+        position: relative;
+        z-index: 10;
+      }
+
+      .btn-yes:hover {
+        background: #ff4d6d;
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(255, 107, 139, 0.8);
+      }
+
+      .btn-no {
+        background: #a8a8a8;
+        color: white;
+        position: relative;
+        transition: all 0.2s ease;
+        z-index: 5;
+      }
+
+      .btn-no:hover {
+        background: #8a8a8a;
+      }
+
+      /* Контейнер для контента после ответа */
+      .response-content {
+        margin-top: 30px;
+        padding: 20px;
+        border-top: 2px dashed #ff9a9e;
+        animation: slideUp 0.5s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .gif-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin: 20px 0;
+      }
+
+      .gif-container img {
+        max-width: 450px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        animation: float 3s ease infinite;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .hearts-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .heart {
+        position: absolute;
+        font-size: 20px;
+        color: rgba(255, 80, 120, 0.6);
+        animation: heartFloat 4s ease-in infinite;
+      }
+
+      @keyframes heartFloat {
+        0% {
+          transform: translateY(100vh) scale(0);
+          opacity: 0;
+        }
+        50% {
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(-100px) scale(1);
+          opacity: 0;
+        }
+      }
+
+      .message {
+        font-size: 1.5em;
+        color: #d63c5e;
+        margin: 20px 0;
+        padding: 20px;
+        background: rgba(255, 230, 240, 0.9);
+        border-radius: 15px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #ff6b8b;
+        position: absolute;
+        animation: confettiFall 3s ease-in infinite;
+        z-index: 3;
+      }
+
+      @keyframes confettiFall {
+        0% {
+          transform: translateY(-100px) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+
+      .back-button {
+        position: absolute;
+        top: max(16px, env(safe-area-inset-top));
+        left: max(16px, env(safe-area-inset-left));
+        padding: 8px 18px;
+        background: rgba(255, 255, 255, 0.85);
+        color: #d63c5e;
+        font-size: 15px;
+        font-weight: bold;
+        border-radius: 25px;
+        text-decoration: none;
+        z-index: 100;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        transition:
+          transform 0.2s ease,
+          background-color 0.2s ease;
+      }
+
+      .back-button:hover {
+        transform: scale(1.05);
+        background: white;
+      }
+
+      @media (max-width: 650px) {
         body {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-            font-family: 'Arial', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow-x: hidden;
+          padding-top: max(60px, calc(env(safe-area-inset-top) + 50px));
+          padding-bottom: max(25px, env(safe-area-inset-bottom));
+          min-height: 100dvh;
         }
-
         .valentine-container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px;
-            border-radius: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
-            width: 90%;
-            position: relative;
-            z-index: 2;
-            animation: fadeIn 1s ease;
+          padding: 15px 12px;
+          width: 94%;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
         h1 {
-            font-size: 2.5em;
-            color: #d63c5e;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+          font-size: 1.6em;
         }
-
         .question {
-            font-size: 1.8em;
-            color: #6b3b4b;
-            margin: 30px 0;
-            font-weight: bold;
+          font-size: 1.3em;
+          margin: 20px 0;
         }
-
-        .buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin: 30px 0;
-            position: relative;
-            min-height: 100px;
-        }
-
         .btn {
-            padding: 15px 40px;
-            font-size: 1.5em;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          padding: 10px 24px;
+          font-size: 1.15em;
         }
-
-        .btn-yes {
-            background: #ff6b8b;
-            color: white;
-            position: relative;
-            z-index: 10;
-        }
-
-        .btn-yes:hover {
-            background: #ff4d6d;
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(255, 107, 139, 0.8);
-        }
-
-        .btn-no {
-            background: #a8a8a8;
-            color: white;
-            position: relative;
-            transition: all 0.2s ease;
-            z-index: 5;
-        }
-
-        .btn-no:hover {
-            background: #8a8a8a;
-        }
-
-        /* Контейнер для контента после ответа */
-        .response-content {
-            margin-top: 30px;
-            padding: 20px;
-            border-top: 2px dashed #ff9a9e;
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .gif-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
         .gif-container img {
-        
-            max-width: 450px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            animation: float 3s ease infinite;
+          max-width: min(260px, 80vw);
         }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .hearts-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .heart {
-            position: absolute;
-            font-size: 20px;
-            color: rgba(255, 80, 120, 0.6);
-            animation: heartFloat 4s ease-in infinite;
-        }
-
-        @keyframes heartFloat {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-100px) scale(1); opacity: 0; }
-        }
-
-        .message {
-            font-size: 1.5em;
-            color: #d63c5e;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 230, 240, 0.9);
-            border-radius: 15px;
-        }
-
-        .hidden {
-            display: none ;
-        }
-
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: #ff6b8b;
-            position: absolute;
-            animation: confettiFall 3s ease-in infinite;
-            z-index: 3;
-        }
-
-        @keyframes confettiFall {
-            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <a href="index.html" class="back-button">← Назад</a>
     <!-- Фон с сердечками -->
     <div class="hearts-bg" id="heartsBg"></div>
 
     <div class="valentine-container">
-        <h1>💕С Днём Святого Валентина!💕</h1>
-        
-        <div class="question" id="question">
-            Будешь моей валентинкой? 💝
-        </div>
+      <h1>💕С Днём Святого Валентина!💕</h1>
 
-        <div class="buttons" id="buttons">
-            <button class="btn btn-yes" id="yesBtn">ДА! 💖</button>
-            <button class="btn btn-no" id="noBtn">Нет 💔</button>
-        </div>
+      <div class="question" id="question">Будешь моей валентинкой? 💝</div>
 
-        <!-- Контейнер для ответа "ДА" -->
-        <div id="yesResponse" class="response-content hidden">
-           
-            <div class="gif-container">
-                <img src="image/lovee.jpg" alt="Happy cats">
-                
-            </div>
-            <div style="font-size: 1.2em; margin-top: 20px; color: #ff6b8b;">
-                💝 Ты моя на 100%! 💝
-            </div>
-        </div>
+      <div class="buttons" id="buttons">
+        <button class="btn btn-yes" id="yesBtn">ДА! 💖</button>
+        <button class="btn btn-no" id="noBtn">Нет 💔</button>
+      </div>
 
-        <!-- Контейнер для ответа "НЕТ" -->
-        <div id="noResponse" class="response-content hidden">
-            <div class="message">
-                😔 Ой... Может быть, всё-таки ДА? 😔
-            </div>
-            <div class="gif-container">
-                <img src="image/sad.jpg" alt="Sad cat">
-               
-            </div>
-            <button class="btn btn-yes" style="margin-top: 20px;" onclick="forceYes()">Всё-таки ДА! 💖</button>
+      <!-- Контейнер для ответа "ДА" -->
+      <div id="yesResponse" class="response-content hidden">
+        <div class="gif-container">
+          <img src="image/lovee.jpg" alt="Happy cats" />
         </div>
+        <div style="font-size: 1.2em; margin-top: 20px; color: #ff6b8b">
+          💝 Ты моя на 100%! 💝
+        </div>
+      </div>
+
+      <!-- Контейнер для ответа "НЕТ" -->
+      <div id="noResponse" class="response-content hidden">
+        <div class="message">😔 Ой... Может быть, всё-таки ДА? 😔</div>
+        <div class="gif-container">
+          <img src="image/sad.jpg" alt="Sad cat" />
+        </div>
+        <button
+          class="btn btn-yes"
+          style="margin-top: 20px"
+          onclick="forceYes()"
+        >
+          Всё-таки ДА! 💖
+        </button>
+      </div>
     </div>
 
     <script>
-        // Функция для создания летающих сердечек на фоне
-        function createHearts() {
-            const heartsBg = document.getElementById('heartsBg');
-            for (let i = 0; i < 30; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'heart';
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * 100 + '%';
-                heart.style.animationDelay = Math.random() * 4 + 's';
-                heart.style.fontSize = Math.random() * 20 + 15 + 'px';
-                heartsBg.appendChild(heart);
-            }
+      // Функция для создания летающих сердечек на фоне
+      function createHearts() {
+        const heartsBg = document.getElementById("heartsBg");
+        for (let i = 0; i < 30; i++) {
+          const heart = document.createElement("div");
+          heart.className = "heart";
+          heart.innerHTML = "❤️";
+          heart.style.left = Math.random() * 100 + "%";
+          heart.style.animationDelay = Math.random() * 4 + "s";
+          heart.style.fontSize = Math.random() * 20 + 15 + "px";
+          heartsBg.appendChild(heart);
         }
+      }
 
-       
+      // Обработчик для кнопки "ДА"
+      document.getElementById("yesBtn").addEventListener("click", function () {
+        // Прячем кнопки и вопрос
+        document.getElementById("buttons").style.display = "none";
+        document.getElementById("question").style.display = "none";
 
-        // Обработчик для кнопки "ДА"
-        document.getElementById('yesBtn').addEventListener('click', function() {
-            // Прячем кнопки и вопрос
-            document.getElementById('buttons').style.display = 'none';
-            document.getElementById('question').style.display = 'none';
-            
-            // Показываем контент для "ДА"
-            document.getElementById('yesResponse').classList.remove('hidden');
-            
-  
-            // Добавляем еще больше сердечек
-            for (let i = 0; i < 20; i++) {
-                setTimeout(() => {
-                    const heart = document.createElement('div');
-                    heart.className = 'heart';
-                    heart.innerHTML = '❤️';
-                    heart.style.left = Math.random() * 100 + '%';
-                    heart.style.animation = 'heartFloat 2s ease-in';
-                    document.querySelector('.hearts-bg').appendChild(heart);
-                    
-                    setTimeout(() => heart.remove(), 2000);
-                }, i * 100);
-            }
-        });
+        // Показываем контент для "ДА"
+        document.getElementById("yesResponse").classList.remove("hidden");
 
-        // Обработчик для кнопки "НЕТ" - она будет убегать!
-        const noBtn = document.getElementById('noBtn');
-        const buttonsContainer = document.querySelector('.buttons');
-        let noClickCount = 0;
-        let isRunning = false;
-        
-        // Функция для получения случайной позиции в контейнере
-        function getRandomPosition() {
-            const container = buttonsContainer;
-            const btn = noBtn;
-            
-            // Получаем размеры контейнера и кнопки
-            const containerRect = container.getBoundingClientRect();
-            const btnRect = btn.getBoundingClientRect();
-            
-            // Вычисляем доступное пространство
-            const maxX = containerRect.width - btnRect.width;
-            const maxY = containerRect.height - btnRect.height;
-            
-            // Генерируем случайные координаты
-            const randomX = Math.max(0, Math.min(maxX, Math.random() * maxX));
-            const randomY = Math.max(0, Math.min(maxY, Math.random() * maxY));
-            
-            return { x: randomX, y: randomY };
+        // Добавляем еще больше сердечек
+        for (let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            const heart = document.createElement("div");
+            heart.className = "heart";
+            heart.innerHTML = "❤️";
+            heart.style.left = Math.random() * 100 + "%";
+            heart.style.animation = "heartFloat 2s ease-in";
+            document.querySelector(".hearts-bg").appendChild(heart);
+
+            setTimeout(() => heart.remove(), 2000);
+          }, i * 100);
         }
+      });
 
-        // Убегание кнопки "НЕТ" при наведении
-        noBtn.addEventListener('mouseover', function(e) {
-            if (noClickCount === 0 && !isRunning) { // Только до первого клика
-                isRunning = true;
-                
-                // Меняем позиционирование кнопки
-                noBtn.style.position = 'absolute';
-                
-                // Получаем новую случайную позицию
-                const pos = getRandomPosition();
-                noBtn.style.left = pos.x + 'px';
-                noBtn.style.top = pos.y + 'px';
-                
-                // Небольшая задержка перед следующим перемещением
-                setTimeout(() => {
-                    isRunning = false;
-                }, 200);
-            }
+      // Обработчик для кнопки "НЕТ" - она будет убегать!
+      const noBtn = document.getElementById("noBtn");
+      const buttonsContainer = document.querySelector(".buttons");
+      let noClickCount = 0;
+      let isRunning = false;
+
+      // Функция для получения случайной позиции в контейнере
+      function getRandomPosition() {
+        const container = buttonsContainer;
+        const btn = noBtn;
+
+        // Получаем размеры контейнера и кнопки
+        const containerRect = container.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+
+        // Вычисляем доступное пространство
+        const maxX = containerRect.width - btnRect.width;
+        const maxY = containerRect.height - btnRect.height;
+
+        // Генерируем случайные координаты
+        const randomX = Math.max(0, Math.min(maxX, Math.random() * maxX));
+        const randomY = Math.max(0, Math.min(maxY, Math.random() * maxY));
+
+        return { x: randomX, y: randomY };
+      }
+
+      // Убегание кнопки "НЕТ" при наведении
+      noBtn.addEventListener("mouseover", function (e) {
+        if (noClickCount === 0 && !isRunning) {
+          // Только до первого клика
+          isRunning = true;
+
+          // Меняем позиционирование кнопки
+          noBtn.style.position = "absolute";
+
+          // Получаем новую случайную позицию
+          const pos = getRandomPosition();
+          noBtn.style.left = pos.x + "px";
+          noBtn.style.top = pos.y + "px";
+
+          // Небольшая задержка перед следующим перемещением
+          setTimeout(() => {
+            isRunning = false;
+          }, 200);
+        }
+      });
+
+      // Дополнительно: кнопка убегает даже если быстро водить мышкой
+      noBtn.addEventListener("mousemove", function (e) {
+        if (noClickCount === 0 && !isRunning) {
+          isRunning = true;
+
+          const pos = getRandomPosition();
+          noBtn.style.left = pos.x + "px";
+          noBtn.style.top = pos.y + "px";
+
+          setTimeout(() => {
+            isRunning = false;
+          }, 150);
+        }
+      });
+
+      // На мобильных устройствах при касании
+      noBtn.addEventListener("touchstart", function (e) {
+        if (noClickCount === 0 && !isRunning) {
+          e.preventDefault();
+          isRunning = true;
+          noBtn.style.position = "absolute";
+          const pos = getRandomPosition();
+          noBtn.style.left = pos.x + "px";
+          noBtn.style.top = pos.y + "px";
+          setTimeout(() => {
+            isRunning = false;
+          }, 180);
+        }
+      });
+
+      noBtn.addEventListener("click", function (e) {
+        noClickCount++;
+
+        if (noClickCount === 1) {
+          // Возвращаем кнопку в нормальное положение
+          noBtn.style.position = "relative";
+          noBtn.style.left = "0";
+          noBtn.style.top = "0";
+
+          // Первый клик - показываем грустный ответ
+          document.getElementById("buttons").style.display = "none";
+          document.getElementById("question").style.display = "none";
+          document.getElementById("noResponse").classList.remove("hidden");
+        }
+      });
+
+      // Функция для "передумывания"
+      window.forceYes = function () {
+        document.getElementById("noResponse").classList.add("hidden");
+        document.getElementById("buttons").style.display = "none";
+        document.getElementById("question").style.display = "none";
+        document.getElementById("yesResponse").classList.remove("hidden");
+        noClickCount = 1;
+      };
+
+      // Добавляем сердечки при загрузке
+      window.onload = function () {
+        createHearts();
+      };
+    </script>
+    <audio autoplay loop style="display: none">
+      <source src="audio/love.mp3" type="audio/mpeg" />
+    </audio>
+    <script>
+      window.addEventListener("load", () => {
+        const audio = document.getElementById("audio-player");
+        audio.muted = false;
+        audio.play().catch(() => {
+          // если не получилось — покажем кнопку вручную
+          const btn = document.createElement("button");
+          btn.innerText = "▶ Включить музыку";
+          btn.className = "gift-button";
+          btn.style.marginTop = "20px";
+          btn.onclick = () => audio.play();
+          document.body.appendChild(btn);
         });
-
-        // Дополнительно: кнопка убегает даже если быстро водить мышкой
-        noBtn.addEventListener('mousemove', function(e) {
-            if (noClickCount === 0 && !isRunning) {
-                isRunning = true;
-                
-                const pos = getRandomPosition();
-                noBtn.style.left = pos.x + 'px';
-                noBtn.style.top = pos.y + 'px';
-                
-                setTimeout(() => {
-                    isRunning = false;
-                }, 150);
-            }
-        });
-
-        noBtn.addEventListener('click', function(e) {
-            noClickCount++;
-            
-            if (noClickCount === 1) {
-                // Возвращаем кнопку в нормальное положение
-                noBtn.style.position = 'relative';
-                noBtn.style.left = '0';
-                noBtn.style.top = '0';
-                
-                // Первый клик - показываем грустный ответ
-                document.getElementById('buttons').style.display = 'none';
-                document.getElementById('question').style.display = 'none';
-                document.getElementById('noResponse').classList.remove('hidden');
-            }
-        });
-
-        // Функция для "передумывания"
-        window.forceYes = function() {
-             document.getElementById('noResponse').classList.add('hidden');
-                document.getElementById('buttons').style.display = 'none';  
-                document.getElementById('question').style.display = 'none';  
-                document.getElementById('yesResponse').classList.remove('hidden');
-                noClickCount = 1;
-        };
-
-        // Добавляем сердечки при загрузке
-        window.onload = function() {
-            createHearts();
-        };
-        
-            </script>
-            <audio autoplay loop style="display: none">
-            <source src="audio/love.mp3" type="audio/mpeg">
-            </audio>
-            <script>
-        window.addEventListener('load', () => {
-            const audio = document.getElementById('audio-player');
-            audio.muted = false;
-            audio.play().catch(() => {
-            // если не получилось — покажем кнопку вручную
-            const btn = document.createElement('button');
-            btn.innerText = "▶ Включить музыку";
-            btn.className = "gift-button";
-            btn.style.marginTop = "20px";
-            btn.onclick = () => audio.play();
-            document.body.appendChild(btn);
-            });
-        });
-        </script>  
-</body>
+      });
+    </script>
+  </body>
 </html>

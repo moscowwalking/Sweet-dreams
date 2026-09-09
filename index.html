@@ -1,11 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>walking ураа</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<style>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>walking ураа</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <style>
     #memoriesButton {
       background: linear-gradient(90deg, #ffa6c9, #ffc3e0);
       color: white;
@@ -24,32 +38,37 @@
       background: linear-gradient(90deg, #ff8fa3, #ffb6c1);
       box-shadow: 0 0 20px rgba(255, 182, 193, 0.8);
     }
-    
+
     /* Новый класс для пульсирующей надписи */
     .pulsing-text {
       animation: pulse 2s infinite;
     }
-    
+
     @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
     }
-    
+
     /* Изменения для расположения кнопок */
     .buttons-row {
       display: flex;
       justify-content: center;
       gap: 50px;
     }
-    
+
     .buttons-column {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    
-  
+
     .secret-input-overlay {
       position: fixed;
       top: 0;
@@ -62,16 +81,16 @@
       align-items: flex-end;
       z-index: 9999;
     }
-    
+
     .secret-input-container {
-      background: linear-gradient(135deg,#ff69b4, #ff1493 100%);
+      background: linear-gradient(135deg, #ff69b4, #ff1493 100%);
       padding: 30px;
       border-radius: 20px 0 0 0;
       box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
       width: 400px;
       max-width: 90vw;
     }
-    
+
     .secret-input-title {
       color: white;
       font-size: 1.5em;
@@ -80,7 +99,7 @@
       font-weight: bold;
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
-    
+
     .secret-input {
       width: 100%;
       padding: 15px;
@@ -92,184 +111,205 @@
       outline: none;
       transition: all 0.3s ease;
     }
-    
+
     .secret-input::placeholder {
       color: rgba(255, 255, 255, 0.6);
     }
-    
+
     .secret-input:focus {
       border-color: rgba(255, 255, 255, 0.8);
       background-color: rgba(255, 255, 255, 0.15);
     }
-    
+
     .secret-hint {
       color: rgba(255, 255, 255, 0.8);
       font-size: 0.9em;
       margin-top: 10px;
       text-align: center;
     }
-</style>
+  </style>
 
-<body class="landing" data-emojis="love">
-
-  <!-- Секретное окно ввода -->
-  <div class="secret-input-overlay" id="secretOverlay">
-    <div class="secret-input-container">
-      <div class="secret-input-title">🔐 Секретная фраза</div>
-      <input type="text" 
-             class="secret-input" 
-             id="secretInput" 
-             placeholder="Введите волшебную фразу..."
-             autocomplete="off">
-      <div class="secret-hint">Подсказка: новый год или 14 февраля!! </div>
-    </div>
-  </div>
-
-  <div class="egor-wrapper">
-    <a href="cute.html" class="egor-button heart-icon pulse"> 
-      Нежность👼👼👼
-      <div class="tooltipp pulse">Одна тут?)</div> 
-    </a>
-  </div>
-
- <div class="builder_core">
-    <a href="builder.html" class="egor-button heart-icon pulse"> 
-      С днем строителя!!!
-      <div class="tooltipp pulse">Конденсат??</div> 
-    </a>
-  </div>
-
-  <div class="hearts-container" id="hearts-container"></div>
-
-  <div class="overlay">
-    <div class="music-button-container">
-      <button id="play-audio" class="main-button play-icon pulse">Нажмиии сюда!!!</button>
-    </div>
-    <div class="buttons-column">
-      <div class="buttons-row">
-        <div class="button-wrapper">
-          <a href="choise.html" class="main-button love-hover heart-icon pulse">Летс гоууу</a>
-          <div class="tooltip pulse pulsing-text">Летс гоу!!! Сюда блиин💅💅</div> 
-        </div>
-        <div class="button-wrapper">
-          <a href="sadd.html" class="main-button sad-hover sad-icon pulse">Ноууу</a>
-          <div class="tooltip pulse pulsing-text">Дипрессия в 0 лет... 😔😔</div> 
-        </div>
-      </div>
-      <div class="button-wrapper">
-        <a href="memories.html" id="memoriesButton" class="main-button memory-hover map-icon pulse">🗺️ Карта воспоминаний</a>
-        <div class="tooltip pulse pulsing-text">Фото сквозь время и на всю жизнь...</div>
+  <body class="landing" data-emojis="love">
+    <!-- Секретное окно ввода -->
+    <div class="secret-input-overlay" id="secretOverlay">
+      <div class="secret-input-container">
+        <div class="secret-input-title">🔐 Секретная фраза</div>
+        <input
+          type="text"
+          class="secret-input"
+          id="secretInput"
+          placeholder="Введите волшебную фразу..."
+          autocomplete="off"
+        />
+        <div class="secret-hint">Подсказка: новый год или 14 февраля!!</div>
       </div>
     </div>
-  </div>
 
-  <audio id="audio-player" style="display: none">
-    <source src="audio/main.mp3" type="audio/mpeg">
-  </audio>
+    <div class="egor-wrapper">
+      <a href="cute.html" class="egor-button heart-icon pulse">
+        Нежность👼👼👼
+        <div class="tooltipp pulse">Одна тут?)</div>
+      </a>
+    </div>
 
-  <script>
-    const playBtn = document.getElementById('play-audio');
-    const audio = document.getElementById('audio-player');
-    
-    playBtn.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play();
-        playBtn.classList.add('pulse');
-      } else {
-        audio.pause();
+    <div class="builder_core">
+      <a href="builder.html" class="egor-button heart-icon pulse">
+        С днем строителя!!!
+        <div class="tooltipp pulse">Конденсат??</div>
+      </a>
+    </div>
+
+    <div class="hearts-container" id="hearts-container"></div>
+
+    <div class="overlay">
+      <div class="music-button-container">
+        <button id="play-audio" class="main-button play-icon pulse">
+          Нажмиии сюда!!!
+        </button>
+      </div>
+      <div class="buttons-column">
+        <div class="buttons-row">
+          <div class="button-wrapper">
+            <a
+              href="choise.html"
+              class="main-button love-hover heart-icon pulse"
+              >Летс гоууу</a
+            >
+            <div class="tooltip pulse pulsing-text">
+              Летс гоу!!! Сюда блиин💅💅
+            </div>
+          </div>
+          <div class="button-wrapper">
+            <a href="sadd.html" class="main-button sad-hover sad-icon pulse"
+              >Ноууу</a
+            >
+            <div class="tooltip pulse pulsing-text">
+              Дипрессия в 0 лет... 😔😔
+            </div>
+          </div>
+        </div>
+        <div class="button-wrapper">
+          <a
+            href="memories.html"
+            id="memoriesButton"
+            class="main-button memory-hover map-icon pulse"
+            >🗺️ Карта воспоминаний</a
+          >
+          <div class="tooltip pulse pulsing-text">
+            Фото сквозь время и на всю жизнь...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <audio id="audio-player" style="display: none">
+      <source src="audio/main.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script>
+      const playBtn = document.getElementById("play-audio");
+      const audio = document.getElementById("audio-player");
+
+      playBtn.addEventListener("click", () => {
+        if (audio.paused) {
+          audio.play();
+          playBtn.classList.add("pulse");
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+          playBtn.classList.remove("pulse");
+        }
+      });
+
+      audio.addEventListener("ended", () => {
         audio.currentTime = 0;
-        playBtn.classList.remove('pulse');
-      }
-    });
-    
-    audio.addEventListener('ended', () => {
-      audio.currentTime = 0;
-      playBtn.classList.remove('pulse');
-    });
-  </script>
+        playBtn.classList.remove("pulse");
+      });
+    </script>
     <script>
       // Регистрируем Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('✅ Service Worker зарегистрирован'))
-            .catch(err => console.log('❌ Ошибка SW:', err));
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((reg) => console.log("✅ Service Worker зарегистрирован"))
+            .catch((err) => console.log("❌ Ошибка SW:", err));
         });
       }
     </script>
-  <script>
-    // Секретный функционал - счётчик кликов и окно ввода
-    let clickCount = 0;
-    const clickTimeout = 3000; // 3 секунды для сброса счётчика
-    let clickTimer;
-    
-    // Элементы секретного окна
-    const secretOverlay = document.getElementById('secretOverlay');
-    const secretInput = document.getElementById('secretInput');
-    
-    // Обработчик кликов по всему документу
-    document.addEventListener('click', (e) => {
-      // Увеличиваем счётчик
-      clickCount++;
-      
-      // Сбрасываем таймер
-      clearTimeout(clickTimer);
-      
-      // Запускаем новый таймер для сброса счётчика
-      clickTimer = setTimeout(() => {
-        clickCount = 0;
-        console.log('Счётчик кликов сброшен');
-      }, clickTimeout);
-      
-      // Проверяем, достигли ли 5 кликов
-      if (clickCount === 5) {
-        // Сбрасываем счётчик
-        clickCount = 0;
-        
-        // Показываем секретное окно
-        secretOverlay.style.display = 'flex';
-        secretInput.focus();
-        
-        console.log('Секретное окно открыто!');
-      }
-    });
-    
-    // Обработчик ввода в секретное поле
-    secretInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const inputValue = secretInput.value.trim();
-        
-        // Проверяем секретную фразу
-        if (inputValue.toUpperCase() === 'NYTOGETHER') {
-          // Переходим на страницу gifts.html
-          window.location.href = 'gifts.html';
-        }
-          // Проверяем секретную фразу для Дня Святого Валентина
-        if (inputValue === '14feb') {
-          window.location.href = 'saint_valentine.html';
-        }
-        // Скрываем окно в любом случае
-        secretOverlay.style.display = 'none';
-        secretInput.value = '';
-      }
-    });
-    
-    // Закрытие окна при клике вне поля ввода
-    secretOverlay.addEventListener('click', (e) => {
-      if (e.target === secretOverlay) {
-        secretOverlay.style.display = 'none';
-        secretInput.value = '';
-      }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && secretOverlay.style.display === 'flex') {
-        secretOverlay.style.display = 'none';
-        secretInput.value = '';
-      }
-    });
-  </script>
+    <script>
+      // Секретный функционал - счётчик кликов и окно ввода
+      let clickCount = 0;
+      const clickTimeout = 3000; // 3 секунды для сброса счётчика
+      let clickTimer;
 
-  <script src="script.js"></script>
-</body>
+      // Элементы секретного окна
+      const secretOverlay = document.getElementById("secretOverlay");
+      const secretInput = document.getElementById("secretInput");
+
+      // Обработчик кликов по всему документу
+      document.addEventListener("click", (e) => {
+        // Увеличиваем счётчик
+        clickCount++;
+
+        // Сбрасываем таймер
+        clearTimeout(clickTimer);
+
+        // Запускаем новый таймер для сброса счётчика
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+          console.log("Счётчик кликов сброшен");
+        }, clickTimeout);
+
+        // Проверяем, достигли ли 5 кликов
+        if (clickCount === 5) {
+          // Сбрасываем счётчик
+          clickCount = 0;
+
+          // Показываем секретное окно
+          secretOverlay.style.display = "flex";
+          secretInput.focus();
+
+          console.log("Секретное окно открыто!");
+        }
+      });
+
+      // Обработчик ввода в секретное поле
+      secretInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const inputValue = secretInput.value.trim();
+
+          // Проверяем секретную фразу
+          if (inputValue.toUpperCase() === "NYTOGETHER") {
+            // Переходим на страницу gifts.html
+            window.location.href = "gifts.html";
+          }
+          // Проверяем секретную фразу для Дня Святого Валентина
+          if (inputValue === "14feb") {
+            window.location.href = "saint_valentine.html";
+          }
+          // Скрываем окно в любом случае
+          secretOverlay.style.display = "none";
+          secretInput.value = "";
+        }
+      });
+
+      // Закрытие окна при клике вне поля ввода
+      secretOverlay.addEventListener("click", (e) => {
+        if (e.target === secretOverlay) {
+          secretOverlay.style.display = "none";
+          secretInput.value = "";
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && secretOverlay.style.display === "flex") {
+          secretOverlay.style.display = "none";
+          secretInput.value = "";
+        }
+      });
+    </script>
+
+    <script src="script.js"></script>
+  </body>
 </html>

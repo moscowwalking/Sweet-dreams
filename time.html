@@ -1,242 +1,308 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Выбор времени</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Выбор времени</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ff69b4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:400,700"
+      rel="stylesheet"
+    />
 
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
-
-  <style>
-    :root {
-      --pink: #ff69b4;
-      --hotpink: #ff1493;
-    }
-     .video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      background: black;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background: url('image/egor-bg.gif') no-repeat center center fixed;
-      background-size: cover;
-      font-family: 'Open Sans', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    .title {
-      font-size: 2.5em;
-      margin-top: 200px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4px;
-      color: #fff;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
-      position: relative;
-      z-index: 1;
-    }
-
-    .title span {
-      display: inline-block;
-      transition: transform 0.3s ease, color 0.3s ease;
-      cursor: default;
-    }
-
-    .title span:hover {
-      transform: scale(1.5);
-      color: var(--pink);
-    }
-
-    .form-container {
-      background: rgba(255, 255, 255, 0.85);
-      padding: 30px;
-      border-radius: 20px;
-      margin-top: 20px;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 1;
-    }
-
-    label {
-      display: block;
-      margin: 15px 0 8px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    input[type="date"],
-    input[type="time"] {
-      padding: 10px 12px;
-  border-radius: 8px;
-  border: none;
-  font-size: 1rem;
-  margin-bottom: 15px;
-  width: 100%;
-  box-sizing: border-box;
-    }
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.time-range input {
-  flex: 1;
-}
-
-.time-range .to-label {
-  font-weight: bold;
-  font-size: 1rem;
-  color: #fff;
-}
-    button {
-      margin-top: 25px;
-      padding: 12px 30px;
-      font-size: 1.1em;
-      background: linear-gradient(135deg, var(--pink), var(--hotpink));
-      color: white;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-    }
-
-    .hearts-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 999;
-    }
-
-    .falling-emoji {
-      position: absolute;
-      top: 0;
-      animation-name: fall;
-      animation-timing-function: linear;
-      animation-iteration-count: 1;
-      text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-      color: white;
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(110vh) rotate(360deg);
-        opacity: 0;
+    <style>
+      :root {
+        --pink: #ff69b4;
+        --hotpink: #ff1493;
       }
-    }
-  </style>
-</head>
-<body data-emojis="time">
-
-
-  <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
-    <source src="audio/time1.mp4" type="video/mp4">
-  </video>
-
-  <h1 class="title">
-    <span>К</span><span>о</span><span>г</span><span>д</span><span>а</span>
-    <span> </span> <span> </span> <span> </span>
-    <span>т</span><span>е</span><span>б</span><span>е</span>
-    <span> </span> <span> </span> <span> </span>
-    <span>б</span><span>у</span><span>д</span><span>е</span><span>т</span>
-    <span> </span> <span> </span> <span> </span>
-    <span>у</span><span>д</span><span>о</span><span>б</span><span>н</span><span>о</span><span>?</span>
-  </h1>
-
-  <div class="form-container">
-  <label for="date">Дата:</label>
-  <input type="date" id="date" required>
-
-  <label for="timeStart">Время:</label>
-  <div class="time-range">
-    <input type="time" id="timeStart" required>
-    <span class="to-label">до</span>
-    <input type="time" id="timeEnd" required>
-  </div>
-
-  <button onclick="saveDateTime()">Продолжить</button>
-</div>
-
-
-  <div class="hearts-container" id="hearts-container"></div>
-
- <script>
-    function saveDateTime() {
-      const date = document.getElementById('date').value;
-      const start = document.getElementById('timeStart').value;
-      const end = document.getElementById('timeEnd').value;
-
-      if (!date || !start || !end) {
-        alert("Пожалуйста, выбери дату, время начала и окончания!");
-        return;
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        background: black;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background: url("image/egor-bg.gif") no-repeat center center fixed;
+        background-size: cover;
+        font-family: "Open Sans", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        overflow: hidden;
       }
 
-      if (end <= start) {
-        alert("Время окончания должно быть позже времени начала!");
-        return;
+      .title {
+        font-size: 2.5em;
+        margin-top: 200px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+        color: #fff;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 1;
       }
 
-      // Сохраняем всё отдельно
-      localStorage.setItem('selectedDate', date);
-      localStorage.setItem('selectedStartTime', start);
-      localStorage.setItem('selectedEndTime', end);
+      .title span {
+        display: inline-block;
+        transition:
+          transform 0.3s ease,
+          color 0.3s ease;
+        cursor: default;
+      }
 
-      location.href = 'confirm.html';
-    }
-  </script>
+      .title span:hover {
+        transform: scale(1.5);
+        color: var(--pink);
+      }
 
-  <audio autoplay loop style="display: none">
-    <source src="audio/Tyler.mp3" type="audio/mpeg">
+      .form-container {
+        background: rgba(255, 255, 255, 0.85);
+        padding: 30px;
+        border-radius: 20px;
+        margin-top: 20px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+      }
+
+      label {
+        display: block;
+        margin: 15px 0 8px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      input[type="date"],
+      input[type="time"] {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+        margin-bottom: 15px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .time-range {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+
+      .time-range input {
+        flex: 1;
+      }
+
+      .time-range .to-label {
+        font-weight: bold;
+        font-size: 1rem;
+        color: #fff;
+      }
+      button {
+        margin-top: 25px;
+        padding: 12px 30px;
+        font-size: 1.1em;
+        background: linear-gradient(135deg, var(--pink), var(--hotpink));
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      button:hover {
+        transform: scale(1.05);
+      }
+
+      .hearts-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 999;
+      }
+
+      .falling-emoji {
+        position: absolute;
+        top: 0;
+        animation-name: fall;
+        animation-timing-function: linear;
+        animation-iteration-count: 1;
+        text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+        color: white;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      .back-button {
+        position: absolute;
+        top: max(16px, env(safe-area-inset-top));
+        left: max(16px, env(safe-area-inset-left));
+        padding: 8px 18px;
+        font-size: 15px;
+        background: linear-gradient(135deg, var(--pink), var(--hotpink));
+        color: white;
+        border-radius: 25px;
+        border: none;
+        cursor: pointer;
+        z-index: 10;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease;
+      }
+
+      .back-button:hover {
+        transform: scale(1.05);
+      }
+
+      @media (max-width: 650px) {
+        body {
+          justify-content: flex-start;
+          padding-top: max(70px, calc(env(safe-area-inset-top) + 50px));
+          padding-bottom: max(25px, env(safe-area-inset-bottom));
+          min-height: 100dvh;
+          overflow-y: auto;
+        }
+        .title {
+          font-size: 1.6em;
+          margin-top: 0;
+          padding: 0 15px;
+        }
+        .form-container {
+          width: min(340px, 92vw);
+          padding: 20px 16px;
+          margin-top: 20px;
+        }
+        input[type="date"],
+        input[type="time"] {
+          font-size: 16px;
+          padding: 10px 8px;
+        }
+      }
+    </style>
+  </head>
+  <body data-emojis="time">
+    <button
+      class="back-button"
+      onclick="
+        window.history.length > 1
+          ? history.back()
+          : (location.href = 'choise.html')
+      "
+    >
+      ← Назад
+    </button>
+
+    <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
+      <source src="audio/time1.mp4" type="video/mp4" />
+    </video>
+
+    <h1 class="title">
+      <span>К</span><span>о</span><span>г</span><span>д</span><span>а</span>
+      <span> </span> <span> </span> <span> </span> <span>т</span><span>е</span
+      ><span>б</span><span>е</span> <span> </span> <span> </span> <span> </span>
+      <span>б</span><span>у</span><span>д</span><span>е</span><span>т</span>
+      <span> </span> <span> </span> <span> </span> <span>у</span><span>д</span
+      ><span>о</span><span>б</span><span>н</span><span>о</span><span>?</span>
+    </h1>
+
+    <div class="form-container">
+      <label for="date">Дата:</label>
+      <input type="date" id="date" required />
+
+      <label for="timeStart">Время:</label>
+      <div class="time-range">
+        <input type="time" id="timeStart" required />
+        <span class="to-label">до</span>
+        <input type="time" id="timeEnd" required />
+      </div>
+
+      <button onclick="saveDateTime()">Продолжить</button>
+    </div>
+
+    <div class="hearts-container" id="hearts-container"></div>
+
+    <script>
+      function saveDateTime() {
+        const date = document.getElementById("date").value;
+        const start = document.getElementById("timeStart").value;
+        const end = document.getElementById("timeEnd").value;
+
+        if (!date || !start || !end) {
+          alert("Пожалуйста, выбери дату, время начала и окончания!");
+          return;
+        }
+
+        if (end <= start) {
+          alert("Время окончания должно быть позже времени начала!");
+          return;
+        }
+
+        // Сохраняем всё отдельно
+        localStorage.setItem("selectedDate", date);
+        localStorage.setItem("selectedStartTime", start);
+        localStorage.setItem("selectedEndTime", end);
+
+        location.href = "confirm.html";
+      }
+    </script>
+
+    <audio autoplay loop style="display: none">
+      <source src="audio/Tyler.mp3" type="audio/mpeg" />
     </audio>
     <script>
-  window.addEventListener('load', () => {
-    const audio = document.getElementById('audio-player');
-    audio.muted = false;
-    audio.play().catch(() => {
-      
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить музыку";
-      btn.className = "gift-button";
-      btn.style.marginTop = "20px";
-      btn.onclick = () => audio.play();
-      document.body.appendChild(btn);
-    });
-  });
-</script> 
+      window.addEventListener("load", () => {
+        const audio = document.getElementById("audio-player");
+        audio.muted = false;
+        audio.play().catch(() => {
+          const btn = document.createElement("button");
+          btn.innerText = "▶ Включить музыку";
+          btn.className = "gift-button";
+          btn.style.marginTop = "20px";
+          btn.onclick = () => audio.play();
+          document.body.appendChild(btn);
+        });
+      });
+    </script>
 
+    <script>
+      const video = document.getElementById("bg-video");
+      video.muted = false;
 
-  <script>
-    const video = document.getElementById('bg-video');
-    video.muted = false;
-
-    video.play().catch(() => {
-      const btn = document.createElement('button');
-      btn.innerText = "▶ Включить видео";
-      btn.className = "gift-button";
-      btn.style.cssText = `
+      video.play().catch(() => {
+        const btn = document.createElement("button");
+        btn.innerText = "▶ Включить видео";
+        btn.className = "gift-button";
+        btn.style.cssText = `
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -251,13 +317,13 @@
         z-index: 100;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       `;
-      btn.onclick = () => {
-        video.play();
-        btn.remove();
-      };
-      document.body.appendChild(btn);
-    });
-  </script>
-  <script src="script.js"></script>
-</body>
+        btn.onclick = () => {
+          video.play();
+          btn.remove();
+        };
+        document.body.appendChild(btn);
+      });
+    </script>
+    <script src="script.js"></script>
+  </body>
 </html>
