@@ -28,7 +28,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      padding: 20px;
       position: relative;
       overflow-x: hidden;
       color: white;
@@ -297,83 +297,6 @@
       justify-content: center;
       gap: 8px;
       animation: fadeIn 1s ease 1s both;
-    }
-
-    @media (max-width: 768px) {
-      .gift-container {
-        padding: 25px;
-      }
-      
-      .title {
-        font-size: 2.2em;
-      }
-      
-      .title::after {
-        right: -35px;
-        font-size: 0.8em;
-      }
-      
-      .subtitle {
-        font-size: 1.1em;
-      }
-      
-      .qr-image {
-        width: 200px;
-        height: 200px;
-      }
-      
-      .button-container {
-        flex-direction: row;
-        gap: 15px;
-      }
-      
-      .gift-button, .voice-button {
-        width: auto;
-        max-width: 250px;
-        font-size: 1.1em;
-        padding: 14px 25px;
-        min-width: 160px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .button-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-      }
-      
-      .gift-button, .voice-button {
-        width: 100%;
-        max-width: 280px;
-        padding: 12px 25px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .title {
-        font-size: 1.8em;
-      }
-      
-      .title::after {
-        right: -30px;
-        font-size: 0.7em;
-      }
-      
-      .qr-image {
-        width: 180px;
-        height: 180px;
-      }
-      
-      .gift-container {
-        padding: 20px;
-      }
-      
-      .gift-button, .voice-button {
-        padding: 12px 20px;
-        font-size: 1em;
-        min-width: 140px;
-      }
     }
   </style>
 </head>

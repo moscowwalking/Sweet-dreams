@@ -140,7 +140,6 @@
         border-color: var(--hotpink);
       }
 
-
       /* ===== Love Counter ===== */
       .love-counter {
         position: absolute;
@@ -542,111 +541,6 @@
         }
       }
 
-      /* ===== Responsive ===== */
-      @media (max-width: 768px) {
-        body {
-          overflow-x: hidden;
-        }
-
-        .title {
-          font-size: 1.4rem;
-          margin: 14px 0 6px;
-        }
-
-        #map {
-          width: 96vw !important;
-          height: calc(100dvh - 90px) !important;
-          max-height: none !important;
-          border-radius: 12px;
-        }
-
-
-        /* Счётчик любви */
-        .love-counter {
-          top: max(10px, env(safe-area-inset-top, 10px));
-          right: max(10px, env(safe-area-inset-right, 10px));
-          padding: 4px 12px;
-          gap: 8px;
-          border-radius: 20px;
-        }
-        .counter-value {
-          font-size: 16px;
-        }
-        .counter-label {
-          font-size: 8px;
-        }
-        .counter-divider {
-          font-size: 12px;
-        }
-
-        /* Панель загрузки на мобильных */
-        .upload-panel {
-          top: auto !important;
-          bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-          left: max(12px, env(safe-area-inset-left, 12px)) !important;
-          padding: 6px !important;
-          border-radius: 25px !important;
-          background: rgba(255, 255, 255, 0.95) !important;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
-        }
-        .upload-btn {
-          padding: 8px 14px !important;
-          font-size: 13px !important;
-          border-radius: 20px !important;
-        }
-        .drop-area {
-          display: none !important; /* На телефоне drag & drop не нужен */
-        }
-
-        /* Плавающие кнопки и карточка */
-        .floating-controls {
-          bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-          right: max(12px, env(safe-area-inset-right, 12px)) !important;
-          gap: 8px !important;
-        }
-        .fab-btn {
-          width: 48px !important;
-          height: 48px !important;
-          font-size: 22px !important;
-        }
-        .nostalgia-card {
-          top: max(14px, env(safe-area-inset-top, 14px)) !important;
-          right: 14px !important;
-          width: calc(100vw - 28px) !important;
-        }
-        .leaflet-bottom.leaflet-right {
-          bottom: calc(
-            max(16px, env(safe-area-inset-bottom, 16px)) + 64px
-          ) !important; /* Чтобы зум не перекрывал кнопки */
-          right: 8px !important;
-        }
-
-        /* Галерея на мобильном */
-        .gallery {
-          max-width: 95vw !important;
-          max-height: 90dvh !important;
-          padding: 14px 10px !important;
-          border-radius: 16px !important;
-        }
-        .gallery img {
-          max-height: 52dvh !important;
-          object-fit: contain !important;
-        }
-        .gallery-date {
-          font-size: 15px !important;
-        }
-        .thumbs {
-          max-width: 100% !important;
-          overflow-x: auto !important;
-          padding-bottom: 4px !important;
-        }
-        .thumbs img {
-          width: 50px !important;
-          height: 50px !important;
-          border-radius: 8px !important;
-        }
-      }
-
       /* Utility */
       .hidden {
         display: none !important;
@@ -656,7 +550,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="memories-page">
     <h1 class="title">
       <span>К</span><span>а</span><span>р</span><span>т</span><span>а</span>
       <span> </span>
@@ -680,7 +574,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Love Counter -->
     <div class="love-counter" id="loveCounter">

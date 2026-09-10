@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    mobile.css - Стилизация для iPhone / iOS
    Единый мобильный стиль, оптимизированный под WebKit / Safari и жесты iOS
    ========================================================================== */
@@ -270,10 +270,27 @@ textarea {
     font-size: 1.55em !important;
   }
 
+  /* --- index.html (Секретное окно) --- */
+  .secret-input-container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 20px 15px max(20px, env(safe-area-inset-bottom)) !important;
+  }
+
   /* --- gifts.html --- */
   .gift-container {
     padding: 20px 15px !important;
     width: 94% !important;
+  }
+
+  .gift-container .title {
+    font-size: 1.8em !important;
+  }
+
+  .gift-container .title::after {
+    right: -30px !important;
+    font-size: 0.7em !important;
   }
 
   .subtitle {
@@ -296,5 +313,116 @@ textarea {
     width: 100% !important;
     max-width: 280px !important;
     padding: 12px 25px !important;
+  }
+
+  /* --- memories.html --- */
+  body.memories-page {
+    overflow-x: hidden !important;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+  }
+
+  body.memories-page .title {
+    font-size: 1.4rem !important;
+    margin: 10px 0 6px !important;
+  }
+
+  body.memories-page #map {
+    width: 96vw !important;
+    height: calc(100dvh - 85px) !important;
+    max-height: none !important;
+    border-radius: 12px !important;
+  }
+
+  .love-counter {
+    top: max(10px, env(safe-area-inset-top, 10px)) !important;
+    right: max(10px, env(safe-area-inset-right, 10px)) !important;
+    padding: 4px 12px !important;
+    gap: 8px !important;
+    border-radius: 20px !important;
+  }
+
+  .counter-value {
+    font-size: 16px !important;
+  }
+
+  .counter-label {
+    font-size: 8px !important;
+  }
+
+  .counter-divider {
+    font-size: 12px !important;
+  }
+
+  .upload-panel {
+    top: auto !important;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+    left: max(12px, env(safe-area-inset-left, 12px)) !important;
+    padding: 6px !important;
+    border-radius: 25px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .upload-btn {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    border-radius: 20px !important;
+  }
+
+  .drop-area {
+    display: none !important;
+  }
+
+  .floating-controls {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+    right: max(12px, env(safe-area-inset-right, 12px)) !important;
+    gap: 8px !important;
+  }
+
+  .fab-btn {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+  }
+
+  .nostalgia-card {
+    top: max(14px, env(safe-area-inset-top, 14px)) !important;
+    right: 14px !important;
+    width: calc(100vw - 28px) !important;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    bottom: calc(
+      max(16px, env(safe-area-inset-bottom, 16px)) + 64px
+    ) !important;
+    right: 8px !important;
+  }
+
+  .gallery {
+    max-width: 95vw !important;
+    max-height: 90dvh !important;
+    padding: 14px 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .gallery img {
+    max-height: 52dvh !important;
+    object-fit: contain !important;
+  }
+
+  .gallery-date {
+    font-size: 15px !important;
+  }
+
+  .thumbs {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+  }
+
+  .thumbs img {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 8px !important;
   }
 }
