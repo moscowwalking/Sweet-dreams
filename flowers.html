@@ -56,9 +56,33 @@
           transform: scale(1.05);
         }
       }
+
+      .back-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 8px 18px;
+        background: rgba(255, 105, 180, 0.9);
+        color: white;
+        font-size: 15px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .back-button:hover {
+        background: #ff85c1;
+        transform: scale(1.05);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+      }
     </style>
   </head>
   <body data-emojis="flowers">
+    <button class="back-button" onclick="location.href = 'index.html'">
+      ← Назад
+    </button>
     <div class="content">💐🌸🌹 ! Ты самый красивый цветочек 💕🌷🌻</div>
     <div class="hearts-container" id="hearts-container"></div>
     <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">

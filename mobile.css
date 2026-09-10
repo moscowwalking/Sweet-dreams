@@ -57,6 +57,14 @@ textarea {
     box-sizing: border-box;
   }
 
+  /* Скрытие кнопок «Назад» на телефоне (на iPhone возврат жестом/свайпом) */
+  .back-button,
+  .nav-wrapper,
+  .nav-button,
+  .gift-button.tertiary {
+    display: none !important;
+  }
+
   /* --- index.html (Главная страница) --- */
   body.landing .overlay {
     height: auto !important;

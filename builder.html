@@ -77,12 +77,33 @@
           border-color: #ff69b4;
         }
       }
+
+      /* Кнопка Назад */
+      .back-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: linear-gradient(135deg, #ff69b4, #ff1493);
+        color: white;
+        padding: 8px 18px;
+        font-size: 15px;
+        font-weight: bold;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        text-decoration: none;
+        z-index: 10;
+        animation: pulseGlow 2s infinite;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
     </style>
   </head>
   <body class="builder-page" data-emojis="builder">
     <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
       <source src="audio/builder.mp4" type="video/mp4" />
     </video>
+
+    <a href="index.html" class="back-button heart-icon">← Пора возвращаться</a>
 
     <div class="center-text">ожидала что-то другое?</div>
 
