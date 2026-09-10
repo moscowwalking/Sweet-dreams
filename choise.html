@@ -16,6 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="mobile.css" />
     <link
       href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"
       rel="stylesheet"
@@ -223,59 +224,6 @@
         animation: pulseTooltip 1.5s infinite;
       }
 
-      /* Кнопка Назад */
-      .back-button {
-        position: absolute;
-        top: 20px;
-        left: 40px;
-        padding: 10px 25px;
-        font-size: 18px;
-        background: linear-gradient(135deg, #ff69b4, #ff1493);
-        color: white;
-        border-radius: 25px;
-        border: none;
-        cursor: default;
-      }
-
-      .back-button::after {
-        content: "уже нельзя повернуть назад";
-        position: absolute;
-        top: 90%;
-        left: 60%;
-        transform: translateX(-50%);
-        background: rgba(255, 255, 255, 0.9);
-        color: #000;
-        font-size: 0.8rem;
-        padding: 6px 10px;
-        border-radius: 8px;
-        white-space: nowrap;
-        margin-top: 6px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-        z-index: 10;
-      }
-
-      .back-button:hover::after {
-        opacity: 1;
-        animation: pulseTooltip 1.5s infinite;
-      }
-
-      @keyframes pulseTooltip {
-        0% {
-          box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);
-          transform: translateX(-50%) scale(1);
-        }
-        50% {
-          box-shadow: 0 0 20px rgba(255, 105, 180, 0.9);
-          transform: translateX(-50%) scale(1.08);
-        }
-        100% {
-          box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);
-          transform: translateX(-50%) scale(1);
-        }
-      }
-
       @keyframes pulseGlow {
         0% {
           box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);
@@ -288,43 +236,6 @@
         100% {
           box-shadow: 0 0 6px rgba(255, 105, 180, 0.5);
           transform: scale(1);
-        }
-      }
-
-      @media (max-width: 650px) {
-        body {
-          justify-content: flex-start;
-          padding-top: max(80px, calc(env(safe-area-inset-top) + 55px));
-          padding-bottom: max(25px, env(safe-area-inset-bottom));
-          min-height: 100dvh;
-          overflow-y: auto;
-        }
-        h1.title {
-          font-size: 1.55rem;
-          margin-top: 0;
-          margin-bottom: 24px;
-          padding: 0 16px;
-        }
-        .options {
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          width: 100%;
-          padding: 0 20px;
-          margin-top: 5px;
-        }
-        .option-button.active,
-        .option-button.disabled {
-          width: min(320px, 90vw);
-          padding: 0.95em 1.4em;
-          font-size: 1.05rem;
-        }
-        .back-button {
-          top: max(16px, env(safe-area-inset-top));
-          left: max(16px, env(safe-area-inset-left));
-          padding: 8px 18px;
-          font-size: 15px;
-          cursor: pointer;
         }
       }
     </style>
@@ -369,10 +280,6 @@
         Тверь
       </button>
     </div>
-
-    <button class="back-button" onclick="location.href = 'index.html'">
-      ← Назад
-    </button>
 
     <audio autoplay loop style="display: none">
       <source src="audio/Matt_Maltese.mp3" type="audio/mpeg" />

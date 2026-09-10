@@ -17,6 +17,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="mobile.css" />
     <style>
       body.cute-page {
         margin: 0;
@@ -39,24 +40,6 @@
         height: 100%;
         object-fit: cover;
         z-index: 0;
-      }
-
-      .back-button {
-        position: absolute;
-        top: max(16px, env(safe-area-inset-top));
-        left: max(16px, env(safe-area-inset-left));
-        background: linear-gradient(135deg, #ff69b4, #ff1493);
-        color: white;
-        padding: 8px 18px;
-        font-size: 15px;
-        font-weight: bold;
-        border: none;
-        border-radius: 30px;
-        cursor: pointer;
-        text-decoration: none;
-        z-index: 10;
-        animation: pulseGlow 2s infinite;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       }
 
       .center-text {
@@ -95,13 +78,6 @@
           box-shadow: 0 0 20px #ff1493;
         }
       }
-
-      @media (max-width: 650px) {
-        .center-text {
-          font-size: 1.6em;
-          line-height: 1.35;
-        }
-      }
     </style>
   </head>
   <body class="cute-page" data-emojis="cute">
@@ -109,10 +85,6 @@
     <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
       <source src="audio/cute1.mp4" type="video/mp4" />
     </video>
-
-    <a href="index.html" class="back-button heart-icon"
-      >← Пора возвращаться...</a
-    >
 
     <div class="center-text">Приветик красотка я подсяду??💋💋💋</div>
 

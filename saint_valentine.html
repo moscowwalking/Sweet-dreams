@@ -15,6 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="mobile.css" />
     <title>💝 Валентинка</title>
     <style>
       * {
@@ -229,58 +230,9 @@
         }
       }
 
-      .back-button {
-        position: absolute;
-        top: max(16px, env(safe-area-inset-top));
-        left: max(16px, env(safe-area-inset-left));
-        padding: 8px 18px;
-        background: rgba(255, 255, 255, 0.85);
-        color: #d63c5e;
-        font-size: 15px;
-        font-weight: bold;
-        border-radius: 25px;
-        text-decoration: none;
-        z-index: 100;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        transition:
-          transform 0.2s ease,
-          background-color 0.2s ease;
-      }
-
-      .back-button:hover {
-        transform: scale(1.05);
-        background: white;
-      }
-
-      @media (max-width: 650px) {
-        body {
-          padding-top: max(60px, calc(env(safe-area-inset-top) + 50px));
-          padding-bottom: max(25px, env(safe-area-inset-bottom));
-          min-height: 100dvh;
-        }
-        .valentine-container {
-          padding: 15px 12px;
-          width: 94%;
-        }
-        h1 {
-          font-size: 1.6em;
-        }
-        .question {
-          font-size: 1.3em;
-          margin: 20px 0;
-        }
-        .btn {
-          padding: 10px 24px;
-          font-size: 1.15em;
-        }
-        .gif-container img {
-          max-width: min(260px, 80vw);
-        }
-      }
     </style>
   </head>
   <body>
-    <a href="index.html" class="back-button">← Назад</a>
     <!-- Фон с сердечками -->
     <div class="hearts-bg" id="heartsBg"></div>
 

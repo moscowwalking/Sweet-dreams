@@ -16,6 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="mobile.css" />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -222,61 +223,9 @@
       .custom-place-form button:hover {
         background-color: #ff1493;
       }
-
-      .back-button {
-        position: absolute;
-        top: max(16px, env(safe-area-inset-top));
-        left: max(16px, env(safe-area-inset-left));
-        padding: 8px 18px;
-        font-size: 15px;
-        background: linear-gradient(135deg, var(--pink), var(--hotpink));
-        color: white;
-        border-radius: 25px;
-        border: none;
-        cursor: pointer;
-        z-index: 1001;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-        transition: transform 0.2s ease;
-      }
-
-      .back-button:hover {
-        transform: scale(1.05);
-      }
-
-      @media (max-width: 650px) {
-        body {
-          padding-top: max(60px, calc(env(safe-area-inset-top) + 50px));
-          padding-bottom: max(20px, env(safe-area-inset-bottom));
-          min-height: 100dvh;
-        }
-        .title {
-          font-size: 1.8em;
-          margin-top: 0;
-          padding: 0 10px;
-        }
-        #map {
-          margin: 15px auto;
-          height: calc(100dvh - 170px);
-          min-height: 380px;
-        }
-        .modal {
-          width: min(340px, 90vw);
-          padding: 20px 15px;
-        }
-        .modal h2 {
-          font-size: 1.3em;
-        }
-        .custom-place-form input {
-          width: 160px;
-          font-size: 16px;
-        }
-      }
     </style>
   </head>
   <body data-emojis="parking">
-    <button class="back-button" onclick="location.href = 'choise_moscow.html'">
-      ← Назад
-    </button>
     <h1 class="title">
       <span>В</span><span>ы</span><span>б</span><span>е</span><span>р</span
       ><span>и</span> <span> </span><span> </span><span>p</span><span>l</span

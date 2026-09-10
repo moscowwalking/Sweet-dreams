@@ -16,6 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="stylesheet" href="mobile.css" />
     <link
       href="https://fonts.googleapis.com/css?family=Open+Sans:400,700"
       rel="stylesheet"
@@ -163,65 +164,9 @@
           opacity: 0;
         }
       }
-
-      .back-button {
-        position: absolute;
-        top: max(16px, env(safe-area-inset-top));
-        left: max(16px, env(safe-area-inset-left));
-        padding: 8px 18px;
-        font-size: 15px;
-        background: linear-gradient(135deg, var(--pink), var(--hotpink));
-        color: white;
-        border-radius: 25px;
-        border: none;
-        cursor: pointer;
-        z-index: 10;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-        transition: transform 0.2s ease;
-      }
-
-      .back-button:hover {
-        transform: scale(1.05);
-      }
-
-      @media (max-width: 650px) {
-        body {
-          justify-content: flex-start;
-          padding-top: max(70px, calc(env(safe-area-inset-top) + 50px));
-          padding-bottom: max(25px, env(safe-area-inset-bottom));
-          min-height: 100dvh;
-          overflow-y: auto;
-        }
-        .title {
-          font-size: 1.6em;
-          margin-top: 0;
-          padding: 0 15px;
-        }
-        .form-container {
-          width: min(340px, 92vw);
-          padding: 20px 16px;
-          margin-top: 20px;
-        }
-        input[type="date"],
-        input[type="time"] {
-          font-size: 16px;
-          padding: 10px 8px;
-        }
-      }
     </style>
   </head>
   <body data-emojis="time">
-    <button
-      class="back-button"
-      onclick="
-        window.history.length > 1
-          ? history.back()
-          : (location.href = 'choise.html')
-      "
-    >
-      ← Назад
-    </button>
-
     <video autoplay muted loop class="video-bg" id="bg-video" preload="auto">
       <source src="audio/time1.mp4" type="video/mp4" />
     </video>
