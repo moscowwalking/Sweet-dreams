@@ -318,7 +318,9 @@ textarea {
   /* --- memories.html --- */
   body.memories-page {
     overflow-x: hidden !important;
-    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+    padding: max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left)) !important;
   }
 
   body.memories-page .title {
