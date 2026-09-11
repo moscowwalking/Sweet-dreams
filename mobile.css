@@ -66,24 +66,41 @@ textarea {
   }
 
   /* --- index.html (Главная страница) --- */
+  html.landing-html {
+    background: #1a0a14 url("image/kreed_main.jpg") no-repeat center center !important;
+    background-size: cover !important;
+    background-color: #1a0a14 !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
   body.landing {
     padding: 0 !important;
     margin: 0 !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
+    min-height: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100lvh !important;
+    min-height: -webkit-fill-available !important;
+    height: 100% !important;
     overflow: hidden !important;
-    background: transparent !important;
+    overscroll-behavior: none !important;
+    background: #1a0a14 url("image/kreed_main.jpg") no-repeat center center !important;
+    background-size: cover !important;
+    background-color: #1a0a14 !important;
   }
 
   body.landing::before {
-    height: 100% !important;
-    min-height: 100% !important;
+    display: none !important;
   }
 
   body.landing .overlay {
-    height: 100dvh !important;
+    min-height: 100% !important;
+    min-height: 100vh !important;
     min-height: 100dvh !important;
-    max-height: 100dvh !important;
+    min-height: -webkit-fill-available !important;
+    height: 100% !important;
     padding-top: max(20px, env(safe-area-inset-top)) !important;
     padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
     padding-left: max(12px, env(safe-area-inset-left)) !important;
@@ -132,6 +149,7 @@ textarea {
   body[data-emojis="choise"],
   body[data-emojis="choise_moscow"],
   body[data-emojis="choise_SP"] {
+    background-attachment: scroll !important;
     justify-content: flex-start !important;
     padding-top: max(40px, calc(env(safe-area-inset-top) + 20px)) !important;
     padding-bottom: max(30px, env(safe-area-inset-bottom)) !important;
@@ -200,6 +218,7 @@ textarea {
 
   /* --- time.html --- */
   body[data-emojis="time"] {
+    background-attachment: scroll !important;
     justify-content: flex-start !important;
     padding-top: max(40px, calc(env(safe-area-inset-top) + 20px)) !important;
     padding-bottom: max(30px, env(safe-area-inset-bottom)) !important;
