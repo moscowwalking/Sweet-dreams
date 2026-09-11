@@ -66,12 +66,38 @@ textarea {
   }
 
   /* --- index.html (Главная страница) --- */
-  body.landing .overlay {
-    height: auto !important;
+  body.landing {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100dvh !important;
     min-height: 100dvh !important;
-    padding-top: max(30px, env(safe-area-inset-top));
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-    box-sizing: border-box;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  body.landing::before {
+    height: 100% !important;
+    min-height: 100% !important;
+  }
+
+  body.landing .overlay {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding-top: max(20px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+    padding-left: max(12px, env(safe-area-inset-left)) !important;
+    padding-right: max(12px, env(safe-area-inset-right)) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  .buttons-row {
+    gap: 20px !important;
   }
 
   .builder_core {

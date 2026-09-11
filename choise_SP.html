@@ -219,6 +219,11 @@
         z-index: 10;
       }
 
+      .option-button.disabled:hover::after {
+        opacity: 1;
+        animation: pulseTooltip 1.5s infinite;
+      }
+
       /* Кнопка Назад */
       .back-button {
         position: absolute;
