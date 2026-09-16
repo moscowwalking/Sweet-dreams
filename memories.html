@@ -705,6 +705,35 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
 
+    <!-- Firebase SDK (Firestore Realtime) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        onSnapshot,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyACf9FK-WZUDfJKgD47LOg7UK6-QsJlxDA",
+        authDomain: "walking-98102.firebaseapp.com",
+        projectId: "walking-98102",
+        storageBucket: "walking-98102.firebasestorage.app",
+        messagingSenderId: "1074232422683",
+        appId: "1:1074232422683:web:24bad34fe39453282863be",
+        measurementId: "G-SHCJ69NQ6N",
+      };
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.FirebaseFirestore = { db, collection, onSnapshot };
+        window.dispatchEvent(new CustomEvent("firebase-ready"));
+      } catch (e) {
+        console.warn("⚠️ Firebase init warning:", e);
+      }
+    </script>
+
     <script>
       // =========================================================================
       // CONFIGURATION
@@ -1616,17 +1645,82 @@
           if (this.isLoading) return;
           this.isLoading = true;
 
-          console.log("📥 Loading places.json...");
+          // 1. Если Firebase SDK уже загружен
+          if (window.FirebaseFirestore) {
+            this.subscribeFirestore();
+            return;
+          }
+
+          // 2. Ждем события готовности Firebase SDK
+          let firebaseInitialized = false;
+          window.addEventListener(
+            "firebase-ready",
+            () => {
+              firebaseInitialized = true;
+              this.subscribeFirestore();
+            },
+            { once: true },
+          );
+
+          // 3. Страховочный таймаут: если Firebase не ответил за 3 сек, грузим fallback
+          setTimeout(() => {
+            if (
+              !firebaseInitialized &&
+              (!this.allPlaces || this.allPlaces.length === 0)
+            ) {
+              this.loadFallback();
+            }
+          }, 3000);
+        },
+
+        subscribeFirestore() {
+          if (!window.FirebaseFirestore) return this.loadFallback();
+          const { db, collection, onSnapshot } = window.FirebaseFirestore;
+          console.log("🔥 Подключение Realtime Firestore...");
+
           try {
-            const url = `https://storage.yandexcloud.net/sweet-dream-photos/backups/places.json?_=${Date.now()}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Network error");
+            onSnapshot(
+              collection(db, "places"),
+              (snapshot) => {
+                const places = [];
+                snapshot.forEach((doc) => places.push(doc.data()));
+                if (places.length > 0) {
+                  console.log(
+                    `🔥 Получено ${places.length} мест из Firestore в реальном времени!`,
+                  );
+                  localStorage.setItem(
+                    CONFIG.CACHE.PLACES_KEY,
+                    JSON.stringify(places),
+                  );
+                  this.processData(places);
+                }
+                this.isLoading = false;
+              },
+              (error) => {
+                console.warn(
+                  "⚠️ Ошибка подписки Firestore, используем fallback:",
+                  error,
+                );
+                this.loadFallback();
+              },
+            );
+          } catch (e) {
+            console.warn("⚠️ Исключение при подписке Firestore:", e);
+            this.loadFallback();
+          }
+        },
+
+        async loadFallback() {
+          console.log("📥 Loading places (fallback from server)...");
+          try {
+            const res = await fetch(`${CONFIG.SERVER_URL}/places`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             localStorage.setItem(CONFIG.CACHE.PLACES_KEY, JSON.stringify(data));
             this.processData(data);
             console.log("✅ Fresh data loaded from server");
           } catch (err) {
-            console.warn("⚠️ Failed to load fresh data, using cache:", err);
+            console.warn("⚠️ Failed to load from server, using cache:", err);
             const cached = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
             if (cached) {
               this.processData(JSON.parse(cached));

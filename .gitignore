@@ -8,3 +8,7 @@ S3_MANAGMENT.md
 node_modules/
 .env
 .env.*
+*firebase*.json
+*serviceAccount*.json
+server/scripts/
+server/places.json
