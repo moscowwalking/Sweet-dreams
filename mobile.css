@@ -72,7 +72,7 @@ textarea {
 
   /* --- index.html (Главная страница) --- */
   html.landing-html {
-    background: #000000 url("image/kreed_main.jpg") no-repeat center center !important;
+    background: #000000 url("image/kreed_main.jpg") no-repeat center bottom !important;
     background-size: cover !important;
     background-color: #000000 !important;
     height: 100% !important;
@@ -94,7 +94,7 @@ textarea {
     height: 100dvh !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
-    background: #000000 url("image/kreed_main.jpg") no-repeat center center !important;
+    background: #000000 url("image/kreed_main.jpg") no-repeat center bottom !important;
     background-size: cover !important;
     background-color: #000000 !important;
   }
