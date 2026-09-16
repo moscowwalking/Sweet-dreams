@@ -3,6 +3,11 @@
    Единый мобильный стиль, оптимизированный под WebKit / Safari и жесты iOS
    ========================================================================== */
 
+/* Плавные нативные переходы между страницами (App-like transitions) */
+@view-transition {
+  navigation: auto;
+}
+
 /* 1. Глобальные оптимизации iOS WebKit */
 html {
   -webkit-tap-highlight-color: transparent;

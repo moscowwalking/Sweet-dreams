@@ -3,6 +3,11 @@
    Мобильные и iPhone стили вынесены в mobile.css
    ========================================================================== */
 
+/* Плавные нативные переходы между страницами (App-like transitions) */
+@view-transition {
+  navigation: auto;
+}
+
 /* Сброс */
 body,
 html {
@@ -38,7 +43,6 @@ body.landing {
   overflow: hidden;
   overscroll-behavior: none;
 }
-
 
 /* Центральный блок */
 .builder_core {
