@@ -22,9 +22,9 @@ html {
 /* Фон и цвет */
 html.landing-html,
 html:has(body.landing) {
-  background: #1a0a14 url("image/kreed_main.jpg") no-repeat center center;
+  background: #000000 url("image/kreed_main.jpg") no-repeat center center;
   background-size: cover;
-  background-color: #1a0a14;
+  background-color: #000000;
   height: 100%;
   overscroll-behavior: none;
 }
@@ -33,18 +33,37 @@ body.landing {
   position: relative;
   min-height: 100%;
   min-height: 100vh;
-  min-height: 100lvh;
+  min-height: 100dvh;
   min-height: -webkit-fill-available;
   height: 100%;
-  background: #1a0a14 url("image/kreed_main.jpg") no-repeat center center;
+  background: #000000 url("image/kreed_main.jpg") no-repeat center center;
   background-size: cover;
-  background-color: #1a0a14;
+  background-color: #000000;
   color: white;
   overflow: hidden;
   overscroll-behavior: none;
 }
 
-/* Центральный блок */
+/* Верхняя панель (кнопки Нежность и Строитель) */
+.top-nav-bar {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 100px;
+  pointer-events: none;
+  z-index: 15;
+  box-sizing: border-box;
+}
+
+.top-nav-bar .egor-wrapper,
+.top-nav-bar .builder_core {
+  position: static;
+  pointer-events: auto;
+}
+
 .builder_core {
   position: absolute;
   top: 20px;
