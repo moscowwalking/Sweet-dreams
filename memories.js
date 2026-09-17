@@ -160,6 +160,11 @@ const MarkerManager = {
     const thumbSrc =
       place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || "";
 
+    const hasMultiple = place.photos.length > 1;
+    const countBadgeHtml = hasMultiple
+      ? `<div style="background:rgba(255,255,255,0.95);padding:4px 8px;border-radius:8px;font-weight:700;color:#222;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">${place.photos.length}</div>`
+      : "";
+
     const iconHtml = `
       <div class="${pulseClass}" style="display:flex;align-items:center;gap:6px;">
         <div style="width:${size}px;height:${size}px;border-radius:10px;background:#ffd1dc;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;">
@@ -171,14 +176,15 @@ const MarkerManager = {
                onerror="this.style.display='none';"
                style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s ease;">
         </div>
-        <div style="background:rgba(255,255,255,0.95);padding:4px 8px;border-radius:8px;font-weight:700;color:#222;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">${place.photos.length}</div>
+        ${countBadgeHtml}
       </div>
     `;
 
     const icon = L.divIcon({
       html: iconHtml,
       className: "",
-      iconSize: [size + 40, size],
+      iconSize: [hasMultiple ? size + 40 : size, size],
+      iconAnchor: [size / 2, size / 2],
     });
     const marker = L.marker([lat, lon], { icon });
     marker.on("click", () => Gallery.open(place));
@@ -195,6 +201,11 @@ const MarkerManager = {
       if (!place.marker) return;
       const thumbSrc =
         place.photos[0]?.thumbUrl || place.photos[0]?.origUrl || "";
+      const hasMultiple = place.photos.length > 1;
+      const countBadgeHtml = hasMultiple
+        ? `<div style="background:rgba(255,255,255,0.95);padding:4px 8px;border-radius:8px;font-weight:700;color:#222;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">${place.photos.length}</div>`
+        : "";
+
       const iconHtml = `
         <div style="display:flex;align-items:center;gap:6px;">
           <div style="width:${size}px;height:${size}px;border-radius:10px;background:#ffd1dc;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;">
@@ -206,13 +217,13 @@ const MarkerManager = {
                  onerror="this.style.display='none';"
                  style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s ease;">
           </div>
-          <div style="background:rgba(255,255,255,0.95);padding:4px 8px;border-radius:8px;font-weight:700;color:#222;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">${place.photos.length}</div>
+          ${countBadgeHtml}
         </div>
       `;
       const icon = L.divIcon({
         html: iconHtml,
         className: "",
-        iconSize: [size + 40, size],
+        iconSize: [hasMultiple ? size + 40 : size, size],
         iconAnchor: [size / 2, size / 2],
       });
       place.marker.setIcon(icon);
@@ -314,6 +325,7 @@ const Gallery = {
     this.photoList = photoList;
 
     if (photoList.length > 1) {
+      this.thumbs.style.display = "flex";
       photoList.forEach((photo, idx) => {
         const thumb = document.createElement("img");
         thumb.src = photo.origUrl || photo.thumbUrl || "";
@@ -324,6 +336,8 @@ const Gallery = {
         thumb.onclick = () => this.showPhoto(idx);
         this.thumbs.appendChild(thumb);
       });
+    } else {
+      this.thumbs.style.display = "none";
     }
 
     this.showPhoto(initialIndex);
@@ -608,14 +622,9 @@ const UploadManager = {
         ? String(res.id)
         : Utils.coordsKey(...tmpPlace.coords);
 
+      // Ищем место только по ID нового загруженного фото (каждая фотка — отдельный маркер на карте)
       let place = Array.from(placesStore.values()).find((p) => {
-        if (res.id && String(p.id) === String(res.id)) return true;
-        if (!p.coords || !Array.isArray(p.coords) || p.coords.length < 2)
-          return false;
-        return (
-          Math.abs(p.coords[0] - tmpPlace.coords[0]) < 0.0001 &&
-          Math.abs(p.coords[1] - tmpPlace.coords[1]) < 0.0001
-        );
+        return res.id && String(p.id) === String(res.id);
       });
 
       if (!place) {
@@ -630,11 +639,24 @@ const UploadManager = {
         place.id = String(res.id);
       }
 
-      place.photos.push({
-        thumbUrl: res.thumbUrl || res.fileUrl,
-        origUrl: res.origUrl || res.fileUrl,
-        date: exifDate || Utils.formatDate(new Date()),
-      });
+      // Если Firestore уже успел добавить это фото по вебсокету — не дублируем его второй раз
+      const photoUrl = res.thumbUrl || res.fileUrl;
+      const alreadyExists = place.photos.some(
+        (p) =>
+          p.thumbUrl === photoUrl ||
+          p.origUrl === photoUrl ||
+          p.url === photoUrl,
+      );
+
+      if (!alreadyExists) {
+        place.photos.push({
+          thumbUrl: photoUrl,
+          origUrl: photoUrl,
+          url: photoUrl,
+          date: exifDate || Utils.formatDate(new Date()),
+          caption: "",
+        });
+      }
 
       if (place.marker) markers.removeLayer(place.marker);
       place.marker = MarkerManager.create(place);
