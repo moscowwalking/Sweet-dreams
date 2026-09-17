@@ -889,11 +889,13 @@ const NostalgiaManager = {
     const item = this.items[this.currentIndex];
 
     this.imgEl.src = item.photoUrl;
-    this.tagEl.textContent = `В этот день • ${item.tag}`;
+    this.tagEl.textContent = item.tag?.startsWith("Новое")
+      ? item.tag
+      : `В этот день • ${item.tag}`;
     this.dateEl.textContent = Utils.formatRussianDate(item.date);
     this.captionEl.textContent = item.caption
       ? `«${item.caption}»`
-      : item.place.placeTitle || "";
+      : item.place?.placeTitle || "";
 
     if (this.items.length > 1) {
       this.navEl.style.display = "flex";
@@ -940,6 +942,63 @@ const NostalgiaManager = {
     setTimeout(() => {
       Gallery.open(item.place, item.photoIndex);
     }, 1400);
+  },
+
+  showRecentUploads(recentIds = []) {
+    const matchedPlaces = [];
+    if (Array.isArray(recentIds) && recentIds.length > 0) {
+      for (const id of recentIds) {
+        const place =
+          placesStore.get(String(id)) ||
+          this.places.find((p) => String(p.id) === String(id));
+        if (place && !matchedPlaces.includes(place)) {
+          matchedPlaces.push(place);
+        }
+      }
+    }
+
+    // Если по ID не нашли или передан true, берём самые последние загруженные места
+    const placesToUse =
+      matchedPlaces.length > 0
+        ? matchedPlaces
+        : [...this.places]
+            .sort(
+              (a, b) =>
+                (Utils.getPlaceTime(b) || 0) - (Utils.getPlaceTime(a) || 0),
+            )
+            .slice(0, 5);
+
+    if (placesToUse.length === 0) return;
+
+    this.items = [];
+    for (const place of placesToUse) {
+      const pDate = Utils.getPlaceDate(place);
+      const photos =
+        place.photos && place.photos.length > 0
+          ? place.photos
+          : [
+              {
+                url: place.origUrl || place.thumbUrl || "",
+                origUrl: place.origUrl || place.thumbUrl || "",
+                caption: place.caption || place.placeTitle || "",
+              },
+            ];
+
+      photos.forEach((photo, pIdx) => {
+        this.items.push({
+          place,
+          photoIndex: pIdx,
+          photoUrl: photo.origUrl || photo.thumbUrl || photo.url || "",
+          date: pDate,
+          caption: photo.caption || place.placeTitle || "Новое воспоминание",
+          tag: "Новое фото ✨",
+        });
+      });
+    }
+
+    if (this.items.length === 0) return;
+    this.currentIndex = 0;
+    this.showCard();
   },
 };
 
@@ -1113,6 +1172,21 @@ const DataLoader = {
       setTimeout(() => {
         RandomMemory.show();
       }, 600);
+    }
+
+    // Поддержка перехода из пуша о новых загруженных фото (карусель новых воспоминаний)
+    const recentUploadsParam = urlParams.get("recentUploads");
+    if (recentUploadsParam) {
+      setTimeout(() => {
+        const ids =
+          recentUploadsParam !== "true"
+            ? recentUploadsParam
+                .split(",")
+                .map((id) => decodeURIComponent(id.trim()))
+                .filter(Boolean)
+            : [];
+        NostalgiaManager.showRecentUploads(ids);
+      }, 500);
     }
   },
 };

@@ -95,7 +95,7 @@ router.post("/upload", (req, res) => {
       console.log(`🔥 Место id=${id} успешно сохранено в Firestore!`);
 
       // Уведомление о новых фото (с группировкой/debounce)
-      notifyNewPhotoUploaded();
+      notifyNewPhotoUploaded(id);
 
       res.json({
         success: true,

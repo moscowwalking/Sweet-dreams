@@ -12,6 +12,7 @@ webpush.setVapidDetails(
 let lastDailyCheckDate = null;
 let uploadNotificationTimer = null;
 let uploadBatchCount = 0;
+let uploadBatchPlaceIds = [];
 
 // Дата начала отношений (23 августа 2025)
 const RELATIONSHIP_START = new Date(2025, 7, 23);
@@ -101,8 +102,12 @@ export async function sendNotificationToAll(payload) {
 /**
  * Умная группировка пушей при загрузке нескольких фото (2 минуты debounce)
  */
-export function notifyNewPhotoUploaded() {
+export function notifyNewPhotoUploaded(placeId = null) {
   uploadBatchCount++;
+  if (placeId && !uploadBatchPlaceIds.includes(String(placeId))) {
+    uploadBatchPlaceIds.push(String(placeId));
+  }
+
   if (uploadNotificationTimer) {
     clearTimeout(uploadNotificationTimer);
   }
@@ -110,13 +115,20 @@ export function notifyNewPhotoUploaded() {
   // Ждем 2 минуты после последней загрузки, чтобы не спамить
   uploadNotificationTimer = setTimeout(
     async () => {
+      const ids = [...uploadBatchPlaceIds];
       uploadBatchCount = 0;
+      uploadBatchPlaceIds = [];
       uploadNotificationTimer = null;
+
+      const url =
+        ids.length > 0
+          ? `./memories.html?recentUploads=${encodeURIComponent(ids.join(","))}`
+          : "./memories.html?recentUploads=true";
 
       await sendNotificationToAll({
         title: "Новое воспоминание! 📸",
         body: "На карту добавлено новое воспоминание! 🗺️💖",
-        data: { url: "./memories.html" },
+        data: { url },
       });
     },
     2 * 60 * 1000,
