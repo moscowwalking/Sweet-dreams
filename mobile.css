@@ -420,23 +420,34 @@ textarea {
   }
 
   body.memories-page .title {
-    font-size: 1.4rem !important;
-    margin: 10px 0 6px !important;
+    display: none !important;
   }
 
   body.memories-page #map {
     width: 96vw !important;
-    height: calc(100dvh - 85px) !important;
+    height: calc(
+      100dvh -
+        max(20px, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom)))
+    ) !important;
     max-height: none !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
   }
 
   .love-counter {
-    top: max(10px, env(safe-area-inset-top, 10px)) !important;
-    right: max(10px, env(safe-area-inset-right, 10px)) !important;
-    padding: 4px 12px !important;
-    gap: 8px !important;
-    border-radius: 20px !important;
+    top: max(55px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    padding: 6px 16px !important;
+    gap: 12px !important;
+    border-radius: 25px !important;
+    white-space: nowrap !important;
+    z-index: 750 !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    border: 2px solid rgba(255, 105, 180, 0.35) !important;
   }
 
   .counter-value {
@@ -483,17 +494,68 @@ textarea {
     font-size: 22px !important;
   }
 
+  /* Карточка «В этот день» ниже Dynamic Island и с правильной геометрией */
   .nostalgia-card {
-    top: max(14px, env(safe-area-inset-top, 14px)) !important;
-    right: 14px !important;
-    width: calc(100vw - 28px) !important;
+    position: fixed !important;
+    top: max(55px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
+    left: max(12px, env(safe-area-inset-left, 12px)) !important;
+    right: max(12px, env(safe-area-inset-right, 12px)) !important;
+    width: auto !important;
+    max-width: 400px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    max-height: calc(100dvh - 80px) !important;
+    overflow-y: auto !important;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25) !important;
+    z-index: 1200 !important;
   }
 
+  .nostalgia-header {
+    margin-bottom: 2px !important;
+  }
+
+  .nostalgia-image-container {
+    height: 190px !important;
+    border-radius: 12px !important;
+  }
+
+  .nostalgia-nav {
+    padding: 0 2px !important;
+    margin-top: 4px !important;
+  }
+
+  .nostalgia-body {
+    gap: 4px !important;
+    padding: 2px 2px !important;
+    box-sizing: border-box !important;
+  }
+
+  .nostalgia-date {
+    font-size: 14px !important;
+    white-space: normal !important;
+  }
+
+  .nostalgia-caption {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    max-height: 50px !important;
+  }
+
+  .nostalgia-btn {
+    padding: 11px !important;
+    font-size: 14px !important;
+    border-radius: 12px !important;
+    margin-top: 4px !important;
+  }
+
+  /* Кнопки масштабирования карты подняты выше плавающих FAB-кнопок */
   .leaflet-bottom.leaflet-right {
     bottom: calc(
-      max(16px, env(safe-area-inset-bottom, 16px)) + 64px
+      max(16px, env(safe-area-inset-bottom, 16px)) + 125px
     ) !important;
-    right: 8px !important;
+    right: max(12px, env(safe-area-inset-right, 12px)) !important;
   }
 
   .gallery {

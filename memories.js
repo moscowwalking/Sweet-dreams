@@ -790,7 +790,7 @@ const NostalgiaManager = {
       };
     }
 
-    // Если сегодня есть совпадение даты — показываем кнопку и открываем карточку
+    // Если сегодня есть совпадение даты — показываем кнопку (карточка открывается только по клику)
     if (this.items.length > 0) {
       this.btn.style.display = "flex";
       if (this.items.length > 1) {
@@ -799,7 +799,6 @@ const NostalgiaManager = {
       } else {
         this.badge.style.display = "none";
       }
-      setTimeout(() => this.showCard(), 1500);
     } else {
       this.btn.style.display = "none";
       this.badge.style.display = "none";
