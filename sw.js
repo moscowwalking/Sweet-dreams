@@ -156,11 +156,18 @@ self.addEventListener("push", (event) => {
     renotify: true,
   };
 
+  if ("setAppBadge" in navigator) {
+    navigator.setAppBadge(1).catch(() => {});
+  }
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  if ("clearAppBadge" in navigator) {
+    navigator.clearAppBadge().catch(() => {});
+  }
   const targetUrl = event.notification.data?.url || "./memories.html";
 
   event.waitUntil(

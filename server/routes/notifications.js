@@ -67,9 +67,9 @@ router.post("/send-test-notification", async (req, res) => {
 });
 
 /**
- * POST /check-daily-notifications - Запуск проверки годовщин и воспоминаний
+ * GET/POST /check-daily-notifications - Запуск проверки годовщин и воспоминаний
  */
-router.post("/check-daily-notifications", async (req, res) => {
+router.all("/check-daily-notifications", async (req, res) => {
   try {
     const result = await checkDailyTriggers(true);
     res.json({ success: true, result });

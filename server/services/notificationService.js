@@ -241,7 +241,7 @@ export async function checkDailyTriggers(forced = false) {
   if (now.getDay() === 6) {
     await sendNotificationToAll({
       title: "Тёплое воспоминание ☕✨",
-      body: "Суббота — время вспомнить что-то особенное! Загляни на карту 💕",
+      body: "Теплое воспоминание! Загляни на карту 💕",
       data: { url: "./memories.html?randomMemory=true" },
     });
     return { triggered: "saturday_random_memory" };

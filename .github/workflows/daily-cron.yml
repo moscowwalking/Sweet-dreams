@@ -1,0 +1,23 @@
+name: Daily Push Notifications Cron
+
+on:
+  schedule:
+    # 07:00 UTC каждый день (ровно 10:00 по Московскому времени)
+    - cron: '0 7 * * *'
+  workflow_dispatch: # Возможность запустить вручную одной кнопкой в GitHub Actions
+
+jobs:
+  trigger-daily-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping and Wake Render Server
+        run: |
+          echo "Waking up Render backend if sleeping..."
+          curl -s --max-time 45 https://sweet-dreams-f8nc.onrender.com/health || true
+          sleep 5
+
+      - name: Trigger Daily Notifications Check
+        run: |
+          echo "Triggering /check-daily-notifications..."
+          RESPONSE=$(curl -s -X POST https://sweet-dreams-f8nc.onrender.com/check-daily-notifications)
+          echo "Server response: $RESPONSE"

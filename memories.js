@@ -1295,6 +1295,10 @@ function init() {
   LoveCounter.init();
   PushNotificationManager.init();
 
+  if ("clearAppBadge" in navigator) {
+    navigator.clearAppBadge().catch(() => {});
+  }
+
   DataLoader.load();
 
   map.on("zoom", MarkerManager.updateSizes.bind(MarkerManager));
