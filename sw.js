@@ -133,3 +133,51 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// =========================================================================
+// PUSH NOTIFICATIONS
+// =========================================================================
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+
+  const title = data.title || "Sweet Dreams ❤️";
+  const options = {
+    body: data.body || "Новое воспоминание на карте!",
+    icon: "./image/icon-192.png",
+    badge: "./image/icon-192.png",
+    data: data.data || { url: "./memories.html" },
+    vibrate: [200, 100, 200],
+    tag: "sweet-dreams-notification",
+    renotify: true,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "./memories.html";
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ("focus" in client) {
+            if (client.url.includes("memories.html")) {
+              client.navigate(targetUrl);
+              return client.focus();
+            }
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      }),
+  );
+});

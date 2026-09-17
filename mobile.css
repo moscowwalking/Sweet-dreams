@@ -413,10 +413,15 @@ textarea {
 
   /* --- memories.html --- */
   body.memories-page {
-    overflow-x: hidden !important;
-    padding: max(8px, env(safe-area-inset-top))
-      max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
-      max(8px, env(safe-area-inset-left)) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
   }
 
   body.memories-page .title {
@@ -424,17 +429,22 @@ textarea {
   }
 
   body.memories-page #map {
-    width: 96vw !important;
-    height: calc(
-      100dvh -
-        max(20px, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom)))
-    ) !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-width: none !important;
     max-height: none !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
   }
 
   .love-counter {
-    top: max(55px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
+    top: max(45px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -442,7 +452,7 @@ textarea {
     gap: 12px !important;
     border-radius: 25px !important;
     white-space: nowrap !important;
-    z-index: 750 !important;
+    z-index: 1000 !important;
     background: rgba(255, 255, 255, 0.92) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
@@ -470,6 +480,7 @@ textarea {
     border-radius: 25px !important;
     background: rgba(255, 255, 255, 0.95) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1000 !important;
   }
 
   .upload-btn {
@@ -486,6 +497,7 @@ textarea {
     bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
     right: max(12px, env(safe-area-inset-right, 12px)) !important;
     gap: 8px !important;
+    z-index: 1000 !important;
   }
 
   .fab-btn {
@@ -553,7 +565,7 @@ textarea {
   /* Кнопки масштабирования карты подняты выше плавающих FAB-кнопок */
   .leaflet-bottom.leaflet-right {
     bottom: calc(
-      max(16px, env(safe-area-inset-bottom, 16px)) + 125px
+      max(16px, env(safe-area-inset-bottom, 16px)) + 140px
     ) !important;
     right: max(12px, env(safe-area-inset-right, 12px)) !important;
   }

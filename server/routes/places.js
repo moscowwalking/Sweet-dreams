@@ -1,8 +1,16 @@
 import express from "express";
 import multer from "multer";
 import { db } from "../config/firebase.js";
-import { extractExifDate, processAndOptimizeImage } from "../services/imageService.js";
-import { uploadMemoryPhoto, deleteS3Objects, getAllBucketObjects } from "../services/s3Service.js";
+import {
+  extractExifDate,
+  processAndOptimizeImage,
+} from "../services/imageService.js";
+import {
+  uploadMemoryPhoto,
+  deleteS3Objects,
+  getAllBucketObjects,
+} from "../services/s3Service.js";
+import { notifyNewPhotoUploaded } from "../services/notificationService.js";
 import { ENV } from "../config/env.js";
 
 const router = express.Router();
@@ -45,7 +53,8 @@ router.post("/upload", (req, res) => {
     }
 
     const exifDateFromClient = req.body.exifDate;
-    const file = req.files?.find((f) => f.fieldname === "file") || req.files?.[0];
+    const file =
+      req.files?.find((f) => f.fieldname === "file") || req.files?.[0];
 
     if (!file) {
       console.warn("⚠️ Файл не найден в запросе");
@@ -85,6 +94,9 @@ router.post("/upload", (req, res) => {
       await db.collection("places").doc(id).set(newPlace);
       console.log(`🔥 Место id=${id} успешно сохранено в Firestore!`);
 
+      // Уведомление о новых фото (с группировкой/debounce)
+      notifyNewPhotoUploaded();
+
       res.json({
         success: true,
         id,
@@ -105,7 +117,11 @@ router.post("/upload", (req, res) => {
 router.post("/update-caption", async (req, res) => {
   try {
     const { id, photoIndex = 0, caption } = req.body;
-    console.log("📥 Получен запрос на обновление подписи:", { id, photoIndex, caption });
+    console.log("📥 Получен запрос на обновление подписи:", {
+      id,
+      photoIndex,
+      caption,
+    });
 
     if (!id || caption === undefined) {
       return res.status(400).json({ error: "Missing id or caption" });
@@ -141,18 +157,26 @@ router.post("/update-caption", async (req, res) => {
 
     if (!docSnap.exists) {
       console.warn("⚠️ Место не найдено для id:", id);
-      return res.status(404).json({ success: false, error: "Место не найдено" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Место не найдено" });
     }
 
     const docData = docSnap.data();
-    if (docData.photos && Array.isArray(docData.photos) && docData.photos[photoIndex]) {
+    if (
+      docData.photos &&
+      Array.isArray(docData.photos) &&
+      docData.photos[photoIndex]
+    ) {
       docData.photos[photoIndex].caption = caption;
       await docRef.update({ photos: docData.photos });
     } else {
       await docRef.update({ caption });
     }
 
-    console.log(`🔥 Подпись места id=${docRef.id} успешно обновлена в Firestore!`);
+    console.log(
+      `🔥 Подпись места id=${docRef.id} успешно обновлена в Firestore!`,
+    );
     res.json({ success: true, id: docRef.id, caption });
   } catch (err) {
     console.error("❌ Ошибка при обновлении подписи:", err);
@@ -166,7 +190,9 @@ router.post("/update-caption", async (req, res) => {
 router.all("/delete-place", async (req, res) => {
   const id = req.query.id || req.body?.id;
   if (!id) {
-    return res.status(400).json({ error: "Не указан ID места (параметр ?id=...)" });
+    return res
+      .status(400)
+      .json({ error: "Не указан ID места (параметр ?id=...)" });
   }
 
   try {
@@ -197,17 +223,20 @@ router.all("/delete-place", async (req, res) => {
     }
     if (deletedPlace.thumbUrl) {
       const match = deletedPlace.thumbUrl.match(/memories\/[^?#]+/);
-      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+      if (match && !keysToDelete.includes(match[0]))
+        keysToDelete.push(match[0]);
     }
     if (deletedPlace.origUrl) {
       const match = deletedPlace.origUrl.match(/memories\/[^?#]+/);
-      if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+      if (match && !keysToDelete.includes(match[0]))
+        keysToDelete.push(match[0]);
     }
     if (Array.isArray(deletedPlace.photos)) {
       deletedPlace.photos.forEach((p) => {
         const url = p.url || p.origUrl || p.thumbUrl || "";
         const match = url.match(/memories\/[^?#]+/);
-        if (match && !keysToDelete.includes(match[0])) keysToDelete.push(match[0]);
+        if (match && !keysToDelete.includes(match[0]))
+          keysToDelete.push(match[0]);
       });
     }
 
@@ -233,14 +262,20 @@ router.all("/delete-place", async (req, res) => {
  */
 router.get("/sync-places", async (req, res) => {
   if (!ENV.YANDEX_BUCKET || !ENV.YANDEX_ACCESS_KEY) {
-    return res.status(500).json({ success: false, reason: "S3 credentials не настроены" });
+    return res
+      .status(500)
+      .json({ success: false, reason: "S3 credentials не настроены" });
   }
   if (!db) {
-    return res.status(503).json({ success: false, reason: "Firestore не инициализирован" });
+    return res
+      .status(503)
+      .json({ success: false, reason: "Firestore не инициализирован" });
   }
 
   try {
-    console.log("🔄 Проверка меток в Firestore с реальными файлами в бакете S3...");
+    console.log(
+      "🔄 Проверка меток в Firestore с реальными файлами в бакете S3...",
+    );
     const s3Keys = await getAllBucketObjects("memories/");
     console.log(`📦 Найдено реальных файлов в S3 (memories/): ${s3Keys.size}`);
 
@@ -262,7 +297,9 @@ router.get("/sync-places", async (req, res) => {
       }
 
       if (!key || !s3Keys.has(key)) {
-        console.log(`🧹 Удаляем из Firestore запись об удаленном файле: id=${place.id}`);
+        console.log(
+          `🧹 Удаляем из Firestore запись об удаленном файле: id=${place.id}`,
+        );
         await db.collection("places").doc(String(place.id)).delete();
         removedCount++;
       }

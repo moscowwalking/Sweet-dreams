@@ -48,6 +48,15 @@ const markers = L.markerClusterGroup({
 });
 map.addLayer(markers);
 
+window.addEventListener("resize", () => {
+  if (map) map.invalidateSize();
+});
+window.addEventListener("orientationchange", () => {
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 200);
+});
+
 const placesStore = new Map();
 
 // =========================================================================
@@ -145,6 +154,19 @@ const Utils = {
     const m = months[date.getMonth()];
     const y = date.getFullYear();
     return `${d} ${m} ${y}`;
+  },
+
+  urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
   },
 };
 
@@ -799,6 +821,13 @@ const NostalgiaManager = {
       } else {
         this.badge.style.display = "none";
       }
+
+      // При переходе из push-уведомления программно нажимаем кнопку fab-btn nostalgia-btn-fab
+      if (urlParams.get("autoOpenNostalgia") === "true") {
+        setTimeout(() => {
+          if (this.btn) this.btn.click();
+        }, 400);
+      }
     } else {
       this.btn.style.display = "none";
       this.badge.style.display = "none";
@@ -1077,6 +1106,104 @@ const DataLoader = {
 
     // Инициализация "В этот день..."
     NostalgiaManager.init(this.allPlaces);
+
+    // Поддержка перехода из пуша "Случайное тёплое воспоминание"
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("randomMemory") === "true") {
+      setTimeout(() => {
+        RandomMemory.show();
+      }, 600);
+    }
+  },
+};
+
+// =========================================================================
+// PUSH NOTIFICATION MANAGER
+// =========================================================================
+const PushNotificationManager = {
+  bellBtn: document.getElementById("notificationBellBtn"),
+  isSubscribed: false,
+  swRegistration: null,
+
+  async init() {
+    if (!this.bellBtn) return;
+
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      console.log("ℹ️ Push notifications не поддерживаются данным браузером");
+      this.bellBtn.style.display = "none";
+      return;
+    }
+
+    try {
+      this.swRegistration = await navigator.serviceWorker.ready;
+      const subscription =
+        await this.swRegistration.pushManager.getSubscription();
+
+      // Если пользователь уже подписан или уже выдал разрешение — скрываем кнопку,
+      // чтобы она не занимала место на экране!
+      if (subscription || Notification.permission === "granted") {
+        this.isSubscribed = true;
+        this.bellBtn.style.display = "none";
+        return;
+      }
+
+      // Если еще не подписан — показываем колокольчик для разового нажатия
+      this.bellBtn.style.display = "flex";
+      this.bellBtn.addEventListener("click", () => {
+        this.subscribe();
+      });
+    } catch (err) {
+      console.warn("⚠️ PushNotificationManager init error:", err);
+    }
+  },
+
+  async subscribe() {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        alert("Разрешение на отправку уведомлений не было предоставлено.");
+        return;
+      }
+
+      const res = await fetch(`${CONFIG.SERVER_URL}/vapid-public-key`);
+      if (!res.ok) throw new Error("Не удалось получить VAPID ключ с сервера");
+      const data = await res.json();
+      const convertedVapidKey = Utils.urlBase64ToUint8Array(data.publicKey);
+
+      const subscription = await this.swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey,
+      });
+
+      const saveRes = await fetch(`${CONFIG.SERVER_URL}/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription }),
+      });
+
+      if (saveRes.ok) {
+        this.isSubscribed = true;
+        console.log("✅ Успешно подписались на push-уведомления");
+
+        // Показываем галочку и плавно навсегда скрываем кнопку
+        this.bellBtn.innerHTML = "✅";
+        this.bellBtn.style.background =
+          "linear-gradient(135deg, #4caf50, #43a047)";
+        this.bellBtn.style.color = "#fff";
+        setTimeout(() => {
+          this.bellBtn.style.transition =
+            "opacity 0.4s ease, transform 0.4s ease";
+          this.bellBtn.style.opacity = "0";
+          this.bellBtn.style.transform = "scale(0.3)";
+          setTimeout(() => {
+            this.bellBtn.style.display = "none";
+          }, 400);
+        }, 1000);
+      }
+    } catch (err) {
+      console.error("❌ Ошибка при подписке на push:", err);
+      alert("Не удалось включить уведомления: " + (err.message || err));
+    }
   },
 };
 
@@ -1092,6 +1219,7 @@ function init() {
   RandomMemory.init();
   UploadManager.init();
   LoveCounter.init();
+  PushNotificationManager.init();
 
   DataLoader.load();
 
