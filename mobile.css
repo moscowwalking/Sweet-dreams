@@ -412,16 +412,34 @@ textarea {
   }
 
   /* --- memories.html --- */
+  html.memories-html {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    min-height: -webkit-fill-available !important;
+    background-color: #f2efe9 !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
   body.memories-page {
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
-    width: 100vw !important;
+    width: 100% !important;
     height: 100% !important;
-    height: 100dvh !important;
+    min-height: 100% !important;
+    min-height: -webkit-fill-available !important;
     position: fixed !important;
-    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     display: block !important;
+    background-color: #f2efe9 !important;
+    overscroll-behavior: none !important;
   }
 
   body.memories-page .title {
@@ -429,18 +447,22 @@ textarea {
   }
 
   body.memories-page #map {
-    position: absolute !important;
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100vw !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
     height: 100% !important;
-    height: 100dvh !important;
+    min-height: 100% !important;
+    min-height: -webkit-fill-available !important;
     max-width: none !important;
     max-height: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
+    background-color: #f2efe9 !important;
   }
 
   .love-counter {
