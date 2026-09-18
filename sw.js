@@ -1,6 +1,6 @@
-// sw.js - Service Worker для Sweet-dreams (v13)
-const STATIC_CACHE = "sweet-dreams-static-v13";
-const PHOTO_CACHE = "sweet-dreams-photos-v13";
+// sw.js - Service Worker для Sweet-dreams (v14)
+const STATIC_CACHE = "sweet-dreams-static-v14";
+const PHOTO_CACHE = "sweet-dreams-photos-v14";
 
 const MAX_CACHED_PHOTOS = 200;
 
