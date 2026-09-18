@@ -418,7 +418,6 @@ textarea {
     padding: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    height: 100dvh !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
     background: #ffffff !important;
@@ -427,13 +426,12 @@ textarea {
   body.memories-page {
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
     width: 100% !important;
     height: 100% !important;
-    height: 100dvh !important;
     display: block !important;
     overscroll-behavior: none !important;
     background: transparent !important;
+    /* НЕ ставим overflow:hidden — на iOS это ломает position:fixed */
   }
 
   body.memories-page .title {
@@ -446,9 +444,8 @@ textarea {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100vw !important;
+    width: 100% !important;
     height: 100% !important;
-    height: 100dvh !important;
     max-width: none !important;
     max-height: none !important;
     border-radius: 0 !important;
@@ -514,6 +511,17 @@ textarea {
     align-items: flex-end !important;
     z-index: 1000 !important;
     box-sizing: border-box !important;
+  }
+
+  /* Страховка: заполняем любой зазор ниже панели до края экрана */
+  .mobile-bottom-bar::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 100% !important;
+    height: 50px !important;
+    background: #ffffff !important;
   }
 
   .bottom-bar-item {
