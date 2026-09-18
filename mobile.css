@@ -583,10 +583,18 @@ textarea {
     box-shadow: 0 4px 16px rgba(255, 20, 147, 0.4) !important;
     border: 3px solid #ffffff !important;
     color: #ffffff !important;
-    font-size: 22px !important;
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease !important;
+  }
+
+  .center-action-icon {
+    width: 23px !important;
+    height: 23px !important;
+    display: block !important;
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    pointer-events: none !important;
   }
 
   .center-action:active .center-action-btn {
