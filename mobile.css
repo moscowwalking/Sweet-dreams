@@ -502,25 +502,25 @@ textarea {
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    height: 54px !important;
-    padding: 6px 12px max(10px, env(safe-area-inset-bottom, 10px)) !important;
-    background: rgba(255, 255, 255, 0.88) !important;
+    padding: 6px 12px 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
     backdrop-filter: blur(25px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
     border-top: 1px solid rgba(255, 182, 193, 0.45) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08) !important;
     display: flex !important;
     justify-content: space-around !important;
-    align-items: center !important;
+    align-items: flex-end !important;
     z-index: 1000 !important;
-    box-sizing: content-box !important;
+    box-sizing: border-box !important;
   }
 
   .bottom-bar-item {
     background: none !important;
     border: none !important;
     outline: none !important;
-    padding: 3px 6px !important;
+    padding: 4px 6px 6px !important;
     margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
