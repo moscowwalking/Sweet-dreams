@@ -509,9 +509,11 @@ const LoveCounter = {
 // =========================================================================
 const RandomMemory = {
   btn: document.getElementById("randomMemoryBtn"),
+  mobileBtn: document.getElementById("mobileRandomBtn"),
 
   init() {
-    this.btn.addEventListener("click", () => this.show());
+    this.btn?.addEventListener("click", () => this.show());
+    this.mobileBtn?.addEventListener("click", () => this.show());
   },
 
   show() {
@@ -531,8 +533,13 @@ const RandomMemory = {
 
     setTimeout(() => Gallery.open(randomPlace), 1500);
 
-    this.btn.style.transform = "scale(1.2)";
-    setTimeout(() => (this.btn.style.transform = ""), 300);
+    const activeBtn = [this.mobileBtn, this.btn].find(
+      (b) => b && window.getComputedStyle(b).display !== "none",
+    );
+    if (activeBtn) {
+      activeBtn.style.transform = "scale(1.2)";
+      setTimeout(() => (activeBtn.style.transform = ""), 300);
+    }
   },
 };
 
@@ -711,6 +718,8 @@ const NostalgiaManager = {
   card: document.getElementById("nostalgiaCard"),
   btn: document.getElementById("nostalgiaBtn"),
   badge: document.getElementById("nostalgiaBadge"),
+  mobileBtn: document.getElementById("mobileNostalgiaBtn"),
+  mobileBadge: document.getElementById("mobileNostalgiaBadge"),
   closeBtn: document.getElementById("nostalgiaCloseBtn"),
   actionBtn: document.getElementById("nostalgiaActionBtn"),
   imgContainer: document.getElementById("nostalgiaImgContainer"),
@@ -751,11 +760,17 @@ const NostalgiaManager = {
     if (!this.initialized) {
       this.initialized = true;
 
-      this.btn.addEventListener("click", () => {
+      this.btn?.addEventListener("click", () => {
         this.showCard();
       });
 
-      this.closeBtn.addEventListener("click", () => {
+      this.mobileBtn?.addEventListener("click", () => {
+        if (this.items.length > 0) {
+          this.showCard();
+        }
+      });
+
+      this.closeBtn?.addEventListener("click", () => {
         this.hideCard();
       });
 
@@ -800,6 +815,11 @@ const NostalgiaManager = {
           } else {
             this.badge.style.display = "none";
           }
+          if (this.mobileBadge) {
+            this.mobileBadge.style.display = "inline-block";
+            this.mobileBadge.textContent = String(this.items.length);
+          }
+          if (this.mobileBtn) this.mobileBtn.style.opacity = "1";
           this.showCard();
           console.log(
             `✅ Найдено ${this.items.length} фото для даты ${dayMonthStr}`,
@@ -807,14 +827,26 @@ const NostalgiaManager = {
         } else {
           console.log(`ℹ️ Нет воспоминаний для даты ${dayMonthStr}`);
           this.btn.style.display = "none";
+          if (this.mobileBadge) this.mobileBadge.style.display = "none";
+          if (this.mobileBtn) this.mobileBtn.style.opacity = "0.7";
           this.hideCard();
         }
       };
     }
 
-    // Если сегодня есть совпадение даты — показываем кнопку (карточка открывается только по клику)
+    // Если сегодня есть совпадение даты — показываем бейдж с количеством воспоминаний
     if (this.items.length > 0) {
       this.btn.style.display = "flex";
+      if (this.mobileBtn) {
+        this.mobileBtn.style.display = "flex";
+        this.mobileBtn.style.opacity = "1";
+      }
+
+      if (this.mobileBadge) {
+        this.mobileBadge.style.display = "inline-block";
+        this.mobileBadge.textContent = String(this.items.length);
+      }
+
       if (this.items.length > 1) {
         this.badge.style.display = "flex";
         this.badge.textContent = String(this.items.length);
@@ -831,6 +863,11 @@ const NostalgiaManager = {
     } else {
       this.btn.style.display = "none";
       this.badge.style.display = "none";
+      if (this.mobileBtn) {
+        this.mobileBtn.style.display = "flex";
+        this.mobileBtn.style.opacity = "0.7";
+      }
+      if (this.mobileBadge) this.mobileBadge.style.display = "none";
       this.hideCard();
     }
   },
@@ -999,6 +1036,37 @@ const NostalgiaManager = {
     if (this.items.length === 0) return;
     this.currentIndex = 0;
     this.showCard();
+  },
+};
+
+// =========================================================================
+// MAP OVERVIEW (Обзор всех меток на карте)
+// =========================================================================
+const MapOverview = {
+  btn: document.getElementById("mobileOverviewBtn"),
+
+  init() {
+    this.btn?.addEventListener("click", () => {
+      this.fitAll();
+    });
+  },
+
+  fitAll() {
+    if (typeof markers !== "undefined" && markers.getLayers().length > 0) {
+      const bounds = markers.getBounds();
+      if (bounds && bounds.isValid()) {
+        map.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 15,
+          animate: true,
+          duration: 1.2,
+        });
+        return;
+      }
+    }
+    map.flyTo(CONFIG.MAP.center, CONFIG.MAP.zoom, {
+      duration: 1.2,
+    });
   },
 };
 
@@ -1204,7 +1272,7 @@ const PushNotificationManager = {
 
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       console.log("ℹ️ Push notifications не поддерживаются данным браузером");
-      this.bellBtn.style.display = "none";
+      if (this.bellBtn) this.bellBtn.style.display = "none";
       return;
     }
 
@@ -1217,13 +1285,14 @@ const PushNotificationManager = {
       // чтобы она не занимала место на экране!
       if (subscription || Notification.permission === "granted") {
         this.isSubscribed = true;
-        this.bellBtn.style.display = "none";
+        if (this.bellBtn) this.bellBtn.style.display = "none";
         return;
       }
 
       // Если еще не подписан — показываем колокольчик для разового нажатия
-      this.bellBtn.style.display = "flex";
-      this.bellBtn.addEventListener("click", () => {
+      if (this.bellBtn) this.bellBtn.style.display = "flex";
+
+      this.bellBtn?.addEventListener("click", () => {
         this.subscribe();
       });
     } catch (err) {
@@ -1260,18 +1329,23 @@ const PushNotificationManager = {
         console.log("✅ Успешно подписались на push-уведомления");
 
         // Показываем галочку и плавно навсегда скрываем кнопку
-        this.bellBtn.innerHTML = "✅";
-        this.bellBtn.style.background =
-          "linear-gradient(135deg, #4caf50, #43a047)";
-        this.bellBtn.style.color = "#fff";
+        if (this.bellBtn) {
+          this.bellBtn.innerHTML = "✅";
+          this.bellBtn.style.background =
+            "linear-gradient(135deg, #4caf50, #43a047)";
+          this.bellBtn.style.color = "#fff";
+        }
+
         setTimeout(() => {
-          this.bellBtn.style.transition =
-            "opacity 0.4s ease, transform 0.4s ease";
-          this.bellBtn.style.opacity = "0";
-          this.bellBtn.style.transform = "scale(0.3)";
-          setTimeout(() => {
-            this.bellBtn.style.display = "none";
-          }, 400);
+          if (this.bellBtn) {
+            this.bellBtn.style.transition =
+              "opacity 0.4s ease, transform 0.4s ease";
+            this.bellBtn.style.opacity = "0";
+            this.bellBtn.style.transform = "scale(0.3)";
+            setTimeout(() => {
+              this.bellBtn.style.display = "none";
+            }, 400);
+          }
         }, 1000);
       }
     } catch (err) {
@@ -1293,6 +1367,7 @@ function init() {
   RandomMemory.init();
   UploadManager.init();
   LoveCounter.init();
+  MapOverview.init();
   PushNotificationManager.init();
 
   if ("clearAppBadge" in navigator) {
@@ -1302,13 +1377,6 @@ function init() {
   DataLoader.load();
 
   map.on("zoom", MarkerManager.updateSizes.bind(MarkerManager));
-
-  // Patch upload function for counter update
-  const originalUpload = UploadManager.uploadToServer.bind(UploadManager);
-  UploadManager.uploadToServer = async (...args) => {
-    await originalUpload(...args);
-    LoveCounter.update();
-  };
 }
 
 // Start everything

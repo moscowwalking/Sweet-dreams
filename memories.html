@@ -121,6 +121,63 @@
       </div>
     </div>
 
+    <!-- Mobile Bottom Action Bar (Только для телефонов) -->
+    <nav class="mobile-bottom-bar" id="mobileBottomBar">
+      <a href="index.html" class="bottom-bar-item" title="На главную">
+        <span class="bottom-bar-icon">🏠</span>
+        <span class="bottom-bar-label">Главная</span>
+      </a>
+
+      <button
+        class="bottom-bar-item"
+        id="mobileRandomBtn"
+        type="button"
+        title="Случайное воспоминание"
+      >
+        <span class="bottom-bar-icon">✨</span>
+        <span class="bottom-bar-label">Случайное</span>
+      </button>
+
+      <label
+        class="bottom-bar-item center-action"
+        for="fileInput"
+        title="Загрузить фото"
+      >
+        <div class="center-action-btn">
+          <span>📸</span>
+        </div>
+        <span class="bottom-bar-label">Добавить</span>
+      </label>
+
+      <button
+        class="bottom-bar-item"
+        id="mobileNostalgiaBtn"
+        type="button"
+        title="В этот день..."
+      >
+        <span class="bottom-bar-icon">
+          ⏳
+          <span
+            class="bottom-bar-badge"
+            id="mobileNostalgiaBadge"
+            style="display: none"
+            >1</span
+          >
+        </span>
+        <span class="bottom-bar-label">В этот день</span>
+      </button>
+
+      <button
+        class="bottom-bar-item"
+        id="mobileOverviewBtn"
+        type="button"
+        title="Вся карта"
+      >
+        <span class="bottom-bar-icon">🗺️</span>
+        <span class="bottom-bar-label">Обзор</span>
+      </button>
+    </nav>
+
     <!-- Nostalgia Card ("В этот день...") -->
     <div class="nostalgia-card" id="nostalgiaCard">
       <div class="nostalgia-header">
@@ -153,10 +210,7 @@
         <div class="nostalgia-date" id="nostalgiaDate">...</div>
         <div class="nostalgia-caption" id="nostalgiaCaption">...</div>
       </div>
-      <div
-        id="nostalgiaActions"
-        style="display: flex; flex-direction: column; gap: 6px"
-      >
+      <div style="display: flex; flex-direction: column; gap: 6px">
         <button class="nostalgia-btn" id="nostalgiaActionBtn">
           Полететь к месту 🚀
         </button>

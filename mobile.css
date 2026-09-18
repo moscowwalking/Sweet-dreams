@@ -494,38 +494,125 @@ textarea {
     font-size: 12px !important;
   }
 
+  /* Скрываем старые разрозненные кнопки и панель */
   .upload-panel {
-    top: auto !important;
-    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-    left: max(12px, env(safe-area-inset-left, 12px)) !important;
-    padding: 6px !important;
-    border-radius: 25px !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
-    z-index: 1000 !important;
-  }
-
-  .upload-btn {
-    padding: 8px 14px !important;
-    font-size: 13px !important;
-    border-radius: 20px !important;
-  }
-
-  .drop-area {
     display: none !important;
   }
 
   .floating-controls {
-    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-    right: max(12px, env(safe-area-inset-right, 12px)) !important;
-    gap: 8px !important;
-    z-index: 1000 !important;
+    display: none !important;
   }
 
-  .fab-btn {
+  /* Нижняя панель действий (iOS Glassmorphism Tab Bar) */
+  .mobile-bottom-bar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 54px !important;
+    padding: 6px 12px max(10px, env(safe-area-inset-bottom, 10px)) !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+    border-top: 1px solid rgba(255, 182, 193, 0.45) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08) !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    z-index: 1000 !important;
+    box-sizing: content-box !important;
+  }
+
+  .bottom-bar-item {
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    padding: 3px 6px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: #555 !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition:
+      transform 0.15s ease,
+      opacity 0.15s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    min-width: 52px !important;
+  }
+
+  .bottom-bar-item:active {
+    transform: scale(0.9) !important;
+    opacity: 0.8 !important;
+  }
+
+  .bottom-bar-icon {
+    font-size: 21px !important;
+    line-height: 1 !important;
+    position: relative !important;
+    display: inline-block !important;
+  }
+
+  .bottom-bar-label {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin-top: 3px !important;
+    color: #666 !important;
+    white-space: nowrap !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* Центральная акцентная кнопка «Добавить фото» (приподнятая) */
+  .bottom-bar-item.center-action {
+    position: relative !important;
+    margin-top: -16px !important;
+  }
+
+  .center-action-btn {
     width: 48px !important;
     height: 48px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #ff69b4, #ff1493) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 16px rgba(255, 20, 147, 0.4) !important;
+    border: 3px solid #ffffff !important;
+    color: #ffffff !important;
     font-size: 22px !important;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease !important;
+  }
+
+  .center-action:active .center-action-btn {
+    transform: scale(0.92) !important;
+    box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3) !important;
+  }
+
+  .center-action .bottom-bar-label {
+    color: #ff1493 !important;
+    font-weight: 700 !important;
+    margin-top: 2px !important;
+  }
+
+  /* Бейдж на кнопке «В этот день» */
+  .bottom-bar-badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -8px !important;
+    background: #ff1493 !important;
+    color: #fff !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    padding: 1px 5px !important;
+    border-radius: 10px !important;
+    border: 1.5px solid #fff !important;
+    line-height: 1.2 !important;
   }
 
   /* Карточка «В этот день» ниже Dynamic Island и с правильной геометрией */
@@ -584,12 +671,26 @@ textarea {
     margin-top: 4px !important;
   }
 
-  /* Кнопки масштабирования карты подняты выше плавающих FAB-кнопок */
+  /* Кнопки масштабирования карты подняты на середину высоты экрана справа */
   .leaflet-bottom.leaflet-right {
-    bottom: calc(
-      max(16px, env(safe-area-inset-bottom, 16px)) + 140px
-    ) !important;
-    right: max(12px, env(safe-area-inset-right, 12px)) !important;
+    bottom: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    right: 12px !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .leaflet-bottom.leaflet-right .leaflet-control {
+    pointer-events: auto !important;
+    margin: 0 !important;
+  }
+
+  .leaflet-bar a {
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    font-size: 24px !important;
   }
 
   .gallery {

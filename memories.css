@@ -235,13 +235,6 @@ button,
   transform: scale(0.95);
 }
 
-.fab-btn.active {
-  background: linear-gradient(135deg, #ff416c, #ff4b2b);
-  border-color: #ffffff;
-  box-shadow: 0 0 20px rgba(255, 65, 108, 0.7);
-  transform: scale(1.08);
-}
-
 .fab-badge {
   position: absolute;
   top: -3px;
@@ -584,10 +577,57 @@ button,
 }
 
 /* Utility */
-.hidden {
+.leaflet-control-attribution {
   display: none !important;
 }
 
-.leaflet-control-attribution {
-  display: none !important;
+/* Mobile Bottom Bar: скрыта на десктопе */
+.mobile-bottom-bar {
+  display: none;
+}
+
+/* Кастомный стиль кнопок зума Leaflet в нежном стиле сайта */
+.leaflet-bar {
+  border: none !important;
+  box-shadow:
+    0 4px 18px rgba(255, 105, 180, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1.5px solid rgba(255, 182, 193, 0.55) !important;
+}
+
+.leaflet-bar a {
+  background-color: transparent !important;
+  color: #ff3377 !important;
+  width: 38px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-bottom: 1px solid rgba(255, 182, 193, 0.35) !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom: none !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: rgba(255, 182, 193, 0.2) !important;
+  color: #d81b60 !important;
+}
+
+.leaflet-bar a:active {
+  background-color: rgba(255, 105, 180, 0.22) !important;
+  color: #ad1457 !important;
+  transform: scale(0.95);
 }
