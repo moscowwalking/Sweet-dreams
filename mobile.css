@@ -74,13 +74,12 @@ textarea {
 
   /* --- index.html (Главная страница) --- */
   html.landing-html {
-    background: #000000 url("image/kreed_main.jpg") no-repeat center bottom !important;
+    background: #000000 url("image/kreed_main.jpg") no-repeat center center !important;
     background-size: cover !important;
     background-color: #000000 !important;
     height: 100% !important;
     min-height: 100% !important;
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
+    min-height: 100vh !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
   }
@@ -88,17 +87,15 @@ textarea {
   body.landing {
     padding: 0 !important;
     margin: 0 !important;
+    height: 100% !important;
     min-height: 100% !important;
     min-height: 100vh !important;
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
-    height: 100% !important;
-    height: 100dvh !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
-    background: #000000 url("image/kreed_main.jpg") no-repeat center bottom !important;
+    background: #000000 url("image/kreed_main.jpg") no-repeat center center !important;
     background-size: cover !important;
     background-color: #000000 !important;
+    position: relative !important;
   }
 
   body.landing::before {
@@ -106,12 +103,9 @@ textarea {
   }
 
   body.landing .overlay {
+    height: 100% !important;
     min-height: 100% !important;
     min-height: 100vh !important;
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
-    height: 100% !important;
-    height: 100dvh !important;
     padding-top: max(80px, calc(env(safe-area-inset-top) + 60px)) !important;
     padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
     padding-left: max(12px, env(safe-area-inset-left)) !important;
