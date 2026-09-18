@@ -141,12 +141,18 @@ export function notifyNewPhotoUploaded(placeId = null) {
 export async function checkDailyTriggers(forced = false) {
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  const mskTime = now.toLocaleTimeString("ru-RU", { timeZone: "Europe/Moscow" });
-  console.log(`⏰ [${mskTime} МСК] Запущена проверка ежедневных триггеров (forced=${forced})...`);
+  const mskTime = now.toLocaleTimeString("ru-RU", {
+    timeZone: "Europe/Moscow",
+  });
+  console.log(
+    `⏰ [${mskTime} МСК] Запущена проверка ежедневных триггеров (forced=${forced})...`,
+  );
 
   // Защита от повторной отправки в течение дня (если не forced)
   if (!forced && lastDailyCheckDate === todayStr) {
-    console.log(`ℹ️ [${mskTime} МСК] Проверка уже выполнялась сегодня (${todayStr}), пропускаем.`);
+    console.log(
+      `ℹ️ [${mskTime} МСК] Проверка уже выполнялась сегодня (${todayStr}), пропускаем.`,
+    );
     return { skipped: true, reason: "Already checked today" };
   }
 
