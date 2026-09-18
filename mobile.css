@@ -431,9 +431,11 @@ textarea {
     width: 100% !important;
     height: 100% !important;
     min-height: 100% !important;
+    min-height: 100vh !important;
     display: block !important;
     overscroll-behavior: none !important;
     background: transparent !important;
+    position: relative !important;
   }
 
   body.memories-page .title {
@@ -495,9 +497,9 @@ textarea {
     display: none !important;
   }
 
-  /* Нижняя панель действий (iOS Glassmorphism Tab Bar) */
+  /* Нижняя панель действий (iOS Glassmorphism Tab Bar Footer) */
   .mobile-bottom-bar {
-    position: fixed !important;
+    position: absolute !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;

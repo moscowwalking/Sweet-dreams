@@ -33,8 +33,8 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="memories.css?v=2.8" />
-    <link rel="stylesheet" href="mobile.css?v=2.8" />
+    <link rel="stylesheet" href="memories.css?v=3.0" />
+    <link rel="stylesheet" href="mobile.css?v=3.0" />
   </head>
   <body class="memories-page">
     <h1 class="title">
@@ -123,8 +123,8 @@
       </div>
     </div>
 
-    <!-- Mobile Bottom Action Bar (Только для телефонов) -->
-    <nav class="mobile-bottom-bar" id="mobileBottomBar">
+    <!-- Mobile Bottom Action Bar (Footer) -->
+    <footer class="mobile-bottom-bar" id="mobileBottomBar">
       <a href="index.html" class="bottom-bar-item" title="На главную">
         <span class="bottom-bar-icon">🏠</span>
         <span class="bottom-bar-label">Главная</span>
@@ -191,7 +191,7 @@
         <span class="bottom-bar-icon">🗺️</span>
         <span class="bottom-bar-label">Обзор</span>
       </button>
-    </nav>
+    </footer>
 
     <!-- Nostalgia Card ("В этот день...") -->
     <div class="nostalgia-card" id="nostalgiaCard">
@@ -231,6 +231,7 @@
         </button>
       </div>
     </div>
+
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
