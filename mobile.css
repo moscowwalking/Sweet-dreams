@@ -421,6 +421,7 @@ textarea {
     height: 100dvh !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
+    background: #ffffff !important;
   }
 
   body.memories-page {
@@ -432,6 +433,7 @@ textarea {
     height: 100dvh !important;
     display: block !important;
     overscroll-behavior: none !important;
+    background: transparent !important;
   }
 
   body.memories-page .title {
