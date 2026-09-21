@@ -1268,15 +1268,10 @@ const PushNotificationManager = {
   swRegistration: null,
 
   async init() {
-    if (!this.bellBtn) return;
-
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       console.log("ℹ️ Push notifications не поддерживаются данным браузером");
-      this.bellBtn.style.display = "none";
       return;
     }
-
-    this.bellBtn.style.display = "flex";
 
     try {
       this.swRegistration = await navigator.serviceWorker.ready;
@@ -1284,27 +1279,36 @@ const PushNotificationManager = {
         await this.swRegistration.pushManager.getSubscription();
 
       if (subscription) {
-        this.updateUI(true);
+        this.isSubscribed = true;
         // Фоновая синхронизация: гарантируем актуальность токена в Firestore
         this.syncToServer(subscription);
       } else {
-        this.updateUI(false);
-        // Если разрешение уже выдано ранее (например, при переустановке PWA),
-        // пробуем автоматически подписаться в фоне
+        this.isSubscribed = false;
+        // Если разрешение уже выдано (например, при переустановке PWA),
+        // автоматически подписываемся в фоне без необходимости нажимать кнопки!
         if (Notification.permission === "granted") {
           this.subscribe({ silent: true }).catch((err) =>
-            console.log("ℹ️ Auto-resubscribe deferred to user click:", err),
+            console.log("ℹ️ Auto-resubscribe background:", err),
           );
         }
       }
+
+      // Проверка параметра URL ?testPush=true для быстрой проверки пушей
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("testPush") === "true") {
+        setTimeout(() => {
+          this.sendTestNotification();
+        }, 1500);
+      }
     } catch (err) {
       console.warn("⚠️ PushNotificationManager init error:", err);
-      this.updateUI(false);
     }
 
-    this.bellBtn.addEventListener("click", () => {
-      this.handleClick();
-    });
+    if (this.bellBtn) {
+      this.bellBtn.addEventListener("click", () => {
+        this.handleClick();
+      });
+    }
   },
 
   updateUI(active) {

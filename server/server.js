@@ -33,8 +33,12 @@ app.use("/", placesRoutes);
 app.use("/", inviteRoutes);
 app.use("/", notificationsRoutes);
 
-// --- Health check ---
+// --- Health check (Keep-alive ping) ---
 app.get("/health", (req, res) => {
+  const mskTime = new Date().toLocaleTimeString("ru-RU", {
+    timeZone: "Europe/Moscow",
+  });
+  console.log(`💓 [${mskTime} МСК] Keep-alive ping (/health)`);
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

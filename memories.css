@@ -255,7 +255,7 @@ button,
 }
 
 .notification-btn-fab {
-  position: relative;
+  display: none !important;
 }
 
 .notification-btn-fab.is-active::after {
