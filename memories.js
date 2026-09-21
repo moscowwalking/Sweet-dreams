@@ -1272,39 +1272,108 @@ const PushNotificationManager = {
 
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       console.log("ℹ️ Push notifications не поддерживаются данным браузером");
-      if (this.bellBtn) this.bellBtn.style.display = "none";
+      this.bellBtn.style.display = "none";
       return;
     }
+
+    this.bellBtn.style.display = "flex";
 
     try {
       this.swRegistration = await navigator.serviceWorker.ready;
       const subscription =
         await this.swRegistration.pushManager.getSubscription();
 
-      // Если пользователь уже подписан или уже выдал разрешение — скрываем кнопку,
-      // чтобы она не занимала место на экране!
-      if (subscription || Notification.permission === "granted") {
-        this.isSubscribed = true;
-        if (this.bellBtn) this.bellBtn.style.display = "none";
-        return;
+      if (subscription) {
+        this.updateUI(true);
+        // Фоновая синхронизация: гарантируем актуальность токена в Firestore
+        this.syncToServer(subscription);
+      } else {
+        this.updateUI(false);
+        // Если разрешение уже выдано ранее (например, при переустановке PWA),
+        // пробуем автоматически подписаться в фоне
+        if (Notification.permission === "granted") {
+          this.subscribe({ silent: true }).catch((err) =>
+            console.log("ℹ️ Auto-resubscribe deferred to user click:", err),
+          );
+        }
       }
-
-      // Если еще не подписан — показываем колокольчик для разового нажатия
-      if (this.bellBtn) this.bellBtn.style.display = "flex";
-
-      this.bellBtn?.addEventListener("click", () => {
-        this.subscribe();
-      });
     } catch (err) {
       console.warn("⚠️ PushNotificationManager init error:", err);
+      this.updateUI(false);
+    }
+
+    this.bellBtn.addEventListener("click", () => {
+      this.handleClick();
+    });
+  },
+
+  updateUI(active) {
+    if (!this.bellBtn) return;
+    this.isSubscribed = !!active;
+    if (active) {
+      this.bellBtn.classList.add("is-active");
+      this.bellBtn.classList.remove("is-inactive");
+      this.bellBtn.title = "Уведомления включены (нажми для проверки связи)";
+    } else {
+      this.bellBtn.classList.remove("is-active");
+      this.bellBtn.classList.add("is-inactive");
+      this.bellBtn.title = "Включить push-уведомления";
     }
   },
 
-  async subscribe() {
+  async handleClick() {
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone =
+      window.navigator.standalone ||
+      window.matchMedia("(display-mode: standalone)").matches;
+
+    // На iOS push-уведомления работают только если сайт добавлен на экран «Домой»
+    if (isIOS && !isStandalone) {
+      alert(
+        "На iPhone уведомления работают только из приложения с экрана «Домой».\n\nНажми в Safari кнопку «Поделиться» (квадрат со стрелкой вверх) ➔ «На экран Домой» и открой приложение оттуда! 📲",
+      );
+      return;
+    }
+
+    if (this.isSubscribed) {
+      const wantTest = confirm(
+        "Уведомления на этом устройстве уже включены! ❤️\n\nОтправить тестовое пуш-уведомление прямо сейчас для проверки?",
+      );
+      if (wantTest) {
+        await this.sendTestNotification();
+      }
+    } else {
+      await this.subscribe({ silent: false });
+    }
+  },
+
+  async syncToServer(subscription) {
     try {
+      await fetch(`${CONFIG.SERVER_URL}/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription }),
+      });
+      console.log("🔄 Push subscription синхронизирована с сервером");
+    } catch (e) {
+      console.warn("⚠️ Не удалось синхронизировать подписку:", e);
+    }
+  },
+
+  async subscribe(options = {}) {
+    const silent = !!options.silent;
+    try {
+      if (!this.swRegistration) {
+        this.swRegistration = await navigator.serviceWorker.ready;
+      }
+
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Разрешение на отправку уведомлений не было предоставлено.");
+        if (!silent) {
+          alert("Разрешение на отправку уведомлений не было предоставлено.");
+        }
+        this.updateUI(false);
         return;
       }
 
@@ -1318,39 +1387,43 @@ const PushNotificationManager = {
         applicationServerKey: convertedVapidKey,
       });
 
-      const saveRes = await fetch(`${CONFIG.SERVER_URL}/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription }),
-      });
+      await this.syncToServer(subscription);
 
-      if (saveRes.ok) {
-        this.isSubscribed = true;
-        console.log("✅ Успешно подписались на push-уведомления");
+      this.updateUI(true);
+      console.log("✅ Успешно подписались на push-уведомления");
 
-        // Показываем галочку и плавно навсегда скрываем кнопку
-        if (this.bellBtn) {
-          this.bellBtn.innerHTML = "✅";
-          this.bellBtn.style.background =
-            "linear-gradient(135deg, #4caf50, #43a047)";
-          this.bellBtn.style.color = "#fff";
-        }
-
-        setTimeout(() => {
-          if (this.bellBtn) {
-            this.bellBtn.style.transition =
-              "opacity 0.4s ease, transform 0.4s ease";
-            this.bellBtn.style.opacity = "0";
-            this.bellBtn.style.transform = "scale(0.3)";
-            setTimeout(() => {
-              this.bellBtn.style.display = "none";
-            }, 400);
-          }
-        }, 1000);
+      if (!silent) {
+        alert("Уведомления успешно включены! 🎉 Сейчас придет тестовый пуш.");
+        await this.sendTestNotification();
       }
     } catch (err) {
       console.error("❌ Ошибка при подписке на push:", err);
-      alert("Не удалось включить уведомления: " + (err.message || err));
+      this.updateUI(false);
+      if (!silent) {
+        alert("Не удалось включить уведомления: " + (err.message || err));
+      }
+    }
+  },
+
+  async sendTestNotification() {
+    try {
+      const res = await fetch(`${CONFIG.SERVER_URL}/send-test-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Sweet Dreams ❤️",
+          body: "Проверка связи! Пуш-уведомления работают отлично 💌",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        console.log("✅ Тестовый пуш отправлен сервером:", data);
+      } else {
+        alert("Ошибка сервера: " + (data.error || "Неизвестная ошибка"));
+      }
+    } catch (err) {
+      console.error("❌ Ошибка отправки теста:", err);
+      alert("Ошибка отправки тестового уведомления: " + err.message);
     }
   },
 };

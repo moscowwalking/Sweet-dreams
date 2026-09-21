@@ -488,7 +488,54 @@ textarea {
   }
 
   .floating-controls {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .floating-controls .random-memory-btn,
+  .floating-controls .nostalgia-btn-fab {
     display: none !important;
+  }
+
+  .notification-btn-fab {
+    display: flex !important;
+    position: fixed !important;
+    top: max(45px, calc(env(safe-area-inset-top, 0px) + 10px)) !important;
+    right: 14px !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 20px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(15px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(180%) !important;
+    border: 2px solid rgba(255, 105, 180, 0.4) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    color: #333 !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .notification-btn-fab.is-active::after {
+    top: 2px !important;
+    right: 2px !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+  }
+
+  .notification-btn-fab.is-inactive::after {
+    top: 2px !important;
+    right: 2px !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
   }
 
   /* Нижняя панель действий (iOS Glassmorphism Tab Bar Footer) */
