@@ -1620,8 +1620,8 @@ const PushNotificationManager = {
 // INITIALIZATION
 // =========================================================================
 function init() {
-  fetch(`${CONFIG.SERVER_URL}/update-caption`, {
-    method: "HEAD",
+  fetch(`${CONFIG.SERVER_URL}/health`, {
+    method: "GET",
     cache: "no-store",
   }).catch(() => {});
   Gallery.init();

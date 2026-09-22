@@ -12,6 +12,7 @@ import {
 } from "../services/s3Service.js";
 import { notifyNewPhotoUploaded } from "../services/notificationService.js";
 import { ENV } from "../config/env.js";
+import { requireApiKey } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -185,9 +186,9 @@ router.post("/update-caption", async (req, res) => {
 });
 
 /**
- * ALL /delete-place - Удаление места из Firestore и его файлов из S3
+ * ALL /delete-place - Удаление места из Firestore и его файлов из S3 (защищено API ключом)
  */
-router.all("/delete-place", async (req, res) => {
+router.all("/delete-place", requireApiKey, async (req, res) => {
   const id = req.query.id || req.body?.id;
   if (!id) {
     return res
@@ -258,9 +259,9 @@ router.all("/delete-place", async (req, res) => {
 });
 
 /**
- * GET /sync-places - Синхронизация базы Firestore с бакетом S3 (очистка битых ссылок)
+ * ALL /sync-places - Синхронизация базы Firestore с бакетом S3 (защищено API ключом)
  */
-router.get("/sync-places", async (req, res) => {
+router.all("/sync-places", requireApiKey, async (req, res) => {
   if (!ENV.YANDEX_BUCKET || !ENV.YANDEX_ACCESS_KEY) {
     return res
       .status(500)

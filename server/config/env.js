@@ -12,13 +12,10 @@ export const ENV = {
   UNISENDER_API_KEY: process.env.UNISENDER_API_KEY,
   FROM_EMAIL: process.env.FROM_EMAIL,
   TO_EMAIL: process.env.TO_EMAIL,
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || "oda2002@mail.ru",
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
-  VAPID_PUBLIC_KEY:
-    process.env.VAPID_PUBLIC_KEY ||
-    "BJwZf0TySoa8R2J9-DxyqwI4HW79mjFfwvP73LuQTqVZhVk_ZKA7-GHTitsFn4gdu2Dym11-uorAn7WIipdi05M",
-  VAPID_PRIVATE_KEY:
-    process.env.VAPID_PRIVATE_KEY ||
-    "Y02VgbbdulxtE4U5KYKx4eF28DsQLRIlZVNIsSooADI",
-  VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:oda2002@mail.ru",
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+  VAPID_SUBJECT: process.env.VAPID_SUBJECT,
+  API_SECRET_KEY: process.env.API_SECRET_KEY,
 };

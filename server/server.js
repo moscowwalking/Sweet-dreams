@@ -22,8 +22,8 @@ app.use(
       "http://localhost:3000",
       "http://127.0.0.1:3000",
     ],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "OPTIONS", "DELETE", "HEAD"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "X-Api-Key"],
   }),
 );
 app.use(bodyParser.json());
