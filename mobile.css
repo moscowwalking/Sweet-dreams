@@ -699,6 +699,12 @@ textarea {
     border-radius: 16px !important;
   }
 
+  .photo-container {
+    overflow: hidden !important;
+    touch-action: none !important;
+    position: relative !important;
+  }
+
   .gallery img {
     max-height: 52dvh !important;
     object-fit: contain !important;

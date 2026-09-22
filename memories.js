@@ -265,58 +265,239 @@ const Gallery = {
 
   currentPlace: null,
   currentIndex: 0,
+  scale: 1,
+  translateX: 0,
+  translateY: 0,
+
+  applyTransform(animate = false) {
+    if (!this.main) return;
+    if (animate) {
+      this.main.style.transition =
+        "transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)";
+    } else {
+      this.main.style.transition = "none";
+    }
+    this.main.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+  },
+
+  resetZoom(animate = false) {
+    this.scale = 1;
+    this.translateX = 0;
+    this.translateY = 0;
+    this.applyTransform(animate);
+  },
+
+  clampBounds(container) {
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const maxPanX = Math.max(0, (rect.width * this.scale - rect.width) / 2);
+    const maxPanY = Math.max(0, (rect.height * this.scale - rect.height) / 2);
+    this.translateX = Math.max(-maxPanX, Math.min(maxPanX, this.translateX));
+    this.translateY = Math.max(-maxPanY, Math.min(maxPanY, this.translateY));
+  },
 
   init() {
     this.closeBtn.onclick = () => this.close();
 
-    // Поддержка свайпов фото на мобильных устройствах
+    const photoContainer = this.main.parentElement;
+    if (!photoContainer) return;
+
     let touchStartX = 0;
     let touchStartY = 0;
-    const photoContainer = this.main.parentElement;
+    let startTranslateX = 0;
+    let startTranslateY = 0;
+    let initialDistance = 0;
+    let startScale = 1;
+    let isPinching = false;
+    let isPanning = false;
+    let lastTapTime = 0;
 
-    if (photoContainer) {
-      photoContainer.addEventListener(
-        "touchstart",
-        (e) => {
-          if (e.touches.length === 1) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
+    // --- TOUCH START ---
+    photoContainer.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length === 2) {
+          // Pinch-to-zoom (2 пальца)
+          isPinching = true;
+          isPanning = false;
+          initialDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY,
+          );
+          startScale = this.scale;
+        } else if (e.touches.length === 1) {
+          isPinching = false;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          startTranslateX = this.translateX;
+          startTranslateY = this.translateY;
+
+          // Проверка Double Tap (двойной быстрый тап для зума как на iPhone)
+          const now = Date.now();
+          if (now - lastTapTime < 300) {
+            lastTapTime = 0;
+            if (this.scale > 1.2) {
+              this.resetZoom(true);
+            } else {
+              const rect = this.main.getBoundingClientRect();
+              const tapX = e.touches[0].clientX - rect.left - rect.width / 2;
+              const tapY = e.touches[0].clientY - rect.top - rect.height / 2;
+              this.scale = 2.5;
+              this.translateX = -tapX * 1.5;
+              this.translateY = -tapY * 1.5;
+              this.clampBounds(photoContainer);
+              this.applyTransform(true);
+            }
+            return;
           }
-        },
-        { passive: true },
-      );
+          lastTapTime = now;
 
-      photoContainer.addEventListener(
-        "touchend",
-        (e) => {
-          if (!touchStartX) return;
+          if (this.scale > 1.05) {
+            isPanning = true;
+          }
+        }
+      },
+      { passive: false },
+    );
+
+    // --- TOUCH MOVE ---
+    photoContainer.addEventListener(
+      "touchmove",
+      (e) => {
+        if (e.touches.length === 2 && isPinching) {
+          // Активный Pinch двумя пальцами (блокируем зум всей страницы браузера)
+          e.preventDefault();
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY,
+          );
+          if (initialDistance > 0) {
+            const factor = currentDistance / initialDistance;
+            let newScale = startScale * factor;
+            // Мягкое ограничение от 0.75x до 4.5x
+            newScale = Math.max(0.75, Math.min(newScale, 4.5));
+            this.scale = newScale;
+            this.applyTransform(false);
+          }
+        } else if (e.touches.length === 1 && isPanning && this.scale > 1.05) {
+          // Перемещение увеличенного фото (Pan одним пальцем)
+          e.preventDefault();
+          const dx = e.touches[0].clientX - touchStartX;
+          const dy = e.touches[0].clientY - touchStartY;
+          this.translateX = startTranslateX + dx;
+          this.translateY = startTranslateY + dy;
+          this.clampBounds(photoContainer);
+          this.applyTransform(false);
+        } else if (e.touches.length === 1 && this.scale <= 1.05) {
+          // Обычный масштаб: потягивание вниз для закрытия модалки
+          const dy = e.touches[0].clientY - touchStartY;
+          const dx = e.touches[0].clientX - touchStartX;
+          if (dy > 15 && Math.abs(dy) > Math.abs(dx)) {
+            e.preventDefault();
+            this.translateY = dy * 0.75;
+            this.scale = Math.max(0.85, 1 - dy / 800);
+            this.applyTransform(false);
+          }
+        }
+      },
+      { passive: false },
+    );
+
+    // --- TOUCH END ---
+    photoContainer.addEventListener(
+      "touchend",
+      (e) => {
+        if (isPinching) {
+          isPinching = false;
+          if (this.scale < 1.05) {
+            this.resetZoom(true);
+          } else if (this.scale > 4) {
+            this.scale = 4;
+            this.clampBounds(photoContainer);
+            this.applyTransform(true);
+          } else {
+            this.clampBounds(photoContainer);
+            this.applyTransform(true);
+          }
+          return;
+        }
+
+        if (isPanning) {
+          isPanning = false;
+          this.clampBounds(photoContainer);
+          this.applyTransform(true);
+          return;
+        }
+
+        // Если фото в обычном масштабе — обрабатываем свайпы
+        if (this.scale <= 1.05 && touchStartX) {
           const touchEndX = e.changedTouches[0].clientX;
           const touchEndY = e.changedTouches[0].clientY;
           const diffX = touchEndX - touchStartX;
           const diffY = touchEndY - touchStartY;
 
-          if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+          // Свайп вниз (Swipe to close)
+          if (diffY > 80 && Math.abs(diffY) > Math.abs(diffX)) {
+            this.close();
+          } else if (
+            Math.abs(diffX) > 40 &&
+            Math.abs(diffX) > Math.abs(diffY)
+          ) {
+            // Свайп влево/вправо (Next/Prev)
             if (diffX < 0) {
               this.nextPhoto();
             } else {
               this.prevPhoto();
             }
+          } else {
+            // Если не дотянули свайп вниз — плавно пружиним на место
+            this.resetZoom(true);
           }
-          touchStartX = 0;
-          touchStartY = 0;
-        },
-        { passive: true },
-      );
-    }
+        }
+        touchStartX = 0;
+        touchStartY = 0;
+      },
+      { passive: true },
+    );
+
+    // Desktop: зум колесиком мыши
+    photoContainer.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.25 : -0.25;
+        let newScale = this.scale + delta;
+        newScale = Math.max(1, Math.min(newScale, 4));
+        this.scale = newScale;
+        if (this.scale === 1) {
+          this.translateX = 0;
+          this.translateY = 0;
+        } else {
+          this.clampBounds(photoContainer);
+        }
+        this.applyTransform(true);
+      },
+      { passive: false },
+    );
+
+    // Клавиатура: Escape для закрытия, стрелки влево/вправо
+    document.addEventListener("keydown", (e) => {
+      if (this.overlay.style.display !== "flex") return;
+      if (e.key === "Escape") this.close();
+      if (e.key === "ArrowRight") this.nextPhoto();
+      if (e.key === "ArrowLeft") this.prevPhoto();
+    });
   },
 
   nextPhoto() {
+    this.resetZoom(false);
     if (!this.photoList || this.photoList.length <= 1) return;
     const nextIdx = (this.currentIndex + 1) % this.photoList.length;
     this.showPhoto(nextIdx);
   },
 
   prevPhoto() {
+    this.resetZoom(false);
     if (!this.photoList || this.photoList.length <= 1) return;
     const prevIdx =
       (this.currentIndex - 1 + this.photoList.length) % this.photoList.length;
@@ -362,11 +543,13 @@ const Gallery = {
       this.thumbs.style.display = "none";
     }
 
+    this.resetZoom(false);
     this.showPhoto(initialIndex);
     this.overlay.style.display = "flex";
   },
 
   showPhoto(index) {
+    this.resetZoom(false);
     this.currentIndex = index;
     const photo = this.photoList[index];
     if (!photo) return;
@@ -387,6 +570,7 @@ const Gallery = {
   },
 
   close() {
+    this.resetZoom(false);
     this.overlay.style.display = "none";
     this.main.src = "";
   },
