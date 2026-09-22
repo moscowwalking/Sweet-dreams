@@ -1,8 +1,8 @@
-# S3 Management sensitive links
+# Local documentation
+docs/
+PROJECT_ROADMAP.md
 S3_MANAGEMENT.md
 s3_management.md
-s3_managment.md
-S3_MANAGMENT.md
 
 # Node & Environment
 node_modules/
