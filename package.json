@@ -1,0 +1,33 @@
+{
+  "name": "sweet-dreams",
+  "version": "1.0.0",
+  "main": "memories.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0",
+    "playwright-core": "^1.63.0",
+    "undici-types": "^8.9.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2"
+  },
+  "scripts": {
+    "test": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moscowwalking/Sweet-dreams.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/moscowwalking/Sweet-dreams/issues"
+  },
+  "homepage": "https://github.com/moscowwalking/Sweet-dreams#readme",
+  "description": ""
+}
