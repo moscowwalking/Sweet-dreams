@@ -1,0 +1,41 @@
+name: testing_ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Проверка синтаксиса и сборки
+    runs-on: ubuntu-latest
+    steps:
+      - name: клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "server/package-lock.json"
+
+      - name: Установка зависимостей (npm install)
+        run: |
+          cd server
+          npm install
+
+      - name: Проверка синтаксиса файлов
+        run: |
+          echo "Проверяем клиентский код"
+          node -c memories.js
+          node -c sw.js
+          echo "Проверяем серверный код"
+          node -c server/server.js
+          node -c server/config/env.js
+          node -c server/routes/places.js
+          node -c server/routes/notifications.js
+          node -c server/routes/health.js
+          node -c server/routes/invite.js
+          node -c server/middlewares/auth.js
+          echo "Синтаксис корректо"
