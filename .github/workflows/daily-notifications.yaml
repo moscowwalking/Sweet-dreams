@@ -1,0 +1,31 @@
+name: Daily Notifications & Server Wakeup
+
+on:
+  schedule:
+    # 06:55 UTC = 09:55 MSK (Пробуждение спящего сервера на Render)
+    - cron: "55 6 * * *"
+    # 07:02 UTC = 10:02 MSK (Проверка и отправка пуш-уведомлений)
+    - cron: "2 7 * * *"
+  workflow_dispatch: # Позволяет запустить вручную одной кнопкой в GitHub Actions
+
+jobs:
+  daily-trigger:
+    name: Пробуждение и нотификации
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Пробуждение Render (GET /health)
+        run: |
+          echo "⏰ [09:55 / 10:02] Пингуем /health для пробуждения сервера Render..."
+          curl -i -s --retry 3 --retry-delay 10 --max-time 45 \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            https://sweet-dreams-f8nc.onrender.com/health || true
+          echo "✅ Проверка доступности сервера завершена"
+
+      - name: 2. Проверка и отправка уведомлений (в 10:02 МСК или при ручном запуске)
+        if: github.event.schedule == '2 7 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "📬 Запускаем проверку ежедневных событий и годовщин..."
+          RESPONSE=$(curl -s -X POST \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            https://sweet-dreams-f8nc.onrender.com/check-daily-notifications)
+          echo "Ответ сервера: $RESPONSE"
