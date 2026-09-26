@@ -154,7 +154,7 @@ self.addEventListener("push", (event) => {
     badge: "./image/icon-192.png",
     data: data.data || { url: "./memories.html" },
     vibrate: [200, 100, 200],
-    tag: "sweet-dreams-notification",
+    tag: data.tag || data.data?.tag || "sweet-dreams-notification",
     renotify: true,
   };
 

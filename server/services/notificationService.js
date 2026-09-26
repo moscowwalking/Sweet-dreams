@@ -140,12 +140,33 @@ export function notifyNewPhotoUploaded(placeId = null) {
  */
 export async function checkDailyTriggers(forced = false) {
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  const mskTime = now.toLocaleTimeString("ru-RU", {
+
+  // Получаем текущие компоненты даты и времени по московскому времени (Europe/Moscow)
+  const mskFormatter = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
   });
+
+  const parts = Object.fromEntries(
+    mskFormatter.formatToParts(now).map((p) => [p.type, p.value]),
+  );
+
+  const curYear = parseInt(parts.year, 10);
+  const curMonth = parseInt(parts.month, 10) - 1; // 0-indexed (0 = Jan, 7 = Aug, 8 = Sep)
+  const curDay = parseInt(parts.day, 10);
+  const isSaturday = parts.weekday === "Sat";
+  const todayStr = `${curYear}-${parts.month}-${parts.day}`;
+  const mskTime = `${parts.hour}:${parts.minute}:${parts.second}`;
+
   console.log(
-    `⏰ [${mskTime} МСК] Запущена проверка ежедневных триггеров (forced=${forced})...`,
+    `⏰ [${mskTime} МСК] Запущена проверка ежедневных триггеров (forced=${forced}, date=${todayStr})...`,
   );
 
   // Защита от повторной отправки в течение дня (если не forced)
@@ -157,21 +178,31 @@ export async function checkDailyTriggers(forced = false) {
   }
 
   lastDailyCheckDate = todayStr;
-  const curDay = now.getDate();
-  const curMonth = now.getMonth();
-  const curYear = now.getFullYear();
 
-  // 1. Проверка круглых дат (каждые 100 дней)
-  const diffTime = now.getTime() - RELATIONSHIP_START.getTime();
-  const daysTogether = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Расчет количества дней отношений по календарным дням (день старта 23.08.2025 считается как 1-й день)
+  const startUtc = Date.UTC(
+    RELATIONSHIP_START.getFullYear(),
+    RELATIONSHIP_START.getMonth(),
+    RELATIONSHIP_START.getDate(),
+  );
+  const currentUtc = Date.UTC(curYear, curMonth, curDay);
+  const daysTogether =
+    Math.round((currentUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1;
 
+  const triggered = [];
+
+  // 1. Проверка круглых дат (каждые 100 дней: 100, 200, 300, 400 и т.д.)
   if (daysTogether > 0 && daysTogether % 100 === 0) {
+    console.log(
+      `🎉 [${mskTime} МСК] Сработал юбилей отношений: ровно ${daysTogether} дней!`,
+    );
     await sendNotificationToAll({
       title: "Сладкий юбилей! 🎉❤️",
       body: `Сегодня ровно ${daysTogether} дней наших отношений! Загляни на карту 🥂`,
-      data: { url: "./memories.html" },
+      tag: `milestone-${daysTogether}`,
+      data: { url: "./memories.html", tag: `milestone-${daysTogether}` },
     });
-    return { triggered: "milestone_100_days", daysTogether };
+    triggered.push({ type: "milestone_100_days", daysTogether });
   }
 
   // 2. Проверка годовщины (23 августа каждого года)
@@ -182,12 +213,15 @@ export async function checkDailyTriggers(forced = false) {
     const years = curYear - RELATIONSHIP_START.getFullYear();
     if (years > 0) {
       const yearWord = years === 1 ? "год" : years < 5 ? "года" : "лет";
+      console.log(`🥂 [${mskTime} МСК] Сработала годовщина: ${years} ${yearWord}!`);
+      if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
       await sendNotificationToAll({
         title: "С годовщиной любимые! 🥂❤️",
         body: `Сегодня ровно ${years} ${yearWord} нашим отношениям!`,
-        data: { url: "./memories.html" },
+        tag: `anniversary-${years}`,
+        data: { url: "./memories.html", tag: `anniversary-${years}` },
       });
-      return { triggered: "anniversary", years };
+      triggered.push({ type: "anniversary", years });
     }
   }
 
@@ -203,16 +237,16 @@ export async function checkDailyTriggers(forced = false) {
         const place = doc.data();
         let pDate = null;
         if (place.exifDate) {
-          const parts = place.exifDate.split(".");
-          if (parts.length === 3) {
+          const partsExif = place.exifDate.split(".");
+          if (partsExif.length === 3) {
             const y =
-              parseInt(parts[2], 10) < 100
-                ? 2000 + parseInt(parts[2], 10)
-                : parseInt(parts[2], 10);
+              parseInt(partsExif[2], 10) < 100
+                ? 2000 + parseInt(partsExif[2], 10)
+                : parseInt(partsExif[2], 10);
             pDate = new Date(
               y,
-              parseInt(parts[1], 10) - 1,
-              parseInt(parts[0], 10),
+              parseInt(partsExif[1], 10) - 1,
+              parseInt(partsExif[0], 10),
             );
           }
         } else if (place.timestamp) {
@@ -234,12 +268,20 @@ export async function checkDailyTriggers(forced = false) {
       if (matchPhoto) {
         const word =
           matchYearsAgo === 1 ? "год" : matchYearsAgo < 5 ? "года" : "лет";
+        console.log(
+          `📸 [${mskTime} МСК] Сработала ностальгия: фото ${matchYearsAgo} ${word} назад`,
+        );
+        if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
         await sendNotificationToAll({
           title: "В этот день... 📸",
           body: `В этот день ровно ${matchYearsAgo === 1 ? "год" : `${matchYearsAgo} ${word}`} назад... Посмотрим? ✨`,
-          data: { url: "./memories.html?autoOpenNostalgia=true" },
+          tag: `nostalgia-${matchYearsAgo}`,
+          data: {
+            url: "./memories.html?autoOpenNostalgia=true",
+            tag: `nostalgia-${matchYearsAgo}`,
+          },
         });
-        return { triggered: "nostalgia", yearsAgo: matchYearsAgo };
+        triggered.push({ type: "nostalgia", yearsAgo: matchYearsAgo });
       }
     } catch (err) {
       console.warn("⚠️ Ошибка проверки воспоминаний для пуша:", err.message);
@@ -247,15 +289,33 @@ export async function checkDailyTriggers(forced = false) {
   }
 
   // 4. По субботам: «Случайное тёплое воспоминание»
-  if (now.getDay() === 6) {
+  if (isSaturday) {
+    console.log(
+      `☕ [${mskTime} МСК] Сработал субботний триггер случайного воспоминания`,
+    );
+    if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
     await sendNotificationToAll({
       title: "Тёплое воспоминание ☕✨",
       body: "Теплое воспоминание! Загляни на карту 💕",
-      data: { url: "./memories.html?randomMemory=true" },
+      tag: "saturday_random_memory",
+      data: {
+        url: "./memories.html?randomMemory=true",
+        tag: "saturday_random_memory",
+      },
     });
-    return { triggered: "saturday_random_memory" };
+    triggered.push({ type: "saturday_random_memory" });
   }
 
-  console.log(`ℹ️ [${mskTime} МСК] Событий на сегодня нет (triggered: none)`);
-  return { triggered: "none" };
+  if (triggered.length === 0) {
+    console.log(
+      `ℹ️ [${mskTime} МСК] Событий на сегодня нет (triggered: none, daysTogether: ${daysTogether})`,
+    );
+    return { triggered: "none", daysTogether };
+  }
+
+  return {
+    triggered: triggered.map((t) => t.type).join(", "),
+    events: triggered,
+    daysTogether,
+  };
 }

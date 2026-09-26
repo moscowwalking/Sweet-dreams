@@ -676,8 +676,19 @@ const LoveCounter = {
 
     const startDate = CONFIG.RELATIONSHIP.startDate;
     const today = new Date();
-    const diffTime = Math.abs(today - startDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Полные календарные дни: старт (23.08.2025) считается как 1-й день отношений
+    const startUtc = Date.UTC(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate(),
+    );
+    const todayUtc = Date.UTC(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const diffDays =
+      Math.round((todayUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1;
 
     this.daysEl.textContent = diffDays;
 
