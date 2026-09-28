@@ -1276,6 +1276,22 @@ const DataLoader = {
     if (this.isLoading) return;
     this.isLoading = true;
 
+    // 0. МГНОВЕННЫЙ СТАРТ: Сразу отображаем данные из локального кэша, если они есть!
+    const cached = localStorage.getItem(CONFIG.CACHE.PLACES_KEY);
+    if (cached) {
+      try {
+        const cachedPlaces = JSON.parse(cached);
+        if (Array.isArray(cachedPlaces) && cachedPlaces.length > 0) {
+          console.log(
+            `⚡ [МГНОВЕННО] Отрисовано ${cachedPlaces.length} мест из кэша!`,
+          );
+          this.processData(cachedPlaces);
+        }
+      } catch (e) {
+        console.warn("⚠️ Ошибка парсинга кэша:", e);
+      }
+    }
+
     // 1. Если Firebase SDK уже загружен
     if (window.FirebaseFirestore) {
       this.subscribeFirestore();
@@ -1344,7 +1360,13 @@ const DataLoader = {
   async loadFallback() {
     console.log("📥 Loading places (fallback from server)...");
     try {
-      const res = await fetch(`${CONFIG.SERVER_URL}/places`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 сек максимум на ожидание Render
+      const res = await fetch(`${CONFIG.SERVER_URL}/places`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       localStorage.setItem(CONFIG.CACHE.PLACES_KEY, JSON.stringify(data));

@@ -1,11 +1,14 @@
-// sw.js - Service Worker для Sweet-dreams (v24)
-const STATIC_CACHE = "sweet-dreams-static-v24";
-const PHOTO_CACHE = "sweet-dreams-photos-v24";
+// sw.js - Service Worker для Sweet-dreams (v25 - Instant Fast Launch)
+const STATIC_CACHE = "sweet-dreams-static-v25";
+const PHOTO_CACHE = "sweet-dreams-photos-v25";
 
 const MAX_CACHED_PHOTOS = 200;
 
-// Предварительное кэширование стилей, манифеста и иконок PWA
+// Предварительное кэширование страниц, стилей, манифеста и иконок PWA
 const PRECACHE_ASSETS = [
+  "./",
+  "./index.html",
+  "./memories.html",
   "./style.css",
   "./mobile.css",
   "./memories.css",
@@ -92,7 +95,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. Игнорируем запросы к бэкенду и картам (прямо в сеть)
+  // 2. Игнорируем запросы к бэкенду Render и тайлам OpenStreetMap (напрямую в сеть)
   if (
     url.hostname.includes("onrender.com") ||
     url.hostname.includes("tile.openstreetmap")
@@ -100,39 +103,84 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. HTML и локальные файлы сайта - ВСЕГДА свежие из сети (Network-First)
+  // 3. HTML-страницы и навигация PWA — Stale-While-Revalidate (МГНОВЕННЫЙ старт без белого экрана!)
   if (
     event.request.method === "GET" &&
-    (event.request.mode === "navigate" || url.origin === self.location.origin)
+    (event.request.mode === "navigate" || url.pathname.endsWith(".html"))
   ) {
     event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          // Кэшируем только статические css/js, но не HTML
+      (async () => {
+        const cache = await caches.open(STATIC_CACHE);
+        const cachedResponse = await cache.match(event.request);
+
+        // Фоновый запрос в сеть за свежей версией страницы
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => null);
+
+        // Если страница уже есть в кэше — отдаем МГНОВЕННО (0 мс задержки, нет белого экрана!)
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // Если в кэше еще нет (первый вход) — ждем ответ из сети
+        const networkResponse = await fetchPromise;
+        if (networkResponse) return networkResponse;
+
+        // Если офлайн — запасная страница из кэша
+        return (
+          (await cache.match("./index.html")) ||
+          (await cache.match("./memories.html")) ||
+          new Response("Offline", { status: 503 })
+        );
+      })(),
+    );
+    return;
+  }
+
+  // 4. Локальные статические файлы и библиотеки (CSS, JS, иконки, Leaflet CDN) — Cache-First с фоновым обновлением
+  if (
+    event.request.method === "GET" &&
+    (url.origin === self.location.origin ||
+      url.hostname.includes("unpkg.com") ||
+      url.hostname.includes("jsdelivr.net"))
+  ) {
+    event.respondWith(
+      caches.open(STATIC_CACHE).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          // В фоне тихо обновляем кэш свежим ресурсом
+          fetch(event.request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                cache.put(event.request, networkResponse);
+              }
+            })
+            .catch(() => {});
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(event.request);
           if (
             networkResponse &&
-            networkResponse.status === 200 &&
-            !url.pathname.endsWith(".html") &&
-            event.request.mode !== "navigate"
+            (networkResponse.status === 200 ||
+              networkResponse.type === "opaque")
           ) {
-            const clone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then((cache) => {
-              cache.put(event.request, clone);
-            });
+            cache.put(event.request, networkResponse.clone());
           }
           return networkResponse;
-        })
-        .catch(async () => {
-          const cachedResponse = await caches.match(event.request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return new Response("Offline", {
-            status: 503,
-            headers: { "Content-Type": "text/plain" },
-          });
-        }),
+        } catch (err) {
+          return new Response("", { status: 408 });
+        }
+      }),
     );
+    return;
   }
 });
 
