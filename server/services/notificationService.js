@@ -161,7 +161,6 @@ export async function checkDailyTriggers(forced = false) {
   const curYear = parseInt(parts.year, 10);
   const curMonth = parseInt(parts.month, 10) - 1; // 0-indexed (0 = Jan, 7 = Aug, 8 = Sep)
   const curDay = parseInt(parts.day, 10);
-  const isSaturday = parts.weekday === "Sat";
   const todayStr = `${curYear}-${parts.month}-${parts.day}`;
   const mskTime = `${parts.hour}:${parts.minute}:${parts.second}`;
 
@@ -213,7 +212,9 @@ export async function checkDailyTriggers(forced = false) {
     const years = curYear - RELATIONSHIP_START.getFullYear();
     if (years > 0) {
       const yearWord = years === 1 ? "год" : years < 5 ? "года" : "лет";
-      console.log(`🥂 [${mskTime} МСК] Сработала годовщина: ${years} ${yearWord}!`);
+      console.log(
+        `🥂 [${mskTime} МСК] Сработала годовщина: ${years} ${yearWord}!`,
+      );
       if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
       await sendNotificationToAll({
         title: "С годовщиной любимые! 🥂❤️",
@@ -288,23 +289,21 @@ export async function checkDailyTriggers(forced = false) {
     }
   }
 
-  // 4. По субботам: «Случайное тёплое воспоминание»
-  if (isSaturday) {
-    console.log(
-      `☕ [${mskTime} МСК] Сработал субботний триггер случайного воспоминания`,
-    );
-    if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
-    await sendNotificationToAll({
-      title: "Тёплое воспоминание ☕✨",
-      body: "Теплое воспоминание! Загляни на карту 💕",
-      tag: "saturday_random_memory",
-      data: {
-        url: "./memories.html?randomMemory=true",
-        tag: "saturday_random_memory",
-      },
-    });
-    triggered.push({ type: "saturday_random_memory" });
-  }
+  // 4. Ежедневно: «Случайное тёплое воспоминание»
+  console.log(
+    `☕ [${mskTime} МСК] Сработал ежедневный триггер случайного воспоминания`,
+  );
+  if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
+  await sendNotificationToAll({
+    title: "Тёплое воспоминание ☕✨",
+    body: "Теплое воспоминание! Загляни на карту 💕",
+    tag: "daily_random_memory",
+    data: {
+      url: "./memories.html?randomMemory=true",
+      tag: "daily_random_memory",
+    },
+  });
+  triggered.push({ type: "daily_random_memory" });
 
   if (triggered.length === 0) {
     console.log(
