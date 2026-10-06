@@ -557,8 +557,20 @@ const Gallery = {
     const photoSrc = photo.origUrl || photo.thumbUrl || "";
     this.main.onerror = () => {
       this.main.alt = "Не удалось загрузить фото";
+      this.main.style.opacity = "1";
     };
-    this.main.src = photoSrc;
+
+    // Предотвращаем мелькание старого фото: скрываем до момента полной загрузки нового
+    if (this.main.src !== photoSrc) {
+      this.main.style.opacity = "0";
+      this.main.onload = () => {
+        this.main.style.opacity = "1";
+      };
+      this.main.src = photoSrc;
+    } else {
+      this.main.style.opacity = "1";
+    }
+
     this.placeTitle.textContent = photo.date || "Без даты";
 
     this.createCaptionElement(photo.caption);
@@ -573,6 +585,7 @@ const Gallery = {
     this.resetZoom(false);
     this.overlay.style.display = "none";
     this.main.src = "";
+    this.main.style.opacity = "1";
   },
 
   createCaptionElement(initialCaption) {
@@ -1271,6 +1284,7 @@ const MapOverview = {
 const DataLoader = {
   isLoading: false,
   allPlaces: [],
+  urlActionsHandled: false,
 
   async load() {
     if (this.isLoading) return;
@@ -1451,27 +1465,44 @@ const DataLoader = {
     // Инициализация "В этот день..."
     NostalgiaManager.init(this.allPlaces);
 
-    // Поддержка перехода из пуша "Случайное тёплое воспоминание"
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("randomMemory") === "true") {
-      setTimeout(() => {
-        RandomMemory.show();
-      }, 600);
-    }
+    // Поддержка перехода из пушей (выполняется строго 1 раз при первой отрисовке)
+    if (!this.urlActionsHandled) {
+      this.urlActionsHandled = true;
+      const urlParams = new URLSearchParams(window.location.search);
 
-    // Поддержка перехода из пуша о новых загруженных фото (карусель новых воспоминаний)
-    const recentUploadsParam = urlParams.get("recentUploads");
-    if (recentUploadsParam) {
-      setTimeout(() => {
-        const ids =
-          recentUploadsParam !== "true"
-            ? recentUploadsParam
-                .split(",")
-                .map((id) => decodeURIComponent(id.trim()))
-                .filter(Boolean)
-            : [];
-        NostalgiaManager.showRecentUploads(ids);
-      }, 500);
+      // 1. Поддержка перехода из пуша "Случайное тёплое воспоминание"
+      if (urlParams.get("randomMemory") === "true") {
+        setTimeout(() => {
+          RandomMemory.show();
+        }, 600);
+      }
+
+      // 2. Поддержка перехода из пуша о новых загруженных фото (карусель новых воспоминаний)
+      const recentUploadsParam = urlParams.get("recentUploads");
+      if (recentUploadsParam) {
+        setTimeout(() => {
+          const ids =
+            recentUploadsParam !== "true"
+              ? recentUploadsParam
+                  .split(",")
+                  .map((id) => decodeURIComponent(id.trim()))
+                  .filter(Boolean)
+              : [];
+          NostalgiaManager.showRecentUploads(ids);
+        }, 500);
+      }
+
+      // Очищаем параметры в адресной строке, чтобы они не вызывались повторно при обновлении данных
+      if (
+        urlParams.has("randomMemory") ||
+        urlParams.has("recentUploads") ||
+        urlParams.has("autoOpenNostalgia")
+      ) {
+        const cleanUrl =
+          window.location.pathname +
+          (window.location.hash ? window.location.hash : "");
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
     }
   },
 };

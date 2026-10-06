@@ -519,7 +519,8 @@ button,
 
 #galleryMain {
   transform-origin: center center;
-  will-change: transform;
+  will-change: transform, opacity;
+  transition: opacity 0.2s ease-in-out;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
