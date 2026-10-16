@@ -20,3 +20,6 @@ places.json
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Build artifacts
+dist/
