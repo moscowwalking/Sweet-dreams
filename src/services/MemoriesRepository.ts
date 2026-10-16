@@ -119,6 +119,31 @@ export class MemoriesRepository {
     };
   }
 
+  initRealtimeSync(): void {
+    const attachFirestore = () => {
+      const f = (typeof window !== "undefined" && (window as any).FirebaseFirestore);
+      if (f && f.db && f.collection && f.onSnapshot) {
+        try {
+          f.onSnapshot(f.collection(f.db, "places"), (snapshot: any) => {
+            const places: RawPlace[] = [];
+            snapshot.forEach((doc: any) => places.push(doc.data()));
+            this.syncExternalData(places);
+          });
+        } catch (e) {
+          console.warn("Firestore sync error:", e);
+        }
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      if ((window as any).FirebaseFirestore) {
+        attachFirestore();
+      } else {
+        window.addEventListener("firebase-ready", attachFirestore, { once: true });
+      }
+    }
+  }
+
   private populate(rawList: RawPlace[]): void {
     this.placesMap.clear();
     for (const raw of rawList) {

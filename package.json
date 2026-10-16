@@ -19,7 +19,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build:vite": "vite build",
+    "build:vite": "vite build && node -e \"require('fs').copyFileSync('dist/memories.bundle.js', 'memories.bundle.js')\"",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "playwright test"

@@ -56,7 +56,17 @@ export class MemoriesApp {
     });
 
     this.repository.loadFromLocalCache();
+    this.repository.initRealtimeSync();
     this.syncWithServer();
+    this.registerServiceWorker();
+  }
+
+  private registerServiceWorker(): void {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
   }
 
   private setupActionButtons(): void {

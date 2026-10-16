@@ -2,14 +2,14 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 
 export default defineConfig({
-  root: ".",
   build: {
     outDir: "dist",
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
-      input: {
-        index: resolve(__dirname, "index.html"),
-        memoriesDev: resolve(__dirname, "memories-dev.html"),
+      input: resolve(__dirname, "src/main.ts"),
+      output: {
+        entryFileNames: "memories.bundle.js",
+        format: "es",
       },
     },
   },
