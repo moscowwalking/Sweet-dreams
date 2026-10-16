@@ -23,7 +23,7 @@ jobs:
       - name: Проверка синтаксиса файлов
         run: |
           echo "Проверяем клиентский код"
-          node -c memories.js
+          node -c memories.bundle.js
           node -c sw.js
           echo "Проверяем серверный код"
           node -c server/server.js

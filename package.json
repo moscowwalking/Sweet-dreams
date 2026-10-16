@@ -1,7 +1,7 @@
 {
   "name": "sweet-dreams",
   "version": "1.0.0",
-  "main": "memories.js",
+  "main": "memories.bundle.js",
   "directories": {
     "doc": "docs",
     "test": "tests"
