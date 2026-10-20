@@ -714,6 +714,14 @@ textarea {
     font-size: 15px !important;
   }
 
+  #photoCaption {
+    font-size: 14px !important;
+    margin: 8px auto 4px auto !important;
+    width: 90% !important;
+    text-align: center !important;
+    word-break: break-word !important;
+  }
+
   .thumbs {
     max-width: 100% !important;
     overflow-x: auto !important;

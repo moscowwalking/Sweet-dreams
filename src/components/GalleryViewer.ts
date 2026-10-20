@@ -6,6 +6,7 @@ export class GalleryViewer {
   private thumbsContainer: HTMLElement | null = null;
   private titleEl: HTMLElement | null = null;
   private closeBtn: HTMLElement | null = null;
+  private captionEl: HTMLElement | null = null;
 
   private currentPlace: Place | null = null;
   private currentIndex: number = 0;
@@ -13,8 +14,16 @@ export class GalleryViewer {
   private translateX: number = 0;
   private translateY: number = 0;
   private isInitialized: boolean = false;
+  private serverUrl: string;
+  private onCaptionUpdate?: (place: Place) => void;
 
-  constructor() {}
+  constructor(
+    serverUrl: string = "https://sweet-dreams-f8nc.onrender.com",
+    onCaptionUpdate?: (place: Place) => void
+  ) {
+    this.serverUrl = serverUrl;
+    this.onCaptionUpdate = onCaptionUpdate;
+  }
 
   init(): void {
     if (this.isInitialized) return;
@@ -24,6 +33,17 @@ export class GalleryViewer {
     this.thumbsContainer = document.getElementById("thumbs");
     this.titleEl = document.getElementById("placeTitle");
     this.closeBtn = document.getElementById("closeGallery");
+    this.captionEl = document.getElementById("photoCaption");
+
+    if (!this.captionEl && this.mainImg?.parentElement) {
+      this.captionEl = document.createElement("div");
+      this.captionEl.id = "photoCaption";
+      this.mainImg.parentElement.insertAdjacentElement("afterend", this.captionEl);
+    }
+
+    if (this.captionEl) {
+      this.captionEl.onclick = () => this.editCaption();
+    }
 
     if (!this.overlay || !this.mainImg) {
       console.warn("Gallery elements not found in DOM");
@@ -104,7 +124,9 @@ export class GalleryViewer {
       this.titleEl.textContent = photo.formattedRussianDate;
     }
 
-    this.createCaptionElement(photo.caption);
+    if (this.captionEl) {
+      this.captionEl.textContent = photo.caption || "Добавь подпись ✍️";
+    }
 
     if (this.thumbsContainer) {
       const allThumbs = this.thumbsContainer.querySelectorAll("img");
@@ -332,17 +354,70 @@ export class GalleryViewer {
     });
   }
 
-  private createCaptionElement(caption: string): void {
-    let captionEl = document.getElementById("photoCaption");
-    if (captionEl) captionEl.remove();
+  private editCaption(): void {
+    if (!this.captionEl || !this.currentPlace) return;
+    const photo = this.currentPlace.photos[this.currentIndex];
+    if (!photo) return;
 
-    captionEl = document.createElement("div");
-    captionEl.id = "photoCaption";
-    captionEl.textContent = caption || "Добавь подпись ✍️";
+    const oldText = photo.caption;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = oldText;
+    input.style.display = "block";
+    input.style.margin = "10px auto";
+    input.style.width = "80%";
+    input.style.textAlign = "center";
+    input.style.fontSize = "15px";
+    input.style.padding = "6px";
+    input.style.borderRadius = "10px";
+    input.style.border = "1px solid #ccc";
 
-    const photoContainer = this.mainImg?.parentElement;
-    if (photoContainer) {
-      photoContainer.appendChild(captionEl);
-    }
+    this.captionEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let finished = false;
+    const finish = async () => {
+      if (finished) return;
+      finished = true;
+
+      const newCaption = input.value.trim();
+      photo.updateCaption(newCaption);
+
+      if (this.captionEl) {
+        input.replaceWith(this.captionEl);
+        this.captionEl.textContent = newCaption || "Добавь подпись ✍️";
+      }
+
+      if (this.currentPlace) {
+        this.onCaptionUpdate?.(this.currentPlace);
+        try {
+          await fetch(`${this.serverUrl}/update-caption`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: this.currentPlace.id,
+              photoIndex: this.currentIndex,
+              caption: newCaption,
+            }),
+          });
+        } catch (err) {
+          console.error("Failed to save caption:", err);
+        }
+      }
+    };
+
+    input.addEventListener("blur", finish);
+    input.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        input.blur();
+      } else if (e.key === "Escape") {
+        finished = true;
+        if (this.captionEl) {
+          input.replaceWith(this.captionEl);
+          this.captionEl.textContent = oldText || "Добавь подпись ✍️";
+        }
+      }
+    });
   }
 }

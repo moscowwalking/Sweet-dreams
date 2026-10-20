@@ -20,7 +20,12 @@ export class MemoriesApp {
   constructor() {
     this.repository = new MemoriesRepository();
     this.mapService = new MapService("map");
-    this.gallery = new GalleryViewer();
+    this.gallery = new GalleryViewer(
+      "https://sweet-dreams-f8nc.onrender.com",
+      (place) => {
+        this.repository.savePlace(place);
+      }
+    );
     this.nostalgia = new NostalgiaEngine();
     this.nostalgiaWidget = new NostalgiaWidget();
     this.loveCounter = new LoveCounterWidget();
