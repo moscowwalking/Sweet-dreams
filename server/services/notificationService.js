@@ -289,21 +289,21 @@ export async function checkDailyTriggers(forced = false) {
     }
   }
 
-  // 4. Ежедневно: «Случайное тёплое воспоминание»
-  console.log(
-    `☕ [${mskTime} МСК] Сработал ежедневный триггер случайного воспоминания`,
-  );
-  if (triggered.length > 0) await new Promise((r) => setTimeout(r, 1000));
-  await sendNotificationToAll({
-    title: "Тёплое воспоминание ☕✨",
-    body: "Теплое воспоминание! Загляни на карту 💕",
-    tag: "daily_random_memory",
-    data: {
-      url: "./memories.html?randomMemory=true",
+  if (triggered.length === 0) {
+    console.log(
+      `☕ [${mskTime} МСК] Сработал ежедневный триггер случайного воспоминания`,
+    );
+    await sendNotificationToAll({
+      title: "Тёплое воспоминание ☕✨",
+      body: "Теплое воспоминание! Загляни на карту 💕",
       tag: "daily_random_memory",
-    },
-  });
-  triggered.push({ type: "daily_random_memory" });
+      data: {
+        url: "./memories.html?randomMemory=true",
+        tag: "daily_random_memory",
+      },
+    });
+    triggered.push({ type: "daily_random_memory" });
+  }
 
   if (triggered.length === 0) {
     console.log(

@@ -96,11 +96,15 @@ export class MemoriesApp {
 
   private handleUrlActionsOnce(places: readonly Place[], hasNostalgia: boolean): void {
     if (this.isUrlActionHandled || places.length === 0) return;
-    this.isUrlActionHandled = true;
 
     const urlParams = new URLSearchParams(window.location.search);
+    const isRandomMemory = urlParams.get("randomMemory") === "true";
+    const isAutoNostalgia = urlParams.get("autoOpenNostalgia") === "true";
 
-    if (urlParams.get("randomMemory") === "true") {
+    if (!isRandomMemory && !isAutoNostalgia) return;
+
+    if (isRandomMemory) {
+      this.isUrlActionHandled = true;
       const randomItem = this.nostalgia.getRandomMemory();
       if (randomItem) {
         this.mapService.flyTo(randomItem.place.coords, 16, 1.2);
@@ -109,7 +113,8 @@ export class MemoriesApp {
         }, 1300);
       }
       this.cleanUrlParams();
-    } else if (urlParams.get("autoOpenNostalgia") === "true" && hasNostalgia) {
+    } else if (isAutoNostalgia && hasNostalgia) {
+      this.isUrlActionHandled = true;
       setTimeout(() => {
         this.nostalgiaWidget.showCard();
       }, 400);
@@ -131,6 +136,12 @@ export class MemoriesApp {
       await this.repository.fetchFromRender();
     } catch (err) {
       console.warn("Sync failed:", err);
+    } finally {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("autoOpenNostalgia") === "true" && !this.isUrlActionHandled) {
+        this.isUrlActionHandled = true;
+        this.cleanUrlParams();
+      }
     }
   }
 }

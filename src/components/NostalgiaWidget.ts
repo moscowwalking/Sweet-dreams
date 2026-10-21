@@ -92,7 +92,10 @@ export class NostalgiaWidget {
   }
 
   showCard(): void {
-    if (this.items.length === 0) return;
+    if (this.items.length === 0) {
+      alert("В этот день прошлых лет пока нет воспоминаний ✨");
+      return;
+    }
     this.renderCurrent();
     this.card?.classList.add("visible");
   }

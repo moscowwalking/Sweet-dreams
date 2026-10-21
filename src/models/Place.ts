@@ -18,56 +18,75 @@ export class Place {
     }
     this.placeCoords = [lat, lng];
 
+    this.placeDescription = (data.description || "").trim();
+    this.placeDate = Place.resolveDate(data);
+
     if (Array.isArray(data.photos) && data.photos.length > 0) {
-      this.photoItems = data.photos.map((p) => new PhotoItem(p));
+      this.photoItems = data.photos.map((p) => new PhotoItem(p, this.placeDate));
     } else if (data.origUrl || data.thumbUrl) {
       this.photoItems = [
-        new PhotoItem({
-          origUrl: data.origUrl,
-          thumbUrl: data.thumbUrl,
-          caption: data.caption,
-          date: data.exifDate,
-        }),
+        new PhotoItem(
+          {
+            origUrl: data.origUrl,
+            thumbUrl: data.thumbUrl,
+            caption: data.caption,
+            date: data.exifDate,
+          },
+          this.placeDate
+        ),
       ];
     } else {
       this.photoItems = [];
     }
-
-    this.placeDescription = (data.description || "").trim();
-    this.placeDate = Place.resolveDate(data, this.photoItems);
   }
 
   private static generateTempId(): string {
     return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   }
 
-  private static resolveDate(data: RawPlace, photos: PhotoItem[]): Date {
-    if (data.exifDate) {
-      const parts = data.exifDate.split(".");
-      if (parts.length === 3) {
-        let day = parseInt(parts[0], 10);
-        let month = parseInt(parts[1], 10) - 1;
-        let year = parseInt(parts[2], 10);
-        if (year < 100) year += 2000;
-        const d = new Date(year, month, day);
-        if (!isNaN(d.getTime())) return d;
+  private static parseDateValue(value: unknown): Date | null {
+    if (!value) return null;
+    if (typeof value === "number") {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) return d;
+    }
+    const str = String(value).trim();
+    if (!str) return null;
+
+    const parts = str.split(".");
+    if (parts.length === 3) {
+      let day = parseInt(parts[0], 10);
+      let month = parseInt(parts[1], 10) - 1;
+      let year = parseInt(parts[2], 10);
+      if (year < 100) year += 2000;
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+
+    const isoDate = new Date(str);
+    if (!isNaN(isoDate.getTime())) return isoDate;
+
+    return null;
+  }
+
+  private static resolveDate(data: RawPlace): Date {
+    const fromExif = Place.parseDateValue(data.exifDate);
+    if (fromExif) return fromExif;
+
+    const fromTimestamp = Place.parseDateValue(data.timestamp);
+    if (fromTimestamp) return fromTimestamp;
+
+    if (Array.isArray(data.photos) && data.photos.length > 0) {
+      for (const p of data.photos) {
+        const fromPhoto = Place.parseDateValue(p.date);
+        if (fromPhoto) return fromPhoto;
       }
-      const d = new Date(data.exifDate);
-      if (!isNaN(d.getTime())) return d;
-    }
-
-    if (photos.length > 0) {
-      return photos[0].date;
-    }
-
-    if (data.timestamp) {
-      const d = new Date(data.timestamp);
-      if (!isNaN(d.getTime())) return d;
     }
 
     const numId = Number(data.id);
     if (!isNaN(numId) && numId > 1600000000000) {
-      return new Date(numId);
+      const fromId = new Date(numId);
+      if (!isNaN(fromId.getTime())) return fromId;
     }
 
     return new Date();

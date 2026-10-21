@@ -6,15 +6,17 @@ export class PhotoItem {
   private photoCaption: string;
   private photoDate: Date;
 
-  constructor(data: RawPhoto) {
+  constructor(data: RawPhoto, fallbackDate?: Date) {
     this.origPhotoUrl = (data.origUrl || data.thumbUrl || "").trim();
     this.thumbPhotoUrl = (data.thumbUrl || data.origUrl || "").trim();
     this.photoCaption = (data.caption || "").trim();
-    this.photoDate = PhotoItem.parseDate(data.date);
+    this.photoDate = PhotoItem.parseDate(data.date, fallbackDate);
   }
 
-  private static parseDate(raw?: string): Date {
-    if (!raw) return new Date();
+  private static parseDate(raw?: string, fallbackDate?: Date): Date {
+    if (!raw) {
+      return fallbackDate ? new Date(fallbackDate.getTime()) : new Date();
+    }
 
     const parts = raw.split(".");
     if (parts.length === 3) {
@@ -29,7 +31,7 @@ export class PhotoItem {
     const isoDate = new Date(raw);
     if (!isNaN(isoDate.getTime())) return isoDate;
 
-    return new Date();
+    return fallbackDate ? new Date(fallbackDate.getTime()) : new Date();
   }
 
   get origUrl(): string {
