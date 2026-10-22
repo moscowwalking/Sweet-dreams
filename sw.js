@@ -1,8 +1,10 @@
 // sw.js - Service Worker для Sweet-dreams (v28 - TypeScript OOP Engine)
-const STATIC_CACHE = "sweet-dreams-static-v30";
-const PHOTO_CACHE = "sweet-dreams-photos-v30";
+const STATIC_CACHE = "sweet-dreams-static-v31";
+const PHOTO_CACHE = "sweet-dreams-photos-v31";
+const TILE_CACHE = "sweet-dreams-tiles-v1";
 
 const MAX_CACHED_PHOTOS = 200;
+const MAX_CACHED_TILES = 500;
 
 // Предварительное кэширование страниц, стилей, манифеста и иконок PWA
 const PRECACHE_ASSETS = [
@@ -37,8 +39,11 @@ self.addEventListener("activate", (event) => {
       .then((keys) => {
         return Promise.all(
           keys.map((key) => {
-            if (key !== STATIC_CACHE && key !== PHOTO_CACHE) {
-              console.log("🧹 Очистка старого кэша:", key);
+            if (
+              key !== STATIC_CACHE &&
+              key !== PHOTO_CACHE &&
+              key !== TILE_CACHE
+            ) {
               return caches.delete(key);
             }
           }),
@@ -95,11 +100,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. Игнорируем запросы к бэкенду Render и тайлам OpenStreetMap (напрямую в сеть)
-  if (
-    url.hostname.includes("onrender.com") ||
-    url.hostname.includes("tile.openstreetmap")
-  ) {
+  if (url.hostname.includes("tile.openstreetmap")) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(event.request);
+          if (
+            networkResponse &&
+            (networkResponse.status === 200 ||
+              networkResponse.type === "opaque")
+          ) {
+            cache.put(event.request, networkResponse.clone());
+            limitCacheSize(TILE_CACHE, MAX_CACHED_TILES);
+          }
+          return networkResponse;
+        } catch (err) {
+          return new Response("", {
+            status: 408,
+            statusText: "Tile Request Timeout",
+          });
+        }
+      }),
+    );
+    return;
+  }
+
+  if (url.hostname.includes("onrender.com")) {
     return;
   }
 

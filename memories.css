@@ -74,6 +74,11 @@ button,
   box-shadow: 0 8px 36px rgba(0, 0, 0, 0.24);
   overflow: hidden;
   position: relative;
+  background-color: #fdf2f7;
+}
+
+.leaflet-container {
+  background: #fdf2f7 !important;
 }
 
 /* ===== Upload Panel ===== */

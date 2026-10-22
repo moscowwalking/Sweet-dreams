@@ -25,7 +25,7 @@ export class MapService {
   constructor(containerId: string = "map", options: MapServiceOptions = {}) {
     this.containerId = containerId;
     this.centerCoords = options.center || [55.75, 37.61];
-    this.defaultZoom = options.zoom || 5;
+    this.defaultZoom = options.zoom || 11;
     this.maxZoomLevel = options.maxZoom || 19;
     this.tileUrl =
       options.tileUrl || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -42,13 +42,22 @@ export class MapService {
       return;
     }
 
-    this.map = L.map(this.containerId, { zoomControl: false }).setView(
+    this.map = L.map(this.containerId, {
+      zoomControl: false,
+      fadeAnimation: true,
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+    }).setView(
       this.centerCoords,
       this.defaultZoom
     );
 
     L.tileLayer(this.tileUrl, {
       maxZoom: this.maxZoomLevel,
+      keepBuffer: 8,
+      updateWhenIdle: false,
+      updateInterval: 100,
+      crossOrigin: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.map);
