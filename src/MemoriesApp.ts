@@ -100,8 +100,10 @@ export class MemoriesApp {
     const urlParams = new URLSearchParams(window.location.search);
     const isRandomMemory = urlParams.get("randomMemory") === "true";
     const isAutoNostalgia = urlParams.get("autoOpenNostalgia") === "true";
+    const recentUploadsParam = urlParams.get("recentUploads");
+    const isRecentUploads = !!recentUploadsParam;
 
-    if (!isRandomMemory && !isAutoNostalgia) return;
+    if (!isRandomMemory && !isAutoNostalgia && !isRecentUploads) return;
 
     if (isRandomMemory) {
       this.isUrlActionHandled = true;
@@ -119,6 +121,30 @@ export class MemoriesApp {
         this.nostalgiaWidget.showCard();
       }, 400);
       this.cleanUrlParams();
+    } else if (isRecentUploads) {
+      const ids =
+        recentUploadsParam !== "true"
+          ? recentUploadsParam
+              .split(",")
+              .map((id) => decodeURIComponent(id.trim()))
+              .filter(Boolean)
+          : [];
+
+      const hasRequested =
+        ids.length === 0 ||
+        ids.some((id) => places.some((p) => String(p.id) === String(id)));
+
+      if (!hasRequested) return;
+
+      const recentItems = this.nostalgia.findRecentUploads(ids);
+      if (recentItems.length > 0) {
+        this.isUrlActionHandled = true;
+        this.mapService.flyTo(recentItems[0].coords, 16, 1.2);
+        setTimeout(() => {
+          this.nostalgiaWidget.showRecentUploads(recentItems);
+        }, 400);
+        this.cleanUrlParams();
+      }
     }
   }
 
@@ -138,9 +164,29 @@ export class MemoriesApp {
       console.warn("Sync failed:", err);
     } finally {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("autoOpenNostalgia") === "true" && !this.isUrlActionHandled) {
-        this.isUrlActionHandled = true;
-        this.cleanUrlParams();
+      if (!this.isUrlActionHandled) {
+        if (urlParams.get("autoOpenNostalgia") === "true") {
+          this.isUrlActionHandled = true;
+          this.cleanUrlParams();
+        } else if (urlParams.has("recentUploads")) {
+          const recentUploadsParam = urlParams.get("recentUploads") || "";
+          const ids =
+            recentUploadsParam !== "true"
+              ? recentUploadsParam
+                  .split(",")
+                  .map((id) => decodeURIComponent(id.trim()))
+                  .filter(Boolean)
+              : [];
+          const recentItems = this.nostalgia.findRecentUploads(ids);
+          if (recentItems.length > 0) {
+            this.mapService.flyTo(recentItems[0].coords, 16, 1.2);
+            setTimeout(() => {
+              this.nostalgiaWidget.showRecentUploads(recentItems);
+            }, 400);
+          }
+          this.isUrlActionHandled = true;
+          this.cleanUrlParams();
+        }
       }
     }
   }

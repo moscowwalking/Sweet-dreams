@@ -18,6 +18,7 @@ export class NostalgiaWidget {
   private mobileBadge: HTMLElement | null = null;
 
   private items: NostalgiaItem[] = [];
+  private baseItems: NostalgiaItem[] = [];
   private currentIndex: number = 0;
   private onFlyTo?: (item: NostalgiaItem) => void;
 
@@ -58,6 +59,7 @@ export class NostalgiaWidget {
   }
 
   updateItems(items: NostalgiaItem[]): void {
+    this.baseItems = [...items];
     this.items = [...items];
     this.currentIndex = 0;
 
@@ -92,16 +94,28 @@ export class NostalgiaWidget {
   }
 
   showCard(): void {
+    this.items = [...this.baseItems];
     if (this.items.length === 0) {
       alert("В этот день прошлых лет пока нет воспоминаний ✨");
       return;
     }
+    this.currentIndex = 0;
+    this.renderCurrent();
+    this.card?.classList.add("visible");
+  }
+
+  showRecentUploads(recentItems: NostalgiaItem[]): void {
+    if (recentItems.length === 0) return;
+    this.items = [...recentItems];
+    this.currentIndex = 0;
     this.renderCurrent();
     this.card?.classList.add("visible");
   }
 
   hideCard(): void {
     this.card?.classList.remove("visible");
+    this.items = [...this.baseItems];
+    this.currentIndex = 0;
   }
 
   next(): void {

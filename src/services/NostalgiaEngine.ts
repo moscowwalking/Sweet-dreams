@@ -53,7 +53,7 @@ export class NostalgiaEngine {
     const matchedPlaces: Place[] = [];
 
     for (const id of recentIds) {
-      const place = this.places.find((p) => p.id === id);
+      const place = this.places.find((p) => String(p.id) === String(id));
       if (place && !matchedPlaces.includes(place)) {
         matchedPlaces.push(place);
       }

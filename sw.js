@@ -1,6 +1,6 @@
 // sw.js - Service Worker для Sweet-dreams (v28 - TypeScript OOP Engine)
-const STATIC_CACHE = "sweet-dreams-static-v32";
-const PHOTO_CACHE = "sweet-dreams-photos-v32";
+const STATIC_CACHE = "sweet-dreams-static-v33";
+const PHOTO_CACHE = "sweet-dreams-photos-v33";
 
 const MAX_CACHED_PHOTOS = 200;
 
