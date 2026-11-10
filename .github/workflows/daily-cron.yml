@@ -1,0 +1,55 @@
+name: Daily Push Notifications Cron
+
+on:
+  schedule:
+    # 06:25 UTC = 09:25 МСК
+    # Некруглые минуты (25) предотвращают попадание в общую очередь GitHub Actions в начале часа
+    - cron: '25 6 * * *'
+  workflow_dispatch: # Кнопка ручного запуска в Actions для проверки в любое время
+
+jobs:
+  trigger-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Daily Notifications
+        run: |
+          node -e '
+          async function run() {
+            const SERVER_URL = "https://sweet-dreams-f8nc.onrender.com";
+            console.log("⏰ Пробуждаем Render сервер через /health...");
+            
+            try {
+              const res = await fetch(`${SERVER_URL}/health`, { signal: AbortSignal.timeout(45000) });
+              console.log("✅ Сервер ответил:", res.status);
+            } catch (err) {
+              console.log("⏳ Сервер спал, ждем 20 секунд пока поднимется...");
+            }
+            
+            await new Promise(r => setTimeout(r, 20000));
+            
+            console.log("📬 Запрашиваем /check-daily-notifications...");
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                const notifyRes = await fetch(`${SERVER_URL}/check-daily-notifications`, {
+                  method: "POST",
+                  signal: AbortSignal.timeout(45000)
+                });
+                if (notifyRes.ok) {
+                  const result = await notifyRes.json();
+                  console.log("🎉 Результат проверки:", JSON.stringify(result, null, 2));
+                  return;
+                } else {
+                  console.log(`⚠️ Попытка ${attempt}: HTTP ${notifyRes.status}`);
+                }
+              } catch (e) {
+                console.log(`⚠️ Попытка ${attempt}: ${e.message}`);
+              }
+              if (attempt < 3) {
+                console.log("⏳ Пауза 10 секунд перед повторной попыткой...");
+                await new Promise(r => setTimeout(r, 10000));
+              }
+            }
+            process.exit(1);
+          }
+          run();
+          '
