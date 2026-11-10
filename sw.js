@@ -1,6 +1,8 @@
-// sw.js - Service Worker для Sweet-dreams (v28 - TypeScript OOP Engine)
-const STATIC_CACHE = "sweet-dreams-static-v33";
+// sw.js - Service Worker для Sweet-dreams (v34 - Map Tile Cache & Mobile Optimization)
+const STATIC_CACHE = "sweet-dreams-static-v34";
 const PHOTO_CACHE = "sweet-dreams-photos-v33";
+const TILE_CACHE = "sweet-dreams-tiles-v1";
+const MAX_CACHED_TILES = 800;
 
 const MAX_CACHED_PHOTOS = 200;
 
@@ -37,7 +39,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) => {
         return Promise.all(
           keys.map((key) => {
-            if (key !== STATIC_CACHE && key !== PHOTO_CACHE) {
+            if (key !== STATIC_CACHE && key !== PHOTO_CACHE && key !== TILE_CACHE) {
               return caches.delete(key);
             }
           }),
@@ -94,10 +96,38 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (
-    url.hostname.includes("onrender.com") ||
-    url.hostname.includes("tile.openstreetmap")
-  ) {
+  // 2. Тайлы карты OpenStreetMap (Cache-First — мгновенный зум без квадратиков)
+  if (url.hostname.includes("tile.openstreetmap.org")) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then(async (cache) => {
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(event.request);
+          if (
+            networkResponse &&
+            (networkResponse.status === 200 ||
+              networkResponse.type === "opaque")
+          ) {
+            cache.put(event.request, networkResponse.clone());
+            limitCacheSize(TILE_CACHE, MAX_CACHED_TILES);
+          }
+          return networkResponse;
+        } catch (err) {
+          return new Response("", {
+            status: 408,
+            statusText: "Tile Timeout",
+          });
+        }
+      })
+    );
+    return;
+  }
+
+  if (url.hostname.includes("onrender.com")) {
     return;
   }
 

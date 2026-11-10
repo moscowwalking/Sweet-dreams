@@ -44,6 +44,7 @@ export class MapService {
 
     this.map = L.map(this.containerId, {
       zoomControl: false,
+      preferCanvas: true,
       fadeAnimation: true,
       zoomAnimation: true,
       markerZoomAnimation: true,
@@ -54,6 +55,10 @@ export class MapService {
 
     L.tileLayer(this.tileUrl, {
       maxZoom: this.maxZoomLevel,
+      maxNativeZoom: 19,
+      keepBuffer: 8,
+      updateWhenIdle: true,
+      updateInterval: 150,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.map);
@@ -65,6 +70,10 @@ export class MapService {
       spiderfyOnMaxZoom: true,
       zoomToBoundsOnClick: true,
       spiderfyDistanceMultiplier: 2.5,
+      chunkedLoading: true,
+      chunkInterval: 50,
+      chunkDelay: 10,
+      removeOutsideVisibleBounds: true,
     });
     this.map.addLayer(this.markersGroup);
 

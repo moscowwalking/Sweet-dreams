@@ -16,6 +16,10 @@
     <meta name="apple-mobile-web-app-title" content="Sweet Dreams" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin />
+    <link rel="preconnect" href="https://b.tile.openstreetmap.org" crossorigin />
+    <link rel="preconnect" href="https://c.tile.openstreetmap.org" crossorigin />
+    <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
     <link rel="stylesheet" href="mobile.css" />
     <link
       rel="stylesheet"
@@ -275,9 +279,15 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      const map = L.map("map").setView([59.98, 30.3], 11);
+      const map = L.map("map", { preferCanvas: true }).setView([59.98, 30.3], 11);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        maxNativeZoom: 19,
+        keepBuffer: 8,
+        updateWhenIdle: true,
+        updateInterval: 150,
+      }).addTo(
         map,
       );
 
@@ -361,7 +371,7 @@
         });
     </script>
 
-    <audio autoplay loop style="display: none">
+    <audio id="audio-player" preload="none" loop style="display: none">
       <source src="audio/ALBLAK_52.mp3" type="audio/mpeg" />
     </audio>
     <script>

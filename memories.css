@@ -81,6 +81,12 @@ button,
   background: #fdf2f7 !important;
 }
 
+.leaflet-tile {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
 /* ===== Upload Panel ===== */
 .upload-panel {
   position: absolute;
