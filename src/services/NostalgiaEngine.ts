@@ -41,6 +41,7 @@ export class NostalgiaEngine {
             tag: `${yearsAgo} ${yearWord} назад ✨ (${idx + 1}/${place.photosCount})`,
             coords: place.coords,
             yearsAgo,
+            photoIndex: idx,
           });
         });
       }
@@ -75,6 +76,7 @@ export class NostalgiaEngine {
           date: photo.date,
           tag: `Новое фото (${idx + 1}/${place.photosCount})`,
           coords: place.coords,
+          photoIndex: idx,
         });
       });
     }

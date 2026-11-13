@@ -27,4 +27,5 @@ export interface NostalgiaItem {
   tag: string;
   coords: [number, number];
   yearsAgo?: number;
+  photoIndex?: number;
 }

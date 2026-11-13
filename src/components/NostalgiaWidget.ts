@@ -17,8 +17,10 @@ export class NostalgiaWidget {
   private mobileBtn: HTMLElement | null = null;
   private mobileBadge: HTMLElement | null = null;
 
-  private items: NostalgiaItem[] = [];
-  private baseItems: NostalgiaItem[] = [];
+  private nostalgiaItems: NostalgiaItem[] = [];
+  private recentItems: NostalgiaItem[] = [];
+  private activeItems: NostalgiaItem[] = [];
+  private activeMode: "nostalgia" | "recent" = "nostalgia";
   private currentIndex: number = 0;
   private onFlyTo?: (item: NostalgiaItem) => void;
 
@@ -49,21 +51,24 @@ export class NostalgiaWidget {
     this.nextBtn?.addEventListener("click", () => this.next());
 
     this.actionBtn?.addEventListener("click", () => {
-      if (this.items.length === 0) return;
-      const current = this.items[this.currentIndex];
+      if (this.activeItems.length === 0) return;
+      const targetItem = this.activeItems[this.currentIndex];
       this.hideCard();
-      if (this.onFlyTo) {
-        this.onFlyTo(current);
+      if (this.onFlyTo && targetItem) {
+        this.onFlyTo(targetItem);
       }
     });
   }
 
   updateItems(items: NostalgiaItem[]): void {
-    this.baseItems = [...items];
-    this.items = [...items];
-    this.currentIndex = 0;
+    this.nostalgiaItems = [...items];
 
-    const count = this.items.length;
+    if (!this.isCardVisible()) {
+      this.activeItems = [...items];
+      this.currentIndex = 0;
+    }
+
+    const count = this.nostalgiaItems.length;
 
     if (count > 0) {
       if (this.btnFab) this.btnFab.style.display = "flex";
@@ -89,13 +94,16 @@ export class NostalgiaWidget {
         this.mobileBtn.style.opacity = "0.7";
       }
       if (this.mobileBadge) this.mobileBadge.style.display = "none";
-      this.hideCard();
+      if (this.activeMode === "nostalgia") {
+        this.hideCard();
+      }
     }
   }
 
   showCard(): void {
-    this.items = [...this.baseItems];
-    if (this.items.length === 0) {
+    this.activeMode = "nostalgia";
+    this.activeItems = [...this.nostalgiaItems];
+    if (this.activeItems.length === 0) {
       alert("В этот день прошлых лет пока нет воспоминаний ✨");
       return;
     }
@@ -106,7 +114,9 @@ export class NostalgiaWidget {
 
   showRecentUploads(recentItems: NostalgiaItem[]): void {
     if (recentItems.length === 0) return;
-    this.items = [...recentItems];
+    this.activeMode = "recent";
+    this.recentItems = [...recentItems];
+    this.activeItems = [...recentItems];
     this.currentIndex = 0;
     this.renderCurrent();
     this.card?.classList.add("visible");
@@ -114,25 +124,30 @@ export class NostalgiaWidget {
 
   hideCard(): void {
     this.card?.classList.remove("visible");
-    this.items = [...this.baseItems];
+    this.activeMode = "nostalgia";
+    this.activeItems = [...this.nostalgiaItems];
     this.currentIndex = 0;
   }
 
   next(): void {
-    if (this.items.length <= 1) return;
-    this.currentIndex = (this.currentIndex + 1) % this.items.length;
+    if (this.activeItems.length <= 1) return;
+    this.currentIndex = (this.currentIndex + 1) % this.activeItems.length;
     this.renderCurrent();
   }
 
   prev(): void {
-    if (this.items.length <= 1) return;
-    this.currentIndex = (this.currentIndex - 1 + this.items.length) % this.items.length;
+    if (this.activeItems.length <= 1) return;
+    this.currentIndex = (this.currentIndex - 1 + this.activeItems.length) % this.activeItems.length;
     this.renderCurrent();
   }
 
+  private isCardVisible(): boolean {
+    return this.card?.classList.contains("visible") ?? false;
+  }
+
   private renderCurrent(): void {
-    if (this.items.length === 0) return;
-    const item = this.items[this.currentIndex];
+    if (this.activeItems.length === 0) return;
+    const item = this.activeItems[this.currentIndex];
 
     if (this.imgEl) this.imgEl.src = item.photoUrl;
     if (this.tagEl) {
@@ -153,10 +168,10 @@ export class NostalgiaWidget {
       this.captionEl.textContent = item.caption ? `«${item.caption}»` : "";
     }
 
-    if (this.items.length > 1) {
+    if (this.activeItems.length > 1) {
       if (this.navEl) this.navEl.style.display = "flex";
       if (this.counterEl) {
-        this.counterEl.textContent = `${this.currentIndex + 1} из ${this.items.length}`;
+        this.counterEl.textContent = `${this.currentIndex + 1} из ${this.activeItems.length}`;
       }
     } else {
       if (this.navEl) this.navEl.style.display = "none";

@@ -41,7 +41,8 @@ export class MemoriesApp {
       this.mapService.flyTo(item.coords, 16, 1.2);
       const place = this.repository.getById(item.placeId);
       if (place) {
-        setTimeout(() => this.gallery.open(place), 1300);
+        const photoIdx = typeof item.photoIndex === "number" ? item.photoIndex : 0;
+        setTimeout(() => this.gallery.open(place, photoIdx), 1300);
       }
     });
 
@@ -139,7 +140,6 @@ export class MemoriesApp {
       const recentItems = this.nostalgia.findRecentUploads(ids);
       if (recentItems.length > 0) {
         this.isUrlActionHandled = true;
-        this.mapService.flyTo(recentItems[0].coords, 16, 1.2);
         setTimeout(() => {
           this.nostalgiaWidget.showRecentUploads(recentItems);
         }, 400);
@@ -179,7 +179,6 @@ export class MemoriesApp {
               : [];
           const recentItems = this.nostalgia.findRecentUploads(ids);
           if (recentItems.length > 0) {
-            this.mapService.flyTo(recentItems[0].coords, 16, 1.2);
             setTimeout(() => {
               this.nostalgiaWidget.showRecentUploads(recentItems);
             }, 400);
