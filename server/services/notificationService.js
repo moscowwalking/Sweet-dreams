@@ -2,12 +2,19 @@ import webpush from "web-push";
 import { ENV } from "../config/env.js";
 import { db } from "../config/firebase.js";
 
-// 1. Инициализация VAPID ключей
-webpush.setVapidDetails(
-  ENV.VAPID_SUBJECT,
-  ENV.VAPID_PUBLIC_KEY,
-  ENV.VAPID_PRIVATE_KEY,
-);
+if (ENV.VAPID_SUBJECT && ENV.VAPID_PUBLIC_KEY && ENV.VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      ENV.VAPID_SUBJECT,
+      ENV.VAPID_PUBLIC_KEY,
+      ENV.VAPID_PRIVATE_KEY,
+    );
+  } catch (err) {
+    console.warn("VAPID init error:", err.message);
+  }
+} else {
+  console.warn("VAPID keys not configured");
+}
 
 let lastDailyCheckDate = null;
 let uploadNotificationTimer = null;
