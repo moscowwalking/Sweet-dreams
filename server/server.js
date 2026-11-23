@@ -43,7 +43,11 @@ app.use("/", notificationsRoutes);
 
 const port = process.env.PORT || ENV.PORT || 8080;
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on port ${port}`);
-  startPushScheduler();
-});
+if (process.argv[1] && (process.argv[1].endsWith("server.js") || process.argv[1].endsWith("server"))) {
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on port ${port}`);
+    startPushScheduler();
+  });
+}
+
+export { app, startPushScheduler };
