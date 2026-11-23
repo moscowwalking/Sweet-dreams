@@ -35,7 +35,7 @@ export class MemoriesRepository {
     storage?: IKeyValueStorage;
   } = {}) {
     this.cacheKey = options.cacheKey || "places_cache_v4";
-    this.serverUrl = options.serverUrl || "https://sweet-dreams-f8nc.onrender.com";
+    this.serverUrl = options.serverUrl || "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net";
 
     if (options.storage) {
       this.storage = options.storage;

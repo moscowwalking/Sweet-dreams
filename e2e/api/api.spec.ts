@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 // Базовый URL нашего бэкенда на Render
-const SERVER_URL = "https://sweet-dreams-f8nc.onrender.com";
+const SERVER_URL = "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net";
 
 test.describe("Sweet Dreams — API & Security Checks 🛡️", () => {
   test("1. GET /health - сервер бодрствует и отдаёт 200 OK", async ({

@@ -21,7 +21,7 @@ export class MemoriesApp {
     this.repository = new MemoriesRepository();
     this.mapService = new MapService("map");
     this.gallery = new GalleryViewer(
-      "https://sweet-dreams-f8nc.onrender.com",
+      "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net",
       (place) => {
         this.repository.savePlace(place);
       }

@@ -18,7 +18,7 @@ export class GalleryViewer {
   private onCaptionUpdate?: (place: Place) => void;
 
   constructor(
-    serverUrl: string = "https://sweet-dreams-f8nc.onrender.com",
+    serverUrl: string = "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net",
     onCaptionUpdate?: (place: Place) => void
   ) {
     this.serverUrl = serverUrl;

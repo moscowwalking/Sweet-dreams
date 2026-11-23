@@ -15,7 +15,7 @@ jobs:
         run: |
           node -e '
           async function run() {
-            const SERVER_URL = "https://sweet-dreams-f8nc.onrender.com";
+            const SERVER_URL = "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net";
             console.log("⏰ Пробуждаем Render сервер через /health...");
             
             try {

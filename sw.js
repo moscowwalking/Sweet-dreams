@@ -1,5 +1,5 @@
-// sw.js - Service Worker для Sweet-dreams (v35 - Map Tile Cache & Mobile Optimization)
-const STATIC_CACHE = "sweet-dreams-static-v35";
+// sw.js - Service Worker для Sweet-dreams (v36 - Map Tile Cache & Mobile Optimization)
+const STATIC_CACHE = "sweet-dreams-static-v36";
 const PHOTO_CACHE = "sweet-dreams-photos-v33";
 const TILE_CACHE = "sweet-dreams-tiles-v1";
 const MAX_CACHED_TILES = 800;
@@ -127,7 +127,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.hostname.includes("onrender.com")) {
+  if (
+    url.hostname.includes("onrender.com") ||
+    url.hostname.includes("containers.yandexcloud.net")
+  ) {
     return;
   }
 
