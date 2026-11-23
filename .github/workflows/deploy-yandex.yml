@@ -38,6 +38,7 @@ jobs:
           yc-sa-json-credentials: ${{ secrets.YC_SA_KEY }}
           container-name: sweet-dreams-backend
           folder-id: b1gt5b6j3ef1r4tg10lk
+          revision-service-account-id: ajed685qrjh5h4ghq3nt
           revision-image-url: cr.yandex/crpshhg7kvbulth8ml7n/sweet-dreams-server:latest
           revision-cores: 1
           revision-memory: 512Mb
