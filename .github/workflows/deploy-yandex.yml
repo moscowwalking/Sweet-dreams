@@ -1,4 +1,4 @@
-name: Deploy Backend to Yandex Serverless Containers
+name: Build & Push Server Docker Image to Yandex Registry
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy to Yandex Cloud
+  build-and-push:
+    name: Build & Push to Yandex Container Registry
     runs-on: ubuntu-latest
 
     steps:
@@ -26,22 +26,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t cr.yandex/crpshhg7kvbulth8ml7n/sweet-dreams-server:latest ./server
+          docker build --platform linux/amd64 -t cr.yandex/crpshhg7kvbulth8ml7n/sweet-dreams-server:latest ./server
 
       - name: Push Docker image
         run: |
           docker push cr.yandex/crpshhg7kvbulth8ml7n/sweet-dreams-server:latest
-
-      - name: Deploy new revision to Yandex Serverless Containers
-        uses: yc-actions/yc-sls-container-deploy@v5
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_KEY }}
-          container-name: sweet-dreams-backend
-          folder-id: b1gt5b6j3ef1r4tg10lk
-          revision-service-account-id: ajed685qrjh5h4ghq3nt
-          revision-image-url: cr.yandex/crpshhg7kvbulth8ml7n/sweet-dreams-server:latest
-          revision-cores: 1
-          revision-memory: 512Mb
-          revision-core-fraction: 20
-          revision-concurrency: 16
-          revision-execution-timeout: 60
