@@ -9,9 +9,16 @@ import inviteRoutes from "./routes/invite.js";
 import notificationsRoutes from "./routes/notifications.js";
 import { startPushScheduler } from "./services/scheduler.js";
 
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason);
+});
+
 const app = express();
 
-// --- Middleware ---
 app.use(compression());
 app.use(
   cors({
@@ -29,14 +36,14 @@ app.use(
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-// --- Routes ---
 app.use("/", healthRoutes);
 app.use("/", placesRoutes);
 app.use("/", inviteRoutes);
 app.use("/", notificationsRoutes);
 
-// --- Запуск сервера ---
-app.listen(ENV.PORT, () => {
-  console.log(`🚀 Server running on port ${ENV.PORT}`);
+const port = process.env.PORT || ENV.PORT || 8080;
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on port ${port}`);
   startPushScheduler();
 });
