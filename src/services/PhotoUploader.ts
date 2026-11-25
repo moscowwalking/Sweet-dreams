@@ -14,7 +14,7 @@ export class PhotoUploader {
   constructor(
     mapService: MapService,
     repository: MemoriesRepository,
-    serverUrl = "https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net"
+    serverUrl = "https://sweet-dreams-f8nc.onrender.com"
   ) {
     this.mapService = mapService;
     this.repository = repository;

@@ -1,5 +1,5 @@
-// sw.js - Service Worker для Sweet-dreams (v36 - Map Tile Cache & Mobile Optimization)
-const STATIC_CACHE = "sweet-dreams-static-v36";
+// sw.js - Service Worker для Sweet-dreams (v37 - Map Tile Cache & Mobile Optimization)
+const STATIC_CACHE = "sweet-dreams-static-v37";
 const PHOTO_CACHE = "sweet-dreams-photos-v33";
 const TILE_CACHE = "sweet-dreams-tiles-v1";
 const MAX_CACHED_TILES = 800;

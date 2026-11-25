@@ -216,7 +216,7 @@
       messageEl.textContent = `Скоро увидимся! Не забудь: ${place}, ${date} в ${timeStart}.`;
 
       // Отправляем данные на сервер
-      fetch("https://bbaq438ioj62hfprgo5p.containers.yandexcloud.net/send-invite", {
+      fetch("https://sweet-dreams-f8nc.onrender.com/send-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(inviteData),
